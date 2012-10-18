@@ -1,0 +1,41 @@
+# kate: replace-tabs: off;
+
+height_files = $(wildcard *.hgt)
+master = mixed.tif
+hillshade = mixed_hillshade.tif
+slopeshade = mixed_slopeshade.tif
+relief = mixed_relief.tif
+shapefiles = $(foreach heigh_file, $(height_files), $(basename $(height_file)) )
+
+gopts = -co compress=lzw 
+
+all: $(hillshade) $(relief) $(slopeshade) mixed_contour.sql $(shapefiles)
+
+$(master): $(height_files)
+	gdal_merge.py -o $@ -v $^
+
+$(hillshade): $(master)
+	gdaldem hillshade $(gopts) $< $@
+
+$(relief): $(master) color-relief.txt
+	gdaldem color-relief $(gopts) $< color-relief.txt $@
+
+$(slopeshade): mixed_slope.tif slope.txt
+	gdaldem color-relief $(gopts) $< slope.txt $@
+
+mixed_slope.tif: $(master)
+	gdaldem slope $(gopts) $< $@
+
+define gdal-contour
+gdal_contour -i 10 -snodata 32767 -a height $< $@
+shapeindex $(basename )
+endef
+
+mixed_contour.shp: $(master)
+	$(gdal-contour)
+
+%.shp: %.hgt
+	$(gdal-contour)
+
+%.sql: %.shp
+	shp2pgsql -c -I -g way $(basename $<) contours > $@
