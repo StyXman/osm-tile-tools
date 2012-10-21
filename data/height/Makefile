@@ -1,15 +1,16 @@
-# kate: replace-tabs: off;
+# kate: replace-tabs: off; indent-width 8
 
 height_files = $(wildcard *.hgt)
 master = mixed.tif
 hillshade = mixed_hillshade.tif
 slopeshade = mixed_slopeshade.tif
 relief = mixed_relief.tif
-shapefiles = $(foreach heigh_file, $(height_files), $(basename $(height_file)) )
+# shapefiles = $(foreach heigh_file, $(height_files), $(basename $(height_file)) )
 
 gopts = -co compress=lzw 
 
-all: $(hillshade) $(relief) $(slopeshade) mixed_contour.sql $(shapefiles)
+all: $(hillshade) $(relief) $(slopeshade) mixed_contour.sql 
+# $(shapefiles)
 
 $(master): $(height_files)
 	gdal_merge.py -o $@ -v $^
