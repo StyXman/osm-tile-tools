@@ -247,24 +247,227 @@
       ],
       "Datasource": {
         "type": "postgis",
-        "table": "(select * from planet_osm_roads where highway!='') as foo",
+        "table": "(select * from planet_osm_roads where highway='secondary_link') as foo",
         "extent": "368945.35,5243076.72,974136.32,5652173.71",
         "key_field": "osm_id",
         "geometry_field": "way",
         "host": "localhost",
         "user": "postgres",
         "dbname": "osm",
-        "id": "osm-highway",
+        "id": "secondary_link",
         "project": "osm-tilemill",
         "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
         "extent_cache": "auto"
       },
-      "id": "highway",
-      "class": "highway",
+      "id": "secondary_link",
+      "class": "secondary_link",
       "srs-name": "900913",
       "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
       "advanced": {},
-      "name": "highway"
+      "name": "secondary_link"
+    },
+    {
+      "geometry": "linestring",
+      "extent": [
+        3.3142924690982625,
+        42.54570194836811,
+        8.750815450719449,
+        45.19437358164464
+      ],
+      "Datasource": {
+        "type": "postgis",
+        "table": "(select * from planet_osm_roads where highway='secondary') as foo",
+        "extent": "368945.35,5243076.72,974136.32,5652173.71",
+        "key_field": "osm_id",
+        "geometry_field": "way",
+        "host": "localhost",
+        "user": "postgres",
+        "dbname": "osm",
+        "id": "secondary",
+        "project": "osm-tilemill",
+        "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
+        "extent_cache": "auto"
+      },
+      "id": "secondary",
+      "class": "secondary",
+      "srs-name": "900913",
+      "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
+      "advanced": {},
+      "name": "secondary"
+    },
+    {
+      "geometry": "linestring",
+      "extent": [
+        3.3142924690982625,
+        42.54570194836811,
+        8.750815450719449,
+        45.19437358164464
+      ],
+      "Datasource": {
+        "type": "postgis",
+        "table": "(select * from planet_osm_roads where highway='trunk_link') as foo",
+        "extent": "368945.35,5243076.72,974136.32,5652173.71",
+        "key_field": "osm_id",
+        "geometry_field": "way",
+        "host": "localhost",
+        "user": "postgres",
+        "dbname": "osm",
+        "id": "trunk_link",
+        "project": "osm-tilemill",
+        "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
+        "extent_cache": "auto"
+      },
+      "id": "trunk_link",
+      "class": "trunk_link",
+      "srs-name": "900913",
+      "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
+      "advanced": {},
+      "name": "trunk_link"
+    },
+    {
+      "geometry": "linestring",
+      "extent": [
+        3.3142924690982625,
+        42.54570194836811,
+        8.750815450719449,
+        45.19437358164464
+      ],
+      "Datasource": {
+        "type": "postgis",
+        "table": "(select * from planet_osm_roads where highway='trunk') as foo",
+        "extent": "368945.35,5243076.72,974136.32,5652173.71",
+        "key_field": "osm_id",
+        "geometry_field": "way",
+        "host": "localhost",
+        "user": "postgres",
+        "dbname": "osm",
+        "id": "trunk",
+        "project": "osm-tilemill",
+        "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
+        "extent_cache": "auto"
+      },
+      "id": "trunk",
+      "class": "trunk",
+      "srs-name": "900913",
+      "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
+      "advanced": {},
+      "name": "trunk"
+    },
+    {
+      "geometry": "linestring",
+      "extent": [
+        3.3142924690982625,
+        42.54570194836811,
+        8.750815450719449,
+        45.19437358164464
+      ],
+      "Datasource": {
+        "type": "postgis",
+        "table": "(select * from planet_osm_roads where highway='primary_link') as foo",
+        "extent": "368945.35,5243076.72,974136.32,5652173.71",
+        "key_field": "osm_id",
+        "geometry_field": "way",
+        "host": "localhost",
+        "user": "postgres",
+        "dbname": "osm",
+        "id": "primary_link",
+        "project": "osm-tilemill",
+        "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
+        "extent_cache": "auto"
+      },
+      "id": "primary_link",
+      "class": "primary_link",
+      "srs-name": "900913",
+      "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
+      "advanced": {},
+      "name": "primary_link"
+    },
+    {
+      "geometry": "linestring",
+      "extent": [
+        3.3142924690982625,
+        42.54570194836811,
+        8.750815450719449,
+        45.19437358164464
+      ],
+      "Datasource": {
+        "type": "postgis",
+        "table": "(select * from planet_osm_roads where highway='primary') as foo",
+        "extent": "368945.35,5243076.72,974136.32,5652173.71",
+        "key_field": "osm_id",
+        "geometry_field": "way",
+        "host": "localhost",
+        "user": "postgres",
+        "dbname": "osm",
+        "id": "primary",
+        "project": "osm-tilemill",
+        "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
+        "extent_cache": "auto"
+      },
+      "id": "primary",
+      "class": "primary",
+      "srs-name": "900913",
+      "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
+      "advanced": {},
+      "name": "primary"
+    },
+    {
+      "geometry": "linestring",
+      "extent": [
+        3.3142924690982625,
+        42.54570194836811,
+        8.750815450719449,
+        45.19437358164464
+      ],
+      "Datasource": {
+        "type": "postgis",
+        "table": "(select * from planet_osm_roads where highway='motorway_link') as foo",
+        "extent": "368945.35,5243076.72,974136.32,5652173.71",
+        "key_field": "osm_id",
+        "geometry_field": "way",
+        "host": "localhost",
+        "user": "postgres",
+        "dbname": "osm",
+        "id": "motorway_link",
+        "project": "osm-tilemill",
+        "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
+        "extent_cache": "auto"
+      },
+      "id": "motorway_link",
+      "class": "motorway_link",
+      "srs-name": "900913",
+      "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
+      "advanced": {},
+      "name": "motorway_link"
+    },
+    {
+      "geometry": "linestring",
+      "extent": [
+        3.3142924690982625,
+        42.54570194836811,
+        8.750815450719449,
+        45.19437358164464
+      ],
+      "Datasource": {
+        "type": "postgis",
+        "table": "(select * from planet_osm_roads where highway='motorway') as foo",
+        "extent": "368945.35,5243076.72,974136.32,5652173.71",
+        "key_field": "osm_id",
+        "geometry_field": "way",
+        "host": "localhost",
+        "user": "postgres",
+        "dbname": "osm",
+        "id": "motorway",
+        "project": "osm-tilemill",
+        "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
+        "extent_cache": "auto"
+      },
+      "id": "motorway",
+      "class": "motorway",
+      "srs-name": "900913",
+      "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
+      "advanced": {},
+      "name": "motorway"
     }
   ],
   "scale": 1,
