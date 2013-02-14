@@ -1,0 +1,18 @@
+    {
+      "geometry": "linestring",
+      "extent": [
+        3.9995833333333337,
+        42.98220238095238,
+        8.000416666666668,
+        46.00041666666667
+      ],
+      "id": "contour",
+      "class": "contour",
+      "Datasource": {
+        "file": "/home/mdione/src/projects/osm/data/height/contour.shp"
+      },
+      "srs-name": "autodetect",
+      "srs": "",
+      "advanced": {},
+      "name": "contour"
+    }

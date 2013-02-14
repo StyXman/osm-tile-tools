@@ -13,7 +13,9 @@ south=$(cat $extent_file | awk 'BEGIN { FS= "[\\(\\), ]" } { print $5 }')
 east=$(cat $extent_file | awk 'BEGIN { FS= "[\\(\\), ]" } { print $9 }')
 north=$(cat $extent_file | awk 'BEGIN { FS= "[\\(\\), ]" } { print $11 }')
 
-for layer in roads waterways points natural places railways; do
+source ../../layers.sh
+
+for layer in $layers; do
 (
 cat << EOS
     {

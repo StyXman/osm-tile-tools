@@ -1,19 +1,19 @@
 {
   "bounds": [
-    -180,
-    -85.05112877980659,
-    180,
-    85.05112877980659
+    4.1309,
+    35.8534,
+    19.2041,
+    49.9512
   ],
   "center": [
-    0,
-    0,
-    2
+    7.1141,
+    43.555,
+    5
   ],
-  "format": "png",
+  "format": "png8",
   "interactivity": false,
-  "minzoom": 0,
-  "maxzoom": 22,
+  "minzoom": 3,
+  "maxzoom": 17,
   "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
   "Stylesheet": [
     "style.mss"
@@ -21,12 +21,6 @@
   "Layer": [
     {
       "geometry": "raster",
-      "extent": [
-        -30.01041677225,
-        -0.010416762649995803,
-        180,
-        60.010416474650015
-      ],
       "id": "hillshade-vhd",
       "class": "hillshade-vhd",
       "Datasource": {
@@ -35,16 +29,28 @@
       "srs-name": "WGS84",
       "srs": "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs",
       "advanced": {},
-      "name": "hillshade-vhd"
+      "name": "hillshade-vhd",
+      "extent": [
+        3.9995833333333333,
+        41.999583333333334,
+        8.000416666666666,
+        46.000416666666666
+      ]
     },
     {
       "geometry": "raster",
-      "extent": [
-        -30.01041677225,
-        -0.010416762649995803,
-        180,
-        60.010416474650015
-      ],
+      "id": "slope-vhd",
+      "class": "slope-vhd",
+      "Datasource": {
+        "file": "/home/mdione/src/projects/osm/data/height/mixed_slopeshade.tif"
+      },
+      "srs-name": "WGS84",
+      "srs": "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs",
+      "advanced": {},
+      "name": "slope-vhd"
+    },
+    {
+      "geometry": "raster",
       "id": "relief-vhd",
       "class": "relief-vhd",
       "Datasource": {
@@ -58,25 +64,147 @@
     {
       "geometry": "linestring",
       "extent": [
-        3.3142924690982625,
-        42.54570194836811,
-        8.750815450719449,
-        45.19437358164464
+        4.308294,
+        42.982774,
+        7.740196,
+        45.148719
       ],
+      "id": "natural_provence-alpes-cote-d-azur",
+      "class": "natural",
       "Datasource": {
-        "type": "postgis",
-        "table": "(select * from planet_osm_roads where boundary='administrative') as foo",
-        "extent": "",
-        "key_field": "osm_id",
-        "geometry_field": "way",
-        "host": "localhost",
-        "user": "postgres",
-        "dbname": "osm"
+        "file": "/home/mdione/src/projects/osm/data/osm/provence-alpes-cote-d-azur/natural.shp"
       },
+      "srs-name": "autodetect",
+      "srs": "",
+      "advanced": {},
+      "name": "natural_provence-alpes-cote-d-azur"
+    },
+    {
+      "geometry": "linestring",
+      "extent": [
+        4.308294,
+        42.982774,
+        7.740196,
+        45.148719
+      ],
+      "id": "waterways_provence-alpes-cote-d-azur",
+      "class": "waterways",
+      "Datasource": {
+        "file": "/home/mdione/src/projects/osm/data/osm/provence-alpes-cote-d-azur/waterways.shp"
+      },
+      "srs-name": "autodetect",
+      "srs": "",
+      "advanced": {},
+      "name": "waterways_provence-alpes-cote-d-azur"
+    },
+    {
+      "geometry": "linestring",
+      "extent": [
+        4.308294,
+        42.982774,
+        7.740196,
+        45.148719
+      ],
+      "id": "landuse_provence-alpes-cote-d-azur",
+      "class": "landuse",
+      "Datasource": {
+        "file": "/home/mdione/src/projects/osm/data/osm/provence-alpes-cote-d-azur/landuse.shp"
+      },
+      "srs-name": "autodetect",
+      "srs": "",
+      "advanced": {},
+      "name": "landuse_provence-alpes-cote-d-azur"
+    },
+    {
+      "geometry": "linestring",
+      "extent": [
+        4.308294,
+        42.982774,
+        7.740196,
+        45.148719
+      ],
+      "id": "roads_provence-alpes-cote-d-azur",
+      "class": "roads",
+      "Datasource": {
+        "file": "/home/mdione/src/projects/osm/data/osm/provence-alpes-cote-d-azur/roads.shp"
+      },
+      "srs-name": "autodetect",
+      "srs": "",
+      "advanced": {},
+      "name": "roads_provence-alpes-cote-d-azur"
+    },
+    {
+      "geometry": "linestring",
+      "extent": [
+        4.308294,
+        42.982774,
+        7.740196,
+        45.148719
+      ],
+      "id": "railways_provence-alpes-cote-d-azur",
+      "class": "railways",
+      "Datasource": {
+        "file": "/home/mdione/src/projects/osm/data/osm/provence-alpes-cote-d-azur/railways.shp"
+      },
+      "srs-name": "autodetect",
+      "srs": "",
+      "advanced": {},
+      "name": "railways_provence-alpes-cote-d-azur"
+    },
+    {
+      "geometry": "linestring",
+      "extent": [
+        4.308294,
+        42.982774,
+        7.740196,
+        45.148719
+      ],
+      "id": "points_provence-alpes-cote-d-azur",
+      "class": "points",
+      "Datasource": {
+        "file": "/home/mdione/src/projects/osm/data/osm/provence-alpes-cote-d-azur/points.shp"
+      },
+      "srs-name": "autodetect",
+      "srs": "",
+      "advanced": {},
+      "name": "points_provence-alpes-cote-d-azur"
+    },
+    {
+      "geometry": "linestring",
+      "extent": [
+        4.308294,
+        42.982774,
+        7.740196,
+        45.148719
+      ],
+      "id": "places_provence-alpes-cote-d-azur",
+      "class": "places",
+      "Datasource": {
+        "file": "/home/mdione/src/projects/osm/data/osm/provence-alpes-cote-d-azur/places.shp"
+      },
+      "srs-name": "autodetect",
+      "srs": "",
+      "advanced": {},
+      "name": "places_provence-alpes-cote-d-azur"
+    },
+    {
+      "geometry": "polygon",
+      "extent": [
+        -179.999026740165,
+        -84.99999999735422,
+        179.999026740165,
+        83.62359599999999
+      ],
       "id": "boundaries",
       "class": "boundaries",
-      "srs-name": "900913",
-      "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
+      "Datasource": {
+        "file": "/home/mdione/osm/world_boundaries/world_bnd_m.shp",
+        "id": "boundaries",
+        "project": "osm-tilemill",
+        "srs": ""
+      },
+      "srs-name": "autodetect",
+      "srs": "",
       "advanced": {},
       "name": "boundaries",
       "status": "off"
@@ -84,390 +212,20 @@
     {
       "geometry": "linestring",
       "extent": [
-        4.99986111111111,
-        42.9946805555556,
-        7.999861111111111,
-        47.0001388888889
+        3.9995833333333337,
+        42.98220238095238,
+        8.000416666666668,
+        46.00041666666667
       ],
+      "id": "contour",
+      "class": "contour",
       "Datasource": {
-        "type": "postgis",
-        "table": "(select gid, way, height::integer from contours where height::integer % 10=0 and height::integer % 50!=0 and height::integer % 100!=0 and height::integer % 500!=0 and height::integer % 1000!=0) as foo",
-        "key_field": "gid",
-        "geometry_field": "way",
-        "extent_cache": "auto",
-        "extent": "4.99986111111111,42.9946805555556,7.99986111111111,47.0001388888889",
-        "host": "localhost",
-        "user": "postgres",
-        "dbname": "osm"
+        "file": "/home/mdione/src/projects/osm/data/height/contour.shp"
       },
-      "id": "contours10",
-      "class": "contours10",
-      "srs-name": "WGS84",
-      "srs": "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs",
+      "srs-name": "autodetect",
+      "srs": "",
       "advanced": {},
-      "name": "contours10"
-    },
-    {
-      "geometry": "linestring",
-      "extent": [
-        4.99986111111111,
-        42.9946805555556,
-        7.999861111111111,
-        47.0001388888889
-      ],
-      "Datasource": {
-        "type": "postgis",
-        "table": "(select gid, way, height::integer from contours where height::integer % 50=0 and height::integer % 100!=0 and height::integer % 500!=0 and height::integer % 1000!=0) as foo",
-        "key_field": "gid",
-        "geometry_field": "way",
-        "extent_cache": "auto",
-        "extent": "4.99986111111111,42.9946805555556,7.99986111111111,47.0001388888889",
-        "host": "localhost",
-        "user": "postgres",
-        "dbname": "osm"
-      },
-      "id": "contours50",
-      "class": "contours50",
-      "srs-name": "WGS84",
-      "srs": "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs",
-      "advanced": {},
-      "name": "contours50"
-    },
-    {
-      "geometry": "linestring",
-      "extent": [
-        4.99986111111111,
-        42.9946805555556,
-        7.999861111111111,
-        47.0001388888889
-      ],
-      "Datasource": {
-        "type": "postgis",
-        "table": "(select gid, way, height::integer from contours where height::integer % 100=0 and height::integer % 500!=0 and height::integer % 1000!=0) as foo",
-        "key_field": "gid",
-        "geometry_field": "way",
-        "extent_cache": "auto",
-        "extent": "4.99986111111111,42.9946805555556,7.99986111111111,47.0001388888889",
-        "host": "localhost",
-        "user": "postgres",
-        "dbname": "osm"
-      },
-      "id": "contours100",
-      "class": "contours100",
-      "srs-name": "WGS84",
-      "srs": "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs",
-      "advanced": {},
-      "name": "contours100"
-    },
-    {
-      "geometry": "linestring",
-      "extent": [
-        4.99986111111111,
-        42.9946805555556,
-        7.999861111111111,
-        47.0001388888889
-      ],
-      "Datasource": {
-        "type": "postgis",
-        "table": "(select gid, way, height::integer from contours where height::integer % 250=0 and height::integer % 500!=0 and height::integer % 1000!=0) as foo",
-        "key_field": "gid",
-        "geometry_field": "way",
-        "extent_cache": "auto",
-        "extent": "4.99986111111111,42.9946805555556,7.99986111111111,47.0001388888889",
-        "host": "localhost",
-        "user": "postgres",
-        "dbname": "osm"
-      },
-      "id": "contours250",
-      "class": "contours250",
-      "srs-name": "WGS84",
-      "srs": "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs",
-      "advanced": {},
-      "name": "contours250"
-    },
-    {
-      "geometry": "linestring",
-      "extent": [
-        4.99986111111111,
-        42.9946805555556,
-        7.999861111111111,
-        47.0001388888889
-      ],
-      "Datasource": {
-        "type": "postgis",
-        "table": "(select gid, way, height::integer from contours where height::integer % 500=0 and height::integer % 1000!=0) as foo",
-        "key_field": "gid",
-        "geometry_field": "way",
-        "extent_cache": "auto",
-        "extent": "4.99986111111111,42.9946805555556,7.99986111111111,47.0001388888889",
-        "host": "localhost",
-        "user": "postgres",
-        "dbname": "osm"
-      },
-      "id": "contours500",
-      "class": "contours500",
-      "srs-name": "WGS84",
-      "srs": "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs",
-      "advanced": {},
-      "name": "contours500"
-    },
-    {
-      "geometry": "linestring",
-      "extent": [
-        4.99986111111111,
-        42.9946805555556,
-        7.999861111111111,
-        47.0001388888889
-      ],
-      "Datasource": {
-        "type": "postgis",
-        "table": "(select gid, way, height::integer from contours where height::integer % 1000=0) as foo",
-        "key_field": "gid",
-        "geometry_field": "way",
-        "extent_cache": "auto",
-        "extent": "4.99986111111111,42.9946805555556,7.99986111111111,47.0001388888889",
-        "host": "localhost",
-        "user": "postgres",
-        "dbname": "osm"
-      },
-      "id": "contours1000",
-      "class": "contours1000",
-      "srs-name": "WGS84",
-      "srs": "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs",
-      "advanced": {},
-      "name": "contours1000"
-    },
-    {
-      "geometry": "linestring",
-      "extent": [
-        3.3142924690982625,
-        42.54570194836811,
-        8.750815450719449,
-        45.19437358164464
-      ],
-      "Datasource": {
-        "type": "postgis",
-        "table": "(select * from planet_osm_roads where highway='secondary_link') as foo",
-        "extent": "368945.35,5243076.72,974136.32,5652173.71",
-        "key_field": "osm_id",
-        "geometry_field": "way",
-        "host": "localhost",
-        "user": "postgres",
-        "dbname": "osm",
-        "id": "secondary_link",
-        "project": "osm-tilemill",
-        "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
-        "extent_cache": "auto"
-      },
-      "id": "secondary_link",
-      "class": "secondary_link",
-      "srs-name": "900913",
-      "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
-      "advanced": {},
-      "name": "secondary_link"
-    },
-    {
-      "geometry": "linestring",
-      "extent": [
-        3.3142924690982625,
-        42.54570194836811,
-        8.750815450719449,
-        45.19437358164464
-      ],
-      "Datasource": {
-        "type": "postgis",
-        "table": "(select * from planet_osm_roads where highway='secondary') as foo",
-        "extent": "368945.35,5243076.72,974136.32,5652173.71",
-        "key_field": "osm_id",
-        "geometry_field": "way",
-        "host": "localhost",
-        "user": "postgres",
-        "dbname": "osm",
-        "id": "secondary",
-        "project": "osm-tilemill",
-        "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
-        "extent_cache": "auto"
-      },
-      "id": "secondary",
-      "class": "secondary",
-      "srs-name": "900913",
-      "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
-      "advanced": {},
-      "name": "secondary"
-    },
-    {
-      "geometry": "linestring",
-      "extent": [
-        3.3142924690982625,
-        42.54570194836811,
-        8.750815450719449,
-        45.19437358164464
-      ],
-      "Datasource": {
-        "type": "postgis",
-        "table": "(select * from planet_osm_roads where highway='trunk_link') as foo",
-        "extent": "368945.35,5243076.72,974136.32,5652173.71",
-        "key_field": "osm_id",
-        "geometry_field": "way",
-        "host": "localhost",
-        "user": "postgres",
-        "dbname": "osm",
-        "id": "trunk_link",
-        "project": "osm-tilemill",
-        "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
-        "extent_cache": "auto"
-      },
-      "id": "trunk_link",
-      "class": "trunk_link",
-      "srs-name": "900913",
-      "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
-      "advanced": {},
-      "name": "trunk_link"
-    },
-    {
-      "geometry": "linestring",
-      "extent": [
-        3.3142924690982625,
-        42.54570194836811,
-        8.750815450719449,
-        45.19437358164464
-      ],
-      "Datasource": {
-        "type": "postgis",
-        "table": "(select * from planet_osm_roads where highway='trunk') as foo",
-        "extent": "368945.35,5243076.72,974136.32,5652173.71",
-        "key_field": "osm_id",
-        "geometry_field": "way",
-        "host": "localhost",
-        "user": "postgres",
-        "dbname": "osm",
-        "id": "trunk",
-        "project": "osm-tilemill",
-        "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
-        "extent_cache": "auto"
-      },
-      "id": "trunk",
-      "class": "trunk",
-      "srs-name": "900913",
-      "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
-      "advanced": {},
-      "name": "trunk"
-    },
-    {
-      "geometry": "linestring",
-      "extent": [
-        3.3142924690982625,
-        42.54570194836811,
-        8.750815450719449,
-        45.19437358164464
-      ],
-      "Datasource": {
-        "type": "postgis",
-        "table": "(select * from planet_osm_roads where highway='primary_link') as foo",
-        "extent": "368945.35,5243076.72,974136.32,5652173.71",
-        "key_field": "osm_id",
-        "geometry_field": "way",
-        "host": "localhost",
-        "user": "postgres",
-        "dbname": "osm",
-        "id": "primary_link",
-        "project": "osm-tilemill",
-        "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
-        "extent_cache": "auto"
-      },
-      "id": "primary_link",
-      "class": "primary_link",
-      "srs-name": "900913",
-      "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
-      "advanced": {},
-      "name": "primary_link"
-    },
-    {
-      "geometry": "linestring",
-      "extent": [
-        3.3142924690982625,
-        42.54570194836811,
-        8.750815450719449,
-        45.19437358164464
-      ],
-      "Datasource": {
-        "type": "postgis",
-        "table": "(select * from planet_osm_roads where highway='primary') as foo",
-        "extent": "368945.35,5243076.72,974136.32,5652173.71",
-        "key_field": "osm_id",
-        "geometry_field": "way",
-        "host": "localhost",
-        "user": "postgres",
-        "dbname": "osm",
-        "id": "primary",
-        "project": "osm-tilemill",
-        "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
-        "extent_cache": "auto"
-      },
-      "id": "primary",
-      "class": "primary",
-      "srs-name": "900913",
-      "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
-      "advanced": {},
-      "name": "primary"
-    },
-    {
-      "geometry": "linestring",
-      "extent": [
-        3.3142924690982625,
-        42.54570194836811,
-        8.750815450719449,
-        45.19437358164464
-      ],
-      "Datasource": {
-        "type": "postgis",
-        "table": "(select * from planet_osm_roads where highway='motorway_link') as foo",
-        "extent": "368945.35,5243076.72,974136.32,5652173.71",
-        "key_field": "osm_id",
-        "geometry_field": "way",
-        "host": "localhost",
-        "user": "postgres",
-        "dbname": "osm",
-        "id": "motorway_link",
-        "project": "osm-tilemill",
-        "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
-        "extent_cache": "auto"
-      },
-      "id": "motorway_link",
-      "class": "motorway_link",
-      "srs-name": "900913",
-      "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
-      "advanced": {},
-      "name": "motorway_link"
-    },
-    {
-      "geometry": "linestring",
-      "extent": [
-        3.3142924690982625,
-        42.54570194836811,
-        8.750815450719449,
-        45.19437358164464
-      ],
-      "Datasource": {
-        "type": "postgis",
-        "table": "(select * from planet_osm_roads where highway='motorway') as foo",
-        "extent": "368945.35,5243076.72,974136.32,5652173.71",
-        "key_field": "osm_id",
-        "geometry_field": "way",
-        "host": "localhost",
-        "user": "postgres",
-        "dbname": "osm",
-        "id": "motorway",
-        "project": "osm-tilemill",
-        "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
-        "extent_cache": "auto"
-      },
-      "id": "motorway",
-      "class": "motorway",
-      "srs-name": "900913",
-      "srs": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over",
-      "advanced": {},
-      "name": "motorway"
+      "name": "contour"
     }
   ],
   "scale": 1,
