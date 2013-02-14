@@ -1,3 +1,3 @@
 #! /bin/bash
 
-wget http://download.geofabrik.de/openstreetmap/europe/$i.shp.zip
+wget http://download.geofabrik.de/openstreetmap/europe/$1.shp.zip

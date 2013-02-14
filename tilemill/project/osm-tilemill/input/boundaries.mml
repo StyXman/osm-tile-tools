@@ -1,0 +1,21 @@
+    {
+      "geometry": "polygon",
+      "extent": [
+        -179.999026740165,
+        -84.99999999735422,
+        179.999026740165,
+        83.62359599999999
+      ],
+      "id": "boundaries",
+      "class": "boundaries",
+      "Datasource": {
+        "file": "/home/mdione/osm/world_boundaries/world_bnd_m.shp",
+        "id": "boundaries",
+        "project": "osm-tilemill",
+        "srs": ""
+      },
+      "srs-name": "autodetect",
+      "srs": "",
+      "advanced": {},
+      "name": "boundaries"
+    },
