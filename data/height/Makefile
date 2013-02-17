@@ -9,7 +9,7 @@ relief = mixed_relief.tif
 
 gopts = -co compress=lzw 
 
-all: $(hillshade) $(relief) $(slopeshade) contour.shp 
+all: $(hillshade) $(relief) $(slopeshade) contour100.shp contour500.shp contour1000.shp
 # $(shapefiles)
 
 # TODO: gdalinfo /vsizip/N43E016.zip/N43E006.hgt
@@ -42,6 +42,18 @@ mixed_contour.sql: contour.shp
 
 contour.shp: $(master)
 	$(gdal-contour)
+
+contour1000.shp: contour.shp
+	ogr2ogr -f "ESRI Shapefile" -overwrite -where "height >0 and height % 1000 = 0" contour1000.shp contour.shp
+
+contour500.shp: contour.shp
+	ogr2ogr -f "ESRI Shapefile" -overwrite -where "height >0 and height % 500 = 0 and (height % 1000) != 0" contour500.shp contour.shp
+
+contour100.shp: contour.shp
+	ogr2ogr -f "ESRI Shapefile" -overwrite -where "height >0 and height % 100 = 0 and (height % 1000) / 100 != 0" contour100.shp contour.shp
+
+#contour10.shp: contour.shp:
+#	ogr2ogr -f "ESRI Shapefile" -overwrite -where "height >0 and height % 10000) / 1000 !=0 and (height % 1000) / 100 != 0" contour10.shp contour.shp
 
 # %.sql: %.shp
 # 	$(shp2pgsql)
