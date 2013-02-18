@@ -1,5 +1,3 @@
-// kate: syntax javascript; indent-width 2;
-
 Map {
   background-color: #b8dee6;
 }
@@ -22,9 +20,11 @@ Map {
   [zoom < 16] {
     raster-opacity: 0.5;
   }
+  /*
   [zoom > 15] {
     raster-opacity: 0;
   }
+  */
 }
 
 #relief-vhd {
@@ -43,82 +43,6 @@ Map {
 
 #slope-vhd {
   raster-opacity: 0.5;
-}
-
-#contours1000 {
-  [zoom > 5] {
-    line-color: #333;
-    line-join: round;
-    line-opacity: 0.7;
-  }
-  [zoom > 10] {
-    ::labels {
-      text-name: "[height]";
-      text-face-name: "DejaVu Sans Book";
-      text-halo-radius: 1;
-      text-opacity: 0.7;
-      text-placement: line;
-    }
-  }
-}
-#contours500 {
-  [zoom > 8] {
-    line-color: #333;
-    line-join: round;
-    line-opacity: 0.7;
-  }
-  [zoom > 12] {
-    ::labels {
-      text-name: "[height]";
-      text-face-name: "DejaVu Sans Book";
-      text-halo-radius: 1;
-      text-placement: line;
-    }
-  }
-}
-#contours250 {
-  [zoom > 10][zoom < 12] {
-    line-color: #333;
-    line-join: round;
-    line-opacity: 0.7;
-  }
-}
-#contours100 {
-  [zoom > 12] {
-    line-color: #333;
-    line-join: round;
-    line-opacity: 0.5;
-  }
-  [zoom > 14] {
-    ::labels {
-      text-name: "[height]";
-      text-face-name: "DejaVu Sans Book";
-      text-halo-radius: 1;
-      text-opacity: 0.7;
-      text-placement: line;
-    }
-  }
-}
-#contours50 {
-  [zoom > 14] {
-    line-color: #333;
-    line-join: round;
-    line-opacity: 0.7;
-  }
-  [zoom > 16] {
-    ::labels {
-      text-name: "[height]";
-      text-face-name: "DejaVu Sans Book";
-      text-halo-radius: 1;
-      text-opacity: 0.7;
-      text-placement: line;
-    }
-  }
-}
-#contours10 [zoom > 16] {
-    line-color: #333;
-    line-join: round;
-    line-opacity: 0.3;
 }
 
 @water: #b8dee6;
@@ -245,6 +169,23 @@ Map {
   line-join: round;
   */
 
+  [type="track"] {
+    [zoom>15] {
+      ::outline {
+        line-color: @road-border;
+        line-width: 2;
+        line-join: round;
+        line-dasharray: 5, 3;
+      }
+      ::inner {
+        line-color: #7f7f00;
+        line-width: 1;
+        line-join: round;
+        line-dasharray: 5, 3;
+      }
+    }
+  }
+
   [type="footway"] {
     [zoom>15] {
       ::outline {
@@ -322,23 +263,6 @@ Map {
         line-width: 2;
         line-join: round;
         line-dasharray: 3, 2;
-      }
-    }
-  }
-
-  [type="track"] {
-    [zoom>15] {
-      ::outline {
-        line-color: @road-border;
-        line-width: 2;
-        line-join: round;
-        line-dasharray: 5, 3;
-      }
-      ::inner {
-        line-color: #7f7f00;
-        line-width: 1;
-        line-join: round;
-        line-dasharray: 5, 3;
       }
     }
   }
@@ -684,18 +608,61 @@ Map {
   }
 }
 
-#places {
-  marker-width:6;
-  marker-fill:#f45;
-  marker-line-color:#813;
-  marker-allow-overlap:true;
+#contour1000 {
+  [zoom > 7] {
+    line-width: 1;
+    line-color: #1f1f1f;
+    line-smooth: 0.8;
+    line-opacity: 0.8;
+  }
+  [zoom > 11] {
+    line-width: 1.5;
+    line-color: #1f1f1f;
+    line-smooth: 0.8;
+    line-opacity: 0.8;
+  }
+  [zoom > 11] {
+    ::labels {
+      text-name: "[height]";
+      text-face-name: "DejaVu Sans Book";
+      text-halo-radius: 1;
+      text-opacity: 0.7;
+      text-placement: line;
+    }
+  }
 }
 
-#contour {
+#contour500 {
   [zoom > 11] {
     line-width: 1;
-    line-color: #dc143c;
+    line-color: #1f1f1f;
     line-smooth: 0.8;
+    line-opacity: 0.6;
+  }
+  [zoom > 11] {
+    line-width: 1;
+    line-color: #1f1f1f;
+    line-smooth: 0.8;
+    line-opacity: 0.8;
+  }
+  [zoom > 13] {
+    ::labels {
+      text-name: "[height]";
+      text-face-name: "DejaVu Sans Book";
+      text-halo-radius: 1;
+      text-opacity: 0.7;
+      text-placement: line;
+    }
+  }
+}
+
+#contour100 {
+  [zoom > 13] {
+    line-width: 1;
+    line-color: #1f1f1f;
+    line-smooth: 0.8;
+    line-opacity: 0.4;
+
     [zoom > 14] {
       ::labels {
         text-name: "[height]";
@@ -707,3 +674,20 @@ Map {
     }
   }
 }
+
+#contour10 {
+  [zoom > 15] {
+    line-width: 1;
+    line-color: #1f1f1f;
+    line-smooth: 0.8;
+    line-opacity: 0.2;
+  }
+}
+
+#places {
+  marker-width:6;
+  marker-fill:#f45;
+  marker-line-color:#813;
+  marker-allow-overlap:true;
+}
+
