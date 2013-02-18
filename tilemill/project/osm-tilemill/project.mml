@@ -29,13 +29,7 @@
       "srs-name": "WGS84",
       "srs": "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs",
       "advanced": {},
-      "name": "hillshade-vhd",
-      "extent": [
-        3.9995833333333333,
-        41.999583333333334,
-        8.000416666666666,
-        46.000416666666666
-      ]
+      "name": "hillshade-vhd"
     },
     {
       "geometry": "raster",
@@ -78,7 +72,8 @@
       "srs": "",
       "advanced": {},
       "name": "natural_provence-alpes-cote-d-azur"
-    },
+    }
+    ,
     {
       "geometry": "linestring",
       "extent": [
@@ -96,7 +91,8 @@
       "srs": "",
       "advanced": {},
       "name": "waterways_provence-alpes-cote-d-azur"
-    },
+    }
+    ,
     {
       "geometry": "linestring",
       "extent": [
@@ -114,7 +110,8 @@
       "srs": "",
       "advanced": {},
       "name": "landuse_provence-alpes-cote-d-azur"
-    },
+    }
+    ,
     {
       "geometry": "linestring",
       "extent": [
@@ -132,7 +129,8 @@
       "srs": "",
       "advanced": {},
       "name": "roads_provence-alpes-cote-d-azur"
-    },
+    }
+    ,
     {
       "geometry": "linestring",
       "extent": [
@@ -150,7 +148,8 @@
       "srs": "",
       "advanced": {},
       "name": "railways_provence-alpes-cote-d-azur"
-    },
+    }
+    ,
     {
       "geometry": "linestring",
       "extent": [
@@ -168,7 +167,8 @@
       "srs": "",
       "advanced": {},
       "name": "points_provence-alpes-cote-d-azur"
-    },
+    }
+    ,
     {
       "geometry": "linestring",
       "extent": [
@@ -186,7 +186,8 @@
       "srs": "",
       "advanced": {},
       "name": "places_provence-alpes-cote-d-azur"
-    },
+    }
+    ,
     {
       "geometry": "polygon",
       "extent": [
@@ -198,13 +199,15 @@
       "id": "boundaries",
       "class": "boundaries",
       "Datasource": {
-        "file": "/home/mdione/osm/world_boundaries/world_bnd_m.shp"
+        "file": "/home/mdione/osm/world_boundaries/world_bnd_m.shp",
+        "id": "boundaries",
+        "project": "osm-tilemill",
+        "srs": ""
       },
       "srs-name": "autodetect",
       "srs": "",
       "advanced": {},
-      "name": "boundaries",
-      "status": "off"
+      "name": "boundaries"
     },
     {
       "geometry": "linestring",
