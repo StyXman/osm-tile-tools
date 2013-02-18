@@ -12,10 +12,7 @@ echo '  "Layer": ['
 
 cat relief.mml
 
-# layer_amount=$(echo $layers | wc -w)
-# layer_count=0
-
-# leave unquoted --v
+#            vvvvvvv-- leave this unquoted
 for layer in $layers; do
     echo $layer >&2
     # file_amount=$(ls -1 ${layer}_*.mml | wc -l)
