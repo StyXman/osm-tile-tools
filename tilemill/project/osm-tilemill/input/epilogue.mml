@@ -1,0 +1,5 @@
+  "scale": 1,
+  "metatile": 2,
+  "name": "OSM TileMill",
+  "description": "Tiles made from OSM data with TileMill for in-car map",
+  "attribution": ""
