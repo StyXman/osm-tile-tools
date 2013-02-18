@@ -10,3 +10,5 @@ Map {
   }
 }
 
+@text: "DejaVu Sans Book";
+
