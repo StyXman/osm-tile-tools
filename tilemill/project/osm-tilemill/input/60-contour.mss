@@ -14,7 +14,7 @@
   [zoom > 11] {
     ::labels {
       text-name: "[height]";
-      text-face-name: "DejaVu Sans Book";
+      text-face-name: @text;
       text-halo-radius: 1;
       text-opacity: 0.7;
       text-placement: line;
@@ -38,7 +38,7 @@
   [zoom > 13] {
     ::labels {
       text-name: "[height]";
-      text-face-name: "DejaVu Sans Book";
+      text-face-name: @text;
       text-halo-radius: 1;
       text-opacity: 0.7;
       text-placement: line;
@@ -56,7 +56,7 @@
     [zoom > 14] {
       ::labels {
         text-name: "[height]";
-        text-face-name: "DejaVu Sans Book";
+        text-face-name: @text;
         text-halo-radius: 1;
         text-opacity: 0.7;
         text-placement: line;
