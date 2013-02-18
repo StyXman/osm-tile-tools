@@ -65,3 +65,12 @@
   }
 }
 
+#contour10 {
+  [zoom > 15] {
+    line-width: 1;
+    line-color: #1f1f1f;
+    line-smooth: 0.8;
+    line-opacity: 0.2;
+  }
+}
+
