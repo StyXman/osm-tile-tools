@@ -28,6 +28,16 @@
         line-cap: round;
       }
     }
+    [zoom>15] {
+        text-name: '[name]';
+        text-face-name: @text;
+        text-fill: @text-color;
+        text-placement: line;
+        text-halo-radius: 2;
+        text-halo-fill: @text-halo;
+        // text-min-path-length: 100;
+        text-min-distance: 100;
+    }
   }
 
   [type="living_street"] {
@@ -45,6 +55,16 @@
         line-cap: round;
       }
     }
+    [zoom>15] {
+        text-name: '[name]';
+        text-face-name: @text;
+        text-fill: @text-color;
+        text-placement: line;
+        text-halo-radius: 2;
+        text-halo-fill: @text-halo;
+        // text-min-path-length: 100;
+        text-min-distance: 100;
+    }
   }
 
   [type="unclassified"] {
@@ -61,6 +81,16 @@
         line-join: round;
         line-cap: round;
       }
+    }
+    [zoom>15] {
+        text-name: '[name]';
+        text-face-name: @text;
+        text-fill: @text-color;
+        text-placement: line;
+        text-halo-radius: 2;
+        text-halo-fill: @text-halo;
+        // text-min-path-length: 100;
+        text-min-distance: 100;
     }
   }
 
@@ -92,6 +122,16 @@
         line-join: round;
         line-cap: round;
       }
+    }
+    [zoom>15] {
+        text-name: '[name]';
+        text-face-name: @text;
+        text-fill: @text-color;
+        text-placement: line;
+        text-halo-radius: 2;
+        text-halo-fill: @text-halo;
+        // text-min-path-length: 100;
+        text-min-distance: 100;
     }
   }
 
