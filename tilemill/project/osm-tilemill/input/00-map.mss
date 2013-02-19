@@ -11,4 +11,6 @@ Map {
 }
 
 @text: "DejaVu Sans Book";
+@text-color: #000;
+@text-halo: #fff;
 
