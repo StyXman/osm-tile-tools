@@ -16,7 +16,7 @@
       text-name: "[height]";
       text-face-name: @text;
       text-halo-radius: 1;
-      text-opacity: 0.7;
+      // text-opacity: 0.7;
       text-placement: line;
     }
   }
@@ -58,7 +58,7 @@
         text-name: "[height]";
         text-face-name: @text;
         text-halo-radius: 1;
-        text-opacity: 0.7;
+        // text-opacity: 0.7;
         text-placement: line;
       }
     }
