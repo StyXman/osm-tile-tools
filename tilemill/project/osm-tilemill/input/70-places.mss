@@ -2,20 +2,66 @@
 @big-inner: #afaf3f;
 
 .places {
-  [population < 500] {
-    [zoom > 14] {
-      ::label {
-          text-name: '[name]';
-          text-face-name: @text;
-          text-size: 8;
-          text-fill: @text-color;
-          text-halo-radius: 1.5;
-          text-halo-fill: @text-halo;
-          text-allow-overlap: false;
-      }
+    [type="hamlet"] {
+        [zoom > 12] {
+          ::label {
+              text-name: '[name]';
+              text-face-name: @text;
+              text-size: 8;
+              text-fill: @text-color;
+              text-halo-radius: 1.5;
+              text-halo-fill: @text-halo;
+              text-allow-overlap: false;
+          }
+        }
     }
-  }
 
+    [type="village"] {
+        [zoom > 12] {
+          ::label {
+              text-name: '[name]';
+              text-face-name: @text;
+              text-size: 8;
+              text-fill: @text-color;
+              text-halo-radius: 1.5;
+              text-halo-fill: @text-halo;
+              text-allow-overlap: false;
+          }
+        }
+    }
+
+    /*
+    [type="locality"] {
+        [zoom > 12] {
+          ::label {
+              text-name: '[name]';
+              text-face-name: @text;
+              text-size: 8;
+              text-fill: @text-color;
+              text-halo-radius: 1.5;
+              text-halo-fill: @text-halo;
+              text-allow-overlap: false;
+          }
+        }
+    }
+    */
+
+    /*
+    [type="island"] {
+        [zoom > 12] {
+          ::label {
+              text-name: '[name]';
+              text-face-name: @text;
+              text-size: 8;
+              text-fill: @text-color;
+              text-halo-radius: 1.5;
+              text-halo-fill: @text-halo;
+              text-allow-overlap: false;
+          }
+        }
+    }
+    */
+    
   [population < 10000][population >= 500] {
     [zoom = 14] {
       ::label {
