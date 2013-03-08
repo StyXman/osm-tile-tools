@@ -6,15 +6,16 @@
       }
       */
 
-    /*
-    ::inline {
-        line-color: #5f5f5f;
-        line-width: 2;
-        line-join: round;
-        // line-dasharray: 5, 3;
-      }
-    }
-    */
+        /*
+        ::inline {
+            line-color: #5f5f5f;
+            line-width: 2;
+            line-join: round;
+            // line-dasharray: 5, 3;
+          }
+        }
+        */
+
       ::line {
         line-width: 3;
         line-color: #777;
@@ -25,6 +26,15 @@
         line-dasharray: 6, 6;
       }
     }
+  }
+
+  /*
+  [type="rail"] {
+    
+  }
+  */
+
+  [type="funicular"] {
   }
 }
 
