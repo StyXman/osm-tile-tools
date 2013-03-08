@@ -119,7 +119,7 @@
   }
 
   [population >= 500000] {
-    [zoom > 10][zoom < 15] {
+    [zoom > 5][zoom < 15] {
         ::label {
           text-name: "[name]";
           text-face-name: @text;
