@@ -2,12 +2,12 @@
     [zoom>15] {
       ::outline {
         line-color: @road-border;
-        line-width: 5;
+        line-width: 9;
         line-join: round;
       }
       ::inner {
         line-color: #5f5f5f;
-        line-width: 3;
+        line-width: 7;
         line-join: round;
       }
     }
@@ -17,18 +17,18 @@
     [zoom>14] {
       ::outline {
         line-color: @road-border;
-        line-width: 5;
+        line-width: 9;
         line-join: round;
         line-cap: round;
       }
       ::inner {
         line-color: #7f7f7f;
-        line-width: 3;
+        line-width: 7;
         line-join: round;
         line-cap: round;
       }
     }
-    [zoom>15] {
+    [zoom>14] {
         text-name: '[name]';
         text-face-name: @text;
         text-fill: @text-color;
@@ -44,18 +44,18 @@
     [zoom>14] {
       ::outline {
         line-color: @road-border;
-        line-width: 3;
+        line-width: 7;
         line-join: round;
         line-cap: round;
       }
       ::inner {
         line-color: #7f7f7f;
-        line-width: 2;
+        line-width: 5;
         line-join: round;
         line-cap: round;
       }
     }
-    [zoom>15] {
+    [zoom>14] {
         text-name: '[name]';
         text-face-name: @text;
         text-fill: @text-color;
@@ -71,18 +71,18 @@
     [zoom>13] {
       ::outline {
         line-color: @road-border;
-        line-width: 5;
+        line-width: 9;
         line-join: round;
         line-cap: round;
       }
       ::inner {
         line-color: #7f7f7f;
-        line-width: 3;
+        line-width: 7;
         line-join: round;
         line-cap: round;
       }
     }
-    [zoom>15] {
+    [zoom>14] {
         text-name: '[name]';
         text-face-name: @text;
         text-fill: @text-color;
@@ -99,12 +99,12 @@
     [zoom>12] {
       ::outline {
         line-color: @road-border;
-        line-width: 3;
+        line-width: 5;
         line-join: round;
       }
       ::inner {
         line-color: #7f7f7f;
-        line-width: 2;
+        line-width: 3;
         line-join: round;
       }
     }
@@ -112,18 +112,18 @@
     [zoom>13] {
       ::outline {
         line-color: @road-border;
-        line-width: 5;
+        line-width: 9;
         line-join: round;
         line-cap: round;
       }
       ::inner {
         line-color: #7f7f7f;
-        line-width: 3;
+        line-width: 7;
         line-join: round;
         line-cap: round;
       }
     }
-    [zoom>15] {
+    [zoom>14] {
         text-name: '[name]';
         text-face-name: @text;
         text-fill: @text-color;
