@@ -59,9 +59,13 @@ for s in $( seq 0 $((seqs-1)) ); do
                 # http://www.viewfinderpanoramas.org/dem1/N47E006.zip
                 if ! wget --no-verbose "http://www.viewfinderpanoramas.org/dem1/$zip_file" || file $zip_file | grep -q 'HTML document'; then
                     rm -f $zip_file
-                    zip_file=$(eval "echo ${pattern}.hgt.zip")
                     # http://dds.cr.usgs.gov/srtm/version2_1/SRTM3/Eurasia/N00E072.hgt.zip
+                    zip_file=$(eval "echo ${pattern}.hgt.zip")
                     wget --no-verbose "http://dds.cr.usgs.gov/srtm/version2_1/SRTM3/Eurasia/$zip_file" || true
+                    # http://droppr.org/srtm/v4.1/6_5x5_TIFs/srtm_39_04.zip
+                    # convert -180/180 -90/90 -> 1/72 1/24
+                    # TODO: this calls for python
+                    # wget --no-verbose "http://droppr.org/srtm/v4.1/6_5x5_TIFs/$zip_file" || true
                 fi
 
                 if [ -f $zip_file ]; then
