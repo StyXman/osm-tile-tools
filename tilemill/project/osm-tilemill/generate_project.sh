@@ -11,6 +11,7 @@ cat project.mml
 echo '  "Layer": ['
 
 cat relief.mml
+cat contour.mml
 
 #            vvvvvvv-- leave this unquoted
 for layer in $layers; do
@@ -34,8 +35,7 @@ for layer in $layers; do
     # fi
 done
 
-cat boundaries.mml
-cat contour.mml
+# cat boundaries.mml
 
 echo '  ],'
 cat epilogue.mml
