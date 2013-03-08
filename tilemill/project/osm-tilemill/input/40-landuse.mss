@@ -1,9 +1,11 @@
 .landuse {
+  /*
   [type="railway"] {
     [zoom > 12] {
       polygon-fill: #dfdfdf;
     }
   }
+  */
 
   /* parks */
   [type="recreation_ground"] {
@@ -13,6 +15,18 @@
   }
 
   [type="reservoir"] {
+    [zoom > 7] {
+      polygon-fill: @water;
+    }
+  }
+
+  [type="water"] {
+    [zoom > 7] {
+      polygon-fill: @water;
+    }
+  }
+
+  [type="pond"] {
     [zoom > 7] {
       polygon-fill: @water;
     }
