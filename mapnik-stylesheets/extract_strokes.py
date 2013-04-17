@@ -1,18 +1,11 @@
 #! /usr/bin/env python
 
-from xml.etree import ElementTree
+from lxml import etree
 import sys
 
-class AllEntities:
-    def __getitem__(self, key):
-        # leave the entity intact
-        return  key
+parser = etree.XMLParser(resolve_entities=False)
 
-parser = ElementTree.XMLParser()
-parser.parser.UseForeignDTD(True)
-parser.entity = AllEntities()
-
-tree= ElementTree.parse (sys.argv[1], parser=parser)
+tree= etree.parse (sys.argv[1], parser=parser)
 
 # ignore the first definition
 ignore_first= (
@@ -69,7 +62,7 @@ for level1 in root.iter ('Style'):
                         # first seen
                         if not entity in ignore_first:
                             entities[entity]= color
-                            print '<!ENTITY %s "%s">' % (entity, color)
+                            # print '<!ENTITY %s "%s">' % (entity, color)
                             level3.set ('stroke', "&%s;" % entity)
                         else:
                             print "<!-- ignoring first %s: %s -->" % (entity, color)
@@ -81,7 +74,7 @@ for level1 in root.iter ('Style'):
                                 if old!='seen':
                                     # print "<!-- redefining entity [ %s ] -->" % old
                                     pass
-                                print '<!ENTITY %s "%s">' % (entity, color)
+                                # print '<!ENTITY %s "%s">' % (entity, color)
                                 level3.set ('stroke', "&%s;" % entity)
                             else:
                                 # repeated
@@ -90,5 +83,9 @@ for level1 in root.iter ('Style'):
                             print "<!-- ignoring other %s: %s -->" % (entity, color)
                 else:
                     print "<!-- ignoring %s: %s -->" % (entity, color)
+
+for entity in sorted (entities.keys ()):
+    color= entities[entity]
+    print '<!ENTITY %s "%s">' % (entity, color)
 
 tree.write (sys.argv[2])
