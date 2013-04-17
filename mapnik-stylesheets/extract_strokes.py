@@ -2,6 +2,7 @@
 
 from lxml import etree
 import sys
+from collections import defaultdict
 
 parser = etree.XMLParser(resolve_entities=False)
 
@@ -31,6 +32,7 @@ ignore= (
 root= tree.getroot ()
 
 entities= {}
+colors= defaultdict (list)
 
 for level1 in root.iter ('Style'):
     # style
@@ -64,6 +66,7 @@ for level1 in root.iter ('Style'):
                             entities[entity]= color
                             # print '<!ENTITY %s "%s">' % (entity, color)
                             level3.set ('stroke', "&%s;" % entity)
+                            colors[color].append (entity)
                         else:
                             print "<!-- ignoring first %s: %s -->" % (entity, color)
                             entities[entity]= 'seen'
@@ -76,6 +79,7 @@ for level1 in root.iter ('Style'):
                                     pass
                                 # print '<!ENTITY %s "%s">' % (entity, color)
                                 level3.set ('stroke', "&%s;" % entity)
+                                colors[color].append (entity)
                             else:
                                 # repeated
                                 pass
@@ -84,8 +88,12 @@ for level1 in root.iter ('Style'):
                 else:
                     print "<!-- ignoring %s: %s -->" % (entity, color)
 
-for entity in sorted (entities.keys ()):
-    color= entities[entity]
-    print '<!ENTITY %s "%s">' % (entity, color)
+print
+                    
+for color in sorted (colors.keys ()):
+    print "<!-- %s -->" % color
+    for entity in colors[color]:
+        print '<!ENTITY %s "%s">' % (entity, color)
+    print 
 
 tree.write (sys.argv[2])
