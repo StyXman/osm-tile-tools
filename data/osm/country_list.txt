@@ -1,22 +1,23 @@
-andorra
-france/aquitaine
+# andorra
+# france/aquitaine
 austria
-france/corse
-croatia
-czech_republic
+germany/baden-wuerttemberg
+# france/corse
+# croatia
+czech-republic
 italy
-france/languedoc-roussillon
+# france/languedoc-roussillon
 liechtenstein
-france/midi-pyrenees
+# france/midi-pyrenees
 germany/bayern/mittelfranken
 germany/bayern/niederbayern
 germany/bayern/oberbayern
 germany/bayern/oberpfalz
-portugal
+# portugal
 france/provence-alpes-cote-d-azur
-france/rhone-alpes
+# france/rhone-alpes
 germany/bayern/schwaben
 slovakia
 slovenia
-spain
+# spain
 switzerland
