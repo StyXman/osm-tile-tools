@@ -28,6 +28,33 @@ ignore= (
     'minor-roads-fill_highway__is__platform_or_railway__is__platform',
     )
 
+color_map= {
+    # motorway
+    '#506077': '#000',
+    '#809bc0': '#3f3f7f',
+    '#d6dfea': '#6f6faf',
+
+    # trunk
+    '#477147': '#000',
+    '#a9dba9': '#9f6f9f',
+    '#cdeacd': '#cf9fcf',
+
+    # primary
+    '#8d4346': '#000',
+    '#ec989a': '#3f9f3f',
+    '#f4c3c4': '#6fcf6f',
+
+    # secondary
+    '#a37b48': '#000',
+    '#fed7a5': '#cfaf3f',
+    '#fecc8b': '#cfaf3f',
+    '#fee0b8': '#df9f6f',
+
+    # tertiary
+    '#ffffb3': '#7f7f7f',
+    '#ffc': '#afafaf',
+    }
+
 # map
 root= tree.getroot ()
 
@@ -35,29 +62,38 @@ entities= {}
 colors= defaultdict (list)
 
 for level1 in root.iter ('Style'):
-    # style
     try:
         style= level1.attrib['name']
     except AttibuteError, e:
         print 'malformed style?', e
     else:
         for level2 in level1.iter ('Rule'):
-            # rule
+            #<Rule>
+               #<Filter>[highway] = 'pedestrian' or [highway]='service' or [highway]='footway' or [highway]='path'</Filter>
+               #&maxscale_zoom14;
+               #<LineSymbolizer stroke="grey" stroke-width="1"/>
+            #</Rule>
             for level3 in level2.iter ('Filter'):
                 # actually there should be only one
                 # 'tertiary_link' and not [tunnel]='yes'
                 suffix= level3.text
-                # print name, suffix
-                
+
             for level3 in level2.iter ('LineSymbolizer'):
-                # linesymbolizer stroke
                 color= level3.attrib['stroke']
-                # print color
                 # 'escape' things in text
-                name= ''.join ([ c for c in suffix.replace ('!=', '_isnot_').replace ('=', '_is_').replace ("''", 'empty').replace ('>', '_gt_').replace ('<', '_lt_').replace (' ', '_').replace ('(', 'a_').replace (')', '_z').replace ('-', 'minus_') if c not in "'[]"])
+                stroke_name= ''.join ( [ c  for c in suffix.replace ('!=', '_isnot_').
+                                                            replace ('=', '_is_').
+                                                            replace ("''", 'empty').
+                                                            replace ('>', '_gt_').
+                                                            replace ('<', '_lt_').
+                                                            replace (' ', '_').
+                                                            replace ('(', 'a_').
+                                                            replace (')', '_z').
+                                                            replace ('-', 'minus_')
+                                            if c not in "'[]" ] ).replace ('__', '_')
 
                 # <!ENTITY maxscale_zoom0 "<MaxScaleDenominator>250000000000</MaxScaleDenominator>">
-                entity= "%s_%s" % (style, name)
+                entity= "%s_%s" % (style, stroke_name)
                 if not entity in ignore:
                     level3.set ('stroke', "&%s;" % entity)
                     old= entities.get (entity, None)
@@ -65,8 +101,9 @@ for level1 in root.iter ('Style'):
                         # first seen
                         if not entity in ignore_first:
                             entities[entity]= color
-                            # print '<!ENTITY %s "%s">' % (entity, color)
-                            colors[color].append (entity)
+                            # this is tricky: update the color with the new definition
+                            # or keep it as before
+                            colors[color_map.get (color, color)].append (entity)
                         else:
                             print "<!-- ignoring first %s: %s -->" % (entity, color)
                             entities[entity]= 'seen'
@@ -74,11 +111,7 @@ for level1 in root.iter ('Style'):
                         if not entity in ignore_others:
                             if color!=old:
                                 entities[entity]= color
-                                if old!='seen':
-                                    # print "<!-- redefining entity [ %s ] -->" % old
-                                    pass
-                                # print '<!ENTITY %s "%s">' % (entity, color)
-                                colors[color].append (entity)
+                                colors[color_map.get (color, color)].append (entity)
                             else:
                                 # repeated
                                 pass
