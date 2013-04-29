@@ -29,7 +29,7 @@ mixed_slope.tif: $(master)
 	gdaldem slope $(gopts) -p $< $@
 
 define gdal-contour
-gdal_contour -i 10 -snodata 32767 -a height $< .
+gdal_contour -i 100 -snodata 32767 -a height $< .
 shapeindex $(basename )
 endef
 
