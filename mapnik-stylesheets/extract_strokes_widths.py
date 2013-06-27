@@ -78,28 +78,28 @@ ignore= (
 color_map= {
     # motorway
     '#506077': '#000',
-    '#809bc0': '#3f3f7f',
-    '#d6dfea': '#6f6faf',
+    '#809bc0': '#404d60',
+    '#d6dfea': '#6b6f75',
 
     # trunk
     '#477147': '#000',
-    '#a9dba9': '#9f6f9f',
-    '#cdeacd': '#cf9fcf',
+    '#a9dba9': '#546d54',
+    '#cdeacd': '#667566',
 
     # primary
     '#8d4346': '#000',
-    '#ec989a': '#3f9f3f',
+    '#ec989a': '#764c4d',
     '#f4c3c4': '#6fcf6f',
 
     # secondary
     '#a37b48': '#000',
-    '#fed7a5': '#cfaf3f',
-    '#fecc8b': '#cfaf3f',
-    '#fee0b8': '#df9f6f',
+    '#fed7a5': '#7f6b52',
+    '#fecc8b': '#7f6645',
+    '#fee0b8': '#7f705c',
 
     # tertiary
-    '#ffffb3': '#7f7f7f',
-    '#ffc': '#afafaf',
+    '#ffffb3': '#7f7f59',
+    '#ffc': '#7f7f66',
     }
 
 # map
