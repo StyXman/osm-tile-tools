@@ -13,7 +13,7 @@ index 9b83544..73854a5 100644
 --- a/inc/fontset-settings.xml.inc.template
 +++ b/inc/fontset-settings.xml.inc.template
 @@ -4,13 +4,13 @@ ls `python -c "import mapnik;print mapnik.fontscollectionpath"`-->
- 
+
  <FontSet name="book-fonts">
    <Font face-name="DejaVu Sans Book" />
 -  <Font face-name="unifont Medium" />
@@ -101,7 +101,7 @@ index e9a522e..a130bf7 100644
      </Rule>
 -</Style>
 +</Style-->
- 
+
 -<Layer name="admin-01234" status="on" srs="&osm2pgsql_projection;">
 +<!--Layer name="admin-01234" status="on" srs="&osm2pgsql_projection;">
      <StyleName>admin-01234</StyleName>
@@ -200,7 +200,7 @@ index 25893ca..e8e0f4a 100644
      </Rule>
 @@ -271,7 +271,7 @@
        <PointSymbolizer file="&symbols;/amenity_prison.p.20.png" placement="interior"/>
-     </Rule> 
+     </Rule>
      <Rule>
 -      &maxscale_zoom16;
 +      &maxscale_zoom13;
@@ -251,7 +251,7 @@ index 2377a19..141c2a8 100644
 @@ -23,7 +23,7 @@
      </Rule>
  </Style>
- 
+
 -<Style name="buildings">
 +<!--Style name="buildings">
      <Rule>
@@ -263,7 +263,7 @@ index 2377a19..141c2a8 100644
      </Rule>
 -</Style>
 +</Style-->
- 
+
  <!-- Render only select building types starting at z10. -->
  <Layer name="buildings-lz" status="on" srs="&osm2pgsql_projection;">
 diff --git a/inc/layer-landcover.xml.inc b/inc/layer-landcover.xml.inc
@@ -522,6 +522,15 @@ index 8dd35e7..2a1042f 100644
        <LineSymbolizer stroke="#555" stroke-width="0.2"/>
      </Rule>
      <Rule>
+diff --git a/inc/layer-placenames.xml.inc b/inc/layer-placenames.xml.inc
+index afbd3ee..956c486 100644
+--- a/inc/layer-placenames.xml.inc
++++ b/inc/layer-placenames.xml.inc
+@@ -190,4 +190,3 @@
+       &datasource-settings;
+     </Datasource>
+ </Layer>
+-
 diff --git a/inc/layer-power.xml.inc b/inc/layer-power.xml.inc
 index 77ad41a..a3a43b0 100644
 --- a/inc/layer-power.xml.inc
@@ -538,7 +547,7 @@ index 77ad41a..a3a43b0 100644
      </Datasource>
 -</Layer>
 +</Layer-->
- 
+
 diff --git a/inc/layer-shapefiles.xml.inc b/inc/layer-shapefiles.xml.inc
 index 14da607..d243443 100644
 --- a/inc/layer-shapefiles.xml.inc
@@ -611,7 +620,7 @@ index 2405e5b..08e2e14 100644
 +<!ENTITY layer-terrain SYSTEM "layer-terrain.xml.inc">
 +<!ENTITY layer-contour SYSTEM "layer-contour.xml.inc">
 diff --git a/osm.xml b/osm.xml
-index 0dd195b..04a2735 100644
+index 0dd195b..ba43479 100644
 --- a/osm.xml
 +++ b/osm.xml
 @@ -148,22 +148,22 @@
@@ -632,9 +641,9 @@ index 0dd195b..04a2735 100644
        <Filter>[highway] = 'pedestrian' or [highway]='footway' or [highway]='path'</Filter>
        &maxscale_zoom14;
        <PolygonSymbolizer fill="#ededed"/>
--   </Rule>   
+-   </Rule>
 -   <Rule>
-+    </Rule>   
++    </Rule>
 +    <!--Rule>
        <Filter>[highway] = 'track'</Filter>
        &maxscale_zoom14;
@@ -662,7 +671,7 @@ index 0dd195b..04a2735 100644
        &minscale_zoom18;
        <LineSymbolizer stroke="#506077" stroke-width="13" stroke-dasharray="4,2"/>
      </Rule>
-+    
++
      <Rule>
        <Filter>[highway] = 'trunk' or [highway] = 'trunk_link'</Filter>
        &maxscale_zoom12;
@@ -678,7 +687,7 @@ index 0dd195b..04a2735 100644
        &minscale_zoom18;
        <LineSymbolizer stroke="#8d4346" stroke-width="14" stroke-dasharray="4,2"/>
      </Rule>
-+    
++
      <Rule>
        <Filter>[highway] = 'secondary' or [highway] = 'secondary_link'</Filter>
        &maxscale_zoom12;
@@ -686,7 +695,7 @@ index 0dd195b..04a2735 100644
        &minscale_zoom18;
        <LineSymbolizer stroke="#a37b48" stroke-width="17" stroke-dasharray="4,2"/>
      </Rule>
-+    
++
      <Rule>
        <Filter>[highway] = 'tertiary' or [highway]='tertiary_link'</Filter>
        &maxscale_zoom13;
@@ -694,7 +703,7 @@ index 0dd195b..04a2735 100644
        &minscale_zoom14;
        <LineSymbolizer stroke="#999" stroke-width="7.5" stroke-dasharray="4,2"/>
      </Rule>
-+    
++
      <Rule>
        <Filter>[highway] = 'residential' or [highway] = 'unclassified' or [highway] = 'road'</Filter>
        &maxscale_zoom13;
@@ -702,7 +711,7 @@ index 0dd195b..04a2735 100644
        &minscale_zoom16;
        <LineSymbolizer stroke="#999" stroke-width="11" stroke-dasharray="4,2"/>
      </Rule>
-+    
++
      <Rule>
        <Filter>[highway] = 'tertiary' or [highway]='tertiary_link'</Filter>
        &maxscale_zoom15;
@@ -733,7 +742,7 @@ index 0dd195b..04a2735 100644
 @@ -1331,7 +1340,7 @@
      </Rule>
  </Style>
- <Style name="minor-roads-fill"> 
+ <Style name="minor-roads-fill">
 -    <Rule>
 +    <!--Rule>
        &maxscale_zoom12;
@@ -787,6 +796,49 @@ index 0dd195b..04a2735 100644
      <Rule>
        <Filter>[highway] = 'track'</Filter>
        &maxscale_zoom13;
+@@ -3152,7 +3161,7 @@
+       <Filter>[highway] = 'trunk' or [highway] = 'primary'</Filter>
+       &maxscale_zoom13;
+       &minscale_zoom13;
+-      <TextSymbolizer size="8" fill="black" placement="line" fontset-name="book-fonts" halo-radius="0">[name]</TextSymbolizer>
++      <TextSymbolizer size="8" fill="black" placement="line" fontset-name="book-fonts" halo-radius="1">[name]</TextSymbolizer>
+     </Rule>
+     <Rule>
+       <Filter>[highway] = 'secondary'</Filter>
+@@ -3164,13 +3173,13 @@
+       <Filter>[highway] = 'trunk' or [highway] = 'primary'</Filter>
+       &maxscale_zoom14;
+       &minscale_zoom14;
+-      <TextSymbolizer size="9" fill="black" placement="line" fontset-name="book-fonts" halo-radius="0">[name]</TextSymbolizer>
++      <TextSymbolizer size="9" fill="black" placement="line" fontset-name="book-fonts" halo-radius="1">[name]</TextSymbolizer>
+     </Rule>
+     <Rule>
+       <Filter>[highway] = 'trunk' or [highway] = 'primary'</Filter>
+       &maxscale_zoom15;
+       &minscale_zoom18;
+-      <TextSymbolizer size="10" fill="black" placement="line" fontset-name="book-fonts" halo-radius="0">[name]</TextSymbolizer>
++      <TextSymbolizer size="10" fill="black" placement="line" fontset-name="book-fonts" halo-radius="1">[name]</TextSymbolizer>
+     </Rule>
+     <Rule>
+       <Filter>[highway] = 'secondary'</Filter>
+@@ -3195,7 +3204,7 @@
+       &minscale_zoom18;
+       <TextSymbolizer size="11" fill="#000" placement="line" fontset-name="book-fonts" halo-radius="1">[name]</TextSymbolizer>
+     </Rule>
+-    <Rule>
++    <!--Rule>
+       &maxscale_zoom13;
+       &minscale_zoom15;
+       <Filter>[highway] = 'proposed' or [highway]='construction'</Filter>
+@@ -3206,7 +3215,7 @@
+       &minscale_zoom18;
+       <Filter>[highway] = 'proposed' or [highway]='construction'</Filter>
+       <TextSymbolizer size="11" fill="#000" placement="line" fontset-name="book-fonts" halo-radius="1">[name]</TextSymbolizer>
+-    </Rule>
++    </Rule-->
+     <Rule>
+       <Filter>[highway] = 'unclassified' or [highway] = 'residential'</Filter>
+       &maxscale_zoom15;
 @@ -3334,7 +3343,7 @@
      </Rule>
  </Style>
@@ -799,7 +851,7 @@ index 0dd195b..04a2735 100644
 @@ -3348,8 +3357,10 @@
      </Rule>
  </Style>
- 
+
 +&layer-terrain;
  &layer-shapefiles;
  &layer-landcover;

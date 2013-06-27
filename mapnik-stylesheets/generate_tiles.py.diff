@@ -1,10 +1,10 @@
 diff --git a/generate_tiles.py b/generate_tiles.py
-index dfa595c..8136b69 100755
+index dfa595c..813150e 100755
 --- a/generate_tiles.py
 +++ b/generate_tiles.py
-@@ -191,66 +191,16 @@ def render_tiles(bbox, mapfile, tile_dir, minZoom=1,maxZoom=18, name="unknown",
- 
- 
+@@ -191,66 +191,19 @@ def render_tiles(bbox, mapfile, tile_dir, minZoom=1,maxZoom=18, name="unknown",
+
+
  if __name__ == "__main__":
 -    home = os.environ['HOME']
 -    try:
@@ -80,4 +80,7 @@ index dfa595c..8136b69 100755
 +        bbox= [ int(d) + float(m)/60 + float(s)/3600 for d, m, s in [ arg.split (',') for arg in sys.argv[2:6] ] ]
 +
 +    print bbox
-+    render_tiles(bbox, mapfile, tile_dir, int (sys.argv[6]), int (sys.argv[7]), "foo")
++
++    os.system ('make')
++
++    render_tiles(bbox, mapfile, tile_dir, int (sys.argv[6]), int (sys.argv[7]), "Elevation")
