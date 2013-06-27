@@ -1,13 +1,19 @@
-all: quux.xml
+all: 04-final.xml
 
-quux.xml: baz.xml inc/colors.xml.inc
+04-final.xml: 03-amp_fixed.xml inc/colors.xml.inc
 	xmllint --noent --load-trace --nonet $< | ./fix_baz.awk > $@
 
-baz.xml: bar.xml
+03-amp_fixed.xml: 02-strokes_colors_replaced.xml
 	sed -e 's/\&amp\;/\&/g;' $< > $@
 
-bar.xml: foo.xml
-	./extract_strokes_widths.py foo.xml bar.xml > inc/colors.xml.inc
+02-strokes_colors_replaced.xml: 01-osm_linted.xml
+	./extract_strokes_widths.py $< $@ > /dev/null
 
-foo.xml: osm.xml
+inc/colors.xml.inc: 01-osm_linted.xml
+	./extract_strokes_widths.py $< /dev/null > $@
+
+01-osm_linted.xml: osm.xml
 	xmllint --noent --load-trace --nonet --output $@ $<
+
+tile-clean:
+	make -C tiles tile-clean
