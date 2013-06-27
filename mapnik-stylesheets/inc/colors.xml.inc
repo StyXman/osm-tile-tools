@@ -97,23 +97,23 @@
 <!ENTITY bridges_casing_highway_is_trunk_or_highway_is_trunk_link "#000">
 <!ENTITY bridges_casing_highway_is_primary_or_highway_is_primary_link "#000">
 
-<!-- #3f3f7f -->
-<!ENTITY minor-roads-fill-links_highway_is_motorway_link_and_not_tunnel_is_yes "#3f3f7f">
-<!ENTITY minor-roads-fill_highway_is_motorway_and_not_tunnel_is_yes "#3f3f7f">
-<!ENTITY bridges_fill_highway_is_motorway_or_highway_is_motorway_link "#3f3f7f">
-<!ENTITY roads_highway_is_motorway_or_highway_is_motorway_link "#3f3f7f">
-
-<!-- #3f9f3f -->
-<!ENTITY minor-roads-fill-links_highway_is_primary_link_and_not_tunnel_is_yes "#3f9f3f">
-<!ENTITY minor-roads-fill_highway_is_primary_and_not_tunnel_is_yes "#3f9f3f">
-<!ENTITY bridges_fill_highway_is_primary_or_highway_is_primary_link "#3f9f3f">
-<!ENTITY roads_highway_is_primary_or_highway_is_primary_link "#3f9f3f">
+<!-- #404d60 -->
+<!ENTITY minor-roads-fill-links_highway_is_motorway_link_and_not_tunnel_is_yes "#404d60">
+<!ENTITY minor-roads-fill_highway_is_motorway_and_not_tunnel_is_yes "#404d60">
+<!ENTITY bridges_fill_highway_is_motorway_or_highway_is_motorway_link "#404d60">
+<!ENTITY roads_highway_is_motorway_or_highway_is_motorway_link "#404d60">
 
 <!-- #444 -->
 <!ENTITY minor-roads-fill_railway_is_tram_and_tunnel_is_yes "#444">
 <!ENTITY trams_railway_is_tram "#444">
 <!ENTITY trams_railway_is_tram_and_not_bridge_is_yes "#444">
 <!ENTITY trams_railway_is_tram_and_bridge_is_yes "#444">
+
+<!-- #546d54 -->
+<!ENTITY minor-roads-fill-links_highway_is_trunk_link_and_not_tunnel_is_yes "#546d54">
+<!ENTITY minor-roads-fill_highway_is_trunk_and_not_tunnel_is_yes "#546d54">
+<!ENTITY bridges_fill_highway_is_trunk_or_highway_is_trunk_link "#546d54">
+<!ENTITY roads_highway_is_trunk_or_highway_is_trunk_link "#546d54">
 
 <!-- #555 -->
 <!ENTITY bridges_casing_railway_is_light_rail_or_railway_is_narrow_gauge "#555">
@@ -128,19 +128,42 @@
 <!-- #6666ff -->
 <!ENTITY guideways_railway_is_tram_and_bridge_is_yes "#6666ff">
 
-<!-- #6f6faf -->
-<!ENTITY tunnels-fill_highway_is_motorway_or_highway_is_motorway_link "#6f6faf">
+<!-- #667566 -->
+<!ENTITY tunnels-fill_highway_is_trunk_or_highway_is_trunk_link "#667566">
+
+<!-- #6b6f75 -->
+<!ENTITY tunnels-fill_highway_is_motorway_or_highway_is_motorway_link "#6b6f75">
 
 <!-- #6fcf6f -->
 <!ENTITY tunnels-fill_highway_is_primary_or_highway_is_primary_link "#6fcf6f">
 
+<!-- #764c4d -->
+<!ENTITY minor-roads-fill-links_highway_is_primary_link_and_not_tunnel_is_yes "#764c4d">
+<!ENTITY minor-roads-fill_highway_is_primary_and_not_tunnel_is_yes "#764c4d">
+<!ENTITY bridges_fill_highway_is_primary_or_highway_is_primary_link "#764c4d">
+<!ENTITY roads_highway_is_primary_or_highway_is_primary_link "#764c4d">
+
 <!-- #777 -->
 <!ENTITY roads_railway_is_monorail "#777">
 
-<!-- #7f7f7f -->
-<!ENTITY minor-roads-fill-links_highway_is_tertiary_link_and_not_tunnel_is_yes "#7f7f7f">
-<!ENTITY minor-roads-fill_highway_is_tertiary_and_not_tunnel_is_yes "#7f7f7f">
-<!ENTITY bridges_fill_highway_is_tertiary_or_highway_is_tertiary_link "#7f7f7f">
+<!-- #7f6645 -->
+<!ENTITY roads_highway_is_secondary_or_highway_is_secondary_link "#7f6645">
+
+<!-- #7f6b52 -->
+<!ENTITY minor-roads-fill-links_highway_is_secondary_link_and_not_tunnel_is_yes "#7f6b52">
+<!ENTITY minor-roads-fill_highway_is_secondary_and_not_tunnel_is_yes "#7f6b52">
+<!ENTITY bridges_fill_highway_is_secondary_or_highway_is_secondary_link "#7f6b52">
+
+<!-- #7f705c -->
+<!ENTITY tunnels-fill_highway_is_secondary_or_highway_is_secondary_link "#7f705c">
+
+<!-- #7f7f59 -->
+<!ENTITY minor-roads-fill-links_highway_is_tertiary_link_and_not_tunnel_is_yes "#7f7f59">
+<!ENTITY minor-roads-fill_highway_is_tertiary_and_not_tunnel_is_yes "#7f7f59">
+<!ENTITY bridges_fill_highway_is_tertiary_or_highway_is_tertiary_link "#7f7f59">
+
+<!-- #7f7f66 -->
+<!ENTITY tunnels-fill_highway_is_tertiary_or_highway_is_tertiary_link "#7f7f66">
 
 <!-- #97d397 -->
 <!ENTITY roads_highway_is_trunk_or_highway_is_trunk_link "#97d397">
@@ -187,12 +210,6 @@
 <!-- #9b9b9b -->
 <!ENTITY minor-roads-fill_railway_is_spur_minus_siding_minus_yard_and_tunnel_is_yes "#9b9b9b">
 
-<!-- #9f6f9f -->
-<!ENTITY minor-roads-fill-links_highway_is_trunk_link_and_not_tunnel_is_yes "#9f6f9f">
-<!ENTITY minor-roads-fill_highway_is_trunk_and_not_tunnel_is_yes "#9f6f9f">
-<!ENTITY bridges_fill_highway_is_trunk_or_highway_is_trunk_link "#9f6f9f">
-<!ENTITY roads_highway_is_trunk_or_highway_is_trunk_link "#9f6f9f">
-
 <!-- #a1a1a1 -->
 <!ENTITY minor-roads-fill_railway_is_spur_minus_siding_minus_yard_and_tunnel_is_yes "#a1a1a1">
 
@@ -212,7 +229,6 @@
 <!ENTITY roads_railway_is_INT_minus_preserved_minus_ssy "#aaa">
 
 <!-- #afafaf -->
-<!ENTITY tunnels-fill_highway_is_tertiary_or_highway_is_tertiary_link "#afafaf">
 <!ENTITY minor-roads-fill_railway_is_spur_minus_siding_minus_yard_and_tunnel_is_yes "#afafaf">
 
 <!-- #b37700 -->
@@ -249,15 +265,6 @@
 <!ENTITY minor-roads-fill_highway_is_living_street "#ccc">
 <!ENTITY roads_railway_is_tram_or_railway_is_light_rail_or_railway_is_narrow_gauge_or_railway_is_funicular "#ccc">
 
-<!-- #cf9fcf -->
-<!ENTITY tunnels-fill_highway_is_trunk_or_highway_is_trunk_link "#cf9fcf">
-
-<!-- #cfaf3f -->
-<!ENTITY minor-roads-fill-links_highway_is_secondary_link_and_not_tunnel_is_yes "#cfaf3f">
-<!ENTITY minor-roads-fill_highway_is_secondary_and_not_tunnel_is_yes "#cfaf3f">
-<!ENTITY bridges_fill_highway_is_secondary_or_highway_is_secondary_link "#cfaf3f">
-<!ENTITY roads_highway_is_secondary_or_highway_is_secondary_link "#cfaf3f">
-
 <!-- #ddd -->
 <!ENTITY minor-roads-fill_highway_is_road "#ddd">
 <!ENTITY bridges_fill_highway_is_road "#ddd">
@@ -266,9 +273,6 @@
 <!ENTITY minor-roads-fill_highway_is_unsurfaced "#debd9c">
 <!ENTITY minor-roads-fill_highway_is_unsurfaced "#debd9c">
 <!ENTITY bridges_fill_highway_is_unsurfaced "#debd9c">
-
-<!-- #df9f6f -->
-<!ENTITY tunnels-fill_highway_is_secondary_or_highway_is_secondary_link "#df9f6f">
 
 <!-- #ececec -->
 <!ENTITY minor-roads-fill_railway_is_spur_minus_siding_minus_yard_and_tunnel_is_yes "#ececec">
