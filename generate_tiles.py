@@ -3,6 +3,7 @@ from math import pi,cos,sin,log,exp,atan
 from subprocess import call
 import sys, os
 from Queue import Queue
+from optparse import OptionParser
 
 import threading
 
@@ -188,22 +189,30 @@ def render_tiles(bbox, mapfile, tile_dir, minZoom=1,maxZoom=18, name="unknown", 
     for i in range(num_threads):
         renderers[i].join()
 
-
-
 if __name__ == "__main__":
-    # mapfile = "elevation.xml"
-    mapfile= sys.argv[1]
-    tile_dir = "tiles/"
+    parser= OptionParser (usage= "%prog [options] E S W N\n E, S, W and N can be suplied as floats (2.5) or degree triplets (2,30,0)")
+    
+    parser.add_option ('-i', '--input-file', dest='mapfile',  default='osm.xml')
+    parser.add_option ('-o', '--output-dir', dest='tile_dir', default='tiles/')
+    parser.add_option ('-x', '--max-zoom',   dest='mx_zoom',  default=18, type="int")
+    parser.add_option ('-n', '--min-zoom',   dest='mn_zoom',  default=0,  type="int")
+    options, args= parser.parse_args ()
+    
+    if len (args)!=4:
+        parser.print_help ()
+        sys.exit (1)
+        
+    if options.tile_dir[-1]!='/':
+        # we need the trailing /, it's actually a series of BUG s in render_tiles()
+        options.tile_dir+= '/'
 
     # E, S, W, N, minz, maxz
     try:
-        bbox = [ float (x) for x in sys.argv[2:6] ]
+        bbox = [ float (x) for x in args ]
     except ValueError:
         # treat each argv as a triple deg,min,sec
-        bbox= [ int(d) + float(m)/60 + float(s)/3600 for d, m, s in [ arg.split (',') for arg in sys.argv[2:6] ] ]
-
-    print bbox
+        bbox= [ int(d) + float(m)/60 + float(s)/3600 for d, m, s in [ arg.split (',') for arg in args ] ]
 
     os.system ('make')
     
-    render_tiles(bbox, mapfile, tile_dir, int (sys.argv[6]), int (sys.argv[7]), "Elevation")
+    render_tiles(bbox, options.mapfile, options.tile_dir, options.mn_zoom, options.mx_zoom, "Elevation")
