@@ -2,7 +2,7 @@
 
 if [ $# -eq 1 ]; then
     dst=$1
-    cp -Rv tiles/{legend*,Elevation.dgml,preview.png} $dst/
+    cp -Rv tiles/{legend*,Elevation.dgml,preview.png,Makefile} $dst/
 else
     dst=tiles
 fi
