@@ -9,7 +9,6 @@ BEGIN {
     entity_def=1;
     print $0;
     print "%entities;";
-
 }
 
 /]>/ {
