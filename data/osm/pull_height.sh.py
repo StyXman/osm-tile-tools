@@ -25,7 +25,7 @@ except (ValueError, AttributeError) as e:
 
 print (west, south, east, north)
 
-# we have 5x5 degrees sqaures that start at
+# we have 5x5 degrees squares
 #  1, 1 for -180,+59,-179,+60
 # 13,37 for    0,  0,  +1, +1
 # 24,72 for +179,-60,+180,-59
@@ -42,20 +42,9 @@ os.chdir ('../height')
 # +1 so they're proper bounds for range
 for lat in range (srtm_v41_n, srtm_v41_s+1):
     for lon in range (srtm_v41_w, srtm_v41_e+1):
-        if lat<0:
-            lat_template= "S%02d"
-        else:
-            lat_template= "N%02d"
-
-        if lon<0:
-            lon_template= "W%03d"
-        else:
-            lon_template= "E%03d"
-
-        # zip_file= "%s%s.hgt.zip" % (lat_template % abs (lat), lon_template % abs (lon))
         zip_file= "srtm_%02d_%02d.zip" % (lon, lat)
 
-        if not _f (zip_file):
+        if not _f ("srtm_%02d_%02d.hgt" % (lon, lat)):
             url= "http://srtm.csi.cgiar.org/SRT-ZIP/SRTM_V41/SRTM_Data_GeoTiff/%s" % zip_file
             try:
                 print ("Getting %s ... " % zip_file, end='', flush=True)
@@ -63,14 +52,12 @@ for lat in range (srtm_v41_n, srtm_v41_s+1):
                 print ("done!")
             except urllib.error.HTTPError as e:
                 print (e)
-
-
-        if _f (zip_file):
-            try:
-                # unzip (zip_file)
-                # os.unlink (zip_file)
-                pass
-            except ErrorReturnCode as e:
-                print ("unzipping %s failed; keeping..." % zip_file)
+            else:
+                try:
+                    # unzip (zip_file)
+                    # os.unlink (zip_file)
+                    pass
+                except ErrorReturnCode as e:
+                    print ("unzipping %s failed; keeping..." % zip_file)
 
         time.sleep (1)
