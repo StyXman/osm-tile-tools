@@ -1,24 +1,31 @@
-#! /usr/bin/env ayrton
+#! /usr/bin/env ayrton -f
 
-# set -e
-# no equivalent yet
+# (c) 2013 Marcos Dione <mdione@grulic.org.ar>
+# for licensing details see the file LICENSE.txt
 
-import sys
-from sh import grep, osmpbf_outline, unzip, ErrorReturnCode
+from sh import ErrorReturnCode
 import re
 import math
-import urllib.request
-import urllib.error
+# import urllib.request
+# import urllib.error
 
-pbf_file= sys.argv[1]
-extent= grep (osmpbf_outline (pbf_file, _tty_out=False, _ok_code=1), 'bbox')
+option ('-e')
+
+download= True
+if argv[1] in ('-n', '--dry-run'):
+    download= False
+    shift ()
+
+
+pbf_file= argv[1]
+extent= grep (head (osmpbf_outline (pbf_file, _out=Capture), n=100, _out=Capture), 'bbox', _out=Capture)
 
 #     bbox: 9.5267800,46.3685100,17.1627300,49.0240300
 try:
     west, south, east, north= [ float (x) for x in re.split ("[:,]", str (extent))[1:] ]
 except (ValueError, AttributeError) as e:
     print ("cannot find the extent of %s [%s]; bailing out" % (pbf_file, e))
-    sys.exit (1)
+    exit (1)
 
 print (west, south, east, north)
 
@@ -31,30 +38,41 @@ srtm_v41_w= math.floor (west/5)+37
 srtm_v41_s= math.floor (-south/5)+13
 srtm_v41_e= math.floor (east/5)+37
 srtm_v41_n= math.floor (-north/5)+13
+if srtm_v41_n<0:
+    srtm_v41_n= 0
+if srtm_v41_s<0:
+    srtm_v41_s= 0
 
 print (srtm_v41_w, srtm_v41_s, srtm_v41_e, srtm_v41_n)
 
-chdir ('../height')
+if not download:
+    exit (0)
+
+cd ('../height')
 
 # +1 so they're proper bounds for range
 for lat in range (srtm_v41_n, srtm_v41_s+1):
     for lon in range (srtm_v41_w, srtm_v41_e+1):
         zip_file= "srtm_%02d_%02d.zip" % (lon, lat)
 
-        if not _f ("srtm_%02d_%02d.hgt" % (lon, lat)):
-            url= "http://srtm.csi.cgiar.org/SRT-ZIP/SRTM_V41/SRTM_Data_GeoTiff/%s" % zip_file
+        if not _f ("srtm_%02d_%02d.hdr" % (lon, lat)):
+            # url= "http://srtm.csi.cgiar.org/SRT-ZIP/SRTM_V41/SRTM_Data_GeoTiff/%s" % zip_file
+            url= "ftp://srtm.csi.cgiar.org/SRTM_v41/SRTM_Data_GeoTIFF/%s" % zip_file
             try:
-                print ("Getting %s ... " % zip_file, end='', flush=True)
-                urllib.request.urlretrieve (url, zip_file)
-                print ("done!")
-            except urllib.error.HTTPError as e:
-                print (e)
+                wget ('--verbose', '--progress=bar', '--continue',
+                      '--output-document', zip_file, url, _out_bufsize=0)
+            except CommandFailed as e:
+                if e.code==8:
+                    # 404
+                    pass
+                else:
+                    raise e
             else:
                 try:
-                    # unzip (zip_file)
+                    unzip ('-o', zip_file)
                     # unlink (zip_file)
                     pass
                 except ErrorReturnCode as e:
                     print ("unzipping %s failed; keeping..." % zip_file)
 
-        sleep (1)
+            sleep (1)
