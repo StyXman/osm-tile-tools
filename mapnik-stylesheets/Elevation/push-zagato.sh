@@ -1,6 +1,14 @@
 #! /bin/bash
 
-bbox_z=$(grep $1 bboxes.txt | cut -d '=' -f 2)
-./tile_list.py $bbox_z > $1.lst
+set -e
 
-rsync --verbose --archive --update --inplace --files-from $1.lst ./ "/media/mdione/Nokia N9/local/share/marble/maps/earth/Elevation/"
+tmp=$(tempfile -d . -s .lst)
+for i in "$@"; do
+    ./tile_list.py $(grep $1 bboxes.txt | cut -d '=' -f 2) >> $tmp
+done
+
+rsync --verbose --archive --update --inplace --delete --delete-during \
+    --ignore-missing-args --stats \
+    --files-from $tmp ./ "/media/sdc/local/share/marble/maps/earth/Elevation/"
+
+rm $tmp
