@@ -229,7 +229,6 @@ def render_tiles(bbox, mapfile, tile_dir, minZoom=1,maxZoom=18, name="unknown",
 
 if __name__ == "__main__":
     parser= OptionParser ()
-
     parser.add_option ('-b', '--bbox',          dest='bbox',      default='-180,-90,180,90')
     parser.add_option ('-i', '--input-file',    dest='mapfile',   default='osm.xml')
     parser.add_option ('-m', '--metatile-size', dest='meta_size', default=1, type='int')
