@@ -1,9 +1,11 @@
 #!/usr/bin/env python
+
 from math import pi,cos,sin,log,exp,atan
 from subprocess import call
 import sys, os, os.path
 from Queue import Queue
 from optparse import OptionParser
+import time
 import errno
 
 import threading
@@ -118,8 +120,10 @@ class RenderThread:
             self.m.buffer_size = 128
 
         # Render image with default Agg renderer
+        start= time.time ()
         im = mapnik.Image(self.image_size, self.image_size)
         mapnik.render(self.m, im)
+        end= time.time ()
 
         # save the image, splitting it in the right amount of tiles
         # we use min() so we can support low zoom levels with less than meta_size tiles
@@ -131,6 +135,10 @@ class RenderThread:
                 k= im.view (i*self.tile_size, j*self.tile_size, self.tile_size, self.tile_size)
                 tile_uri = os.path.join (tile_dir, str (y+j)+'.png')
                 k.save(tile_uri, 'png256')
+
+        # self.printLock.acquire()
+        print "%d:%d:%d: %f" % (x, y, z, end-start)
+        # self.printLock.release()
 
     def loop(self):
         while True:
@@ -151,9 +159,7 @@ class RenderThread:
             empty= ''
             if bytes == 103:
                 empty = " Empty Tile "
-            self.printLock.acquire()
-            print name, ":", z, x, y, exists, empty
-            self.printLock.release()
+            # print name, ":", z, x, y, exists, empty
             self.q.task_done()
 
 
