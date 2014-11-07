@@ -77,10 +77,13 @@ class GoogleProjection:
 
 
 class RenderThread:
-    def __init__(self, tile_dir, mapfile, q, printLock, maxZoom):
+    def __init__(self, tile_dir, mapfile, q, printLock, maxZoom, meta_size):
         self.tile_dir = tile_dir
         self.q = q
-        self.m = mapnik.Map(256, 256)
+        self.meta_size= meta_size
+        self.tile_size= 256
+        self.image_size= self.tile_size*self.meta_size
+        self.m = mapnik.Map(self.image_size, self.image_size)
         self.printLock = printLock
         # Load style XML
         mapnik.load_map(self.m, mapfile, True)
@@ -90,11 +93,10 @@ class RenderThread:
         self.tileproj = GoogleProjection(maxZoom+1)
 
 
-    def render_tile(self, tile_uri, x, y, z):
-
+    def render_tile(self, tile_base_dir, x, y, z):
         # Calculate pixel positions of bottom-left & top-right
-        p0 = (x * 256, (y + 1) * 256)
-        p1 = ((x + 1) * 256, y * 256)
+        p0 = (x * self.tile_size, (y + self.meta_size) * self.tile_size)
+        p1 = ((x + self.meta_size) * self.tile_size, y * self.tile_size)
 
         # Convert to LatLong (EPSG:4326)
         l0 = self.tileproj.fromPixelToLL(p0, z);
@@ -109,17 +111,26 @@ class RenderThread:
             bbox = mapnik.Box2d(c0.x,c0.y, c1.x,c1.y)
         else:
             bbox = mapnik.Envelope(c0.x,c0.y, c1.x,c1.y)
-        render_size = 256
-        self.m.resize(render_size, render_size)
+
+        self.m.resize(self.image_size, self.image_size)
         self.m.zoom_to_box(bbox)
         if(self.m.buffer_size < 128):
             self.m.buffer_size = 128
 
         # Render image with default Agg renderer
-        im = mapnik.Image(render_size, render_size)
+        im = mapnik.Image(self.image_size, self.image_size)
         mapnik.render(self.m, im)
-        im.save(tile_uri, 'png256')
 
+        # save the image, splitting it in the right amount of tiles
+        # we use min() so we can support low zoom levels with less than meta_size tiles
+        for i in xrange (min (self.meta_size, 2**z)):
+            tile_dir= os.path.join (tile_base_dir, str (z), str (x+i))
+            makedirs (tile_dir)
+            for j in xrange (min (self.meta_size, 2**z)):
+                # print "%d:%d:%d" % (x+i, y+j, z)
+                k= im.view (i*self.tile_size, j*self.tile_size, self.tile_size, self.tile_size)
+                tile_uri = os.path.join (tile_dir, str (y+j)+'.png')
+                k.save(tile_uri, 'png256')
 
     def loop(self):
         while True:
@@ -146,7 +157,8 @@ class RenderThread:
             self.q.task_done()
 
 
-def render_tiles(bbox, mapfile, tile_dir, minZoom=1,maxZoom=18, name="unknown", num_threads=NUM_CPUS, tms_scheme=False):
+def render_tiles(bbox, mapfile, tile_dir, minZoom=1,maxZoom=18, name="unknown",
+                 num_threads=NUM_CPUS, tms_scheme=False, meta_size=1):
     print "render_tiles(",bbox, mapfile, tile_dir, minZoom,maxZoom, name,")"
 
     # Launch rendering threads
@@ -154,7 +166,8 @@ def render_tiles(bbox, mapfile, tile_dir, minZoom=1,maxZoom=18, name="unknown", 
     printLock = threading.Lock()
     renderers = {}
     for i in range(num_threads):
-        renderer = RenderThread(tile_dir, mapfile, queue, printLock, maxZoom)
+        renderer = RenderThread(tile_dir, mapfile, queue, printLock, maxZoom,
+                                meta_size)
         render_thread = threading.Thread(target=renderer.loop)
         render_thread.start()
         #print "Started render thread %s" % render_thread.getName()
@@ -168,34 +181,24 @@ def render_tiles(bbox, mapfile, tile_dir, minZoom=1,maxZoom=18, name="unknown", 
     ll0 = (bbox[0],bbox[3])
     ll1 = (bbox[2],bbox[1])
 
+    image_size=256.0*meta_size
+
     for z in range(minZoom,maxZoom + 1):
         px0 = gprj.fromLLtoPixel(ll0,z)
         px1 = gprj.fromLLtoPixel(ll1,z)
 
-        # check if we have directories in place
-        zoom = "%s" % z
-        if not os.path.isdir(tile_dir + zoom):
-            os.mkdir(tile_dir + zoom)
-        for x in range(int(px0[0]/256.0),int(px1[0]/256.0)+1):
+        for x in range(int(px0[0]/image_size),int(px1[0]/image_size)+1):
             # Validate x co-ordinate
-            if (x < 0) or (x >= 2**z):
+            if (x < 0) or (x*meta_size >= 2**z):
                 continue
-            # check if we have directories in place
-            str_x = "%s" % x
-            if not os.path.isdir(tile_dir + zoom + '/' + str_x):
-                os.mkdir(tile_dir + zoom + '/' + str_x)
-            for y in range(int(px0[1]/256.0),int(px1[1]/256.0)+1):
+
+            for y in range(int(px0[1]/image_size),int(px1[1]/image_size)+1):
                 # Validate x co-ordinate
-                if (y < 0) or (y >= 2**z):
+                if (y < 0) or (y*meta_size >= 2**z):
                     continue
-                # flip y to match OSGEO TMS spec
-                if tms_scheme:
-                    str_y = "%s" % ((2**z-1) - y)
-                else:
-                    str_y = "%s" % y
-                tile_uri = tile_dir + zoom + '/' + str_x + '/' + str_y + '.png'
+
                 # Submit tile to be rendered into the queue
-                t = (name, tile_uri, x, y, z)
+                t = (name, tile_dir, x*meta_size, y*meta_size, z)
                 try:
                     queue.put(t)
                 except KeyboardInterrupt:
@@ -213,6 +216,7 @@ if __name__ == "__main__":
     parser= OptionParser ()
 
     parser.add_option ('-i', '--input-file',    dest='mapfile',   default='osm.xml')
+    parser.add_option ('-m', '--metatile-size', dest='meta_size', default=1, type='int')
     parser.add_option ('-n', '--min-zoom',      dest='mn_zoom',   default=0, type="int")
     parser.add_option ('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
     parser.add_option ('-t', '--threads',       dest='threads',   default=NUM_CPUS, type="int")
@@ -236,4 +240,4 @@ if __name__ == "__main__":
 
     render_tiles(bbox, options.mapfile, options.tile_dir,
                  options.mn_zoom, options.mx_zoom, "Elevation",
-                 num_threads=options.threads)
+                 num_threads=options.threads, meta_size=options.meta_size)
