@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 from math import pi,cos,sin,log,exp,atan
 from subprocess import call
-import sys, os
+import sys, os, os.path
 from Queue import Queue
 from optparse import OptionParser
+import errno
 
 import threading
 
@@ -23,10 +24,26 @@ except NotImplementedError:
     NUM_CPUS = 1
 
 
+def makedirs(_dirname):
+    """ Better replacement for os.makedirs():
+        doesn't fails if some intermediate dir already exists.
+    """
+    dirs = _dirname.split('/')
+    i = ''
+    while len(dirs):
+        i += dirs.pop(0)+'/'
+        try:
+            os.mkdir(i)
+        except OSError, e:
+            if e.args[0]!=errno.EEXIST:
+                raise e
+
+
 def minmax (a,b,c):
     a = max(a,b)
     a = min(a,c)
     return a
+
 
 class GoogleProjection:
     def __init__(self,levels=18):
