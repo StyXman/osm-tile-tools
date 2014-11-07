@@ -150,8 +150,16 @@ class RenderThread:
             else:
                 (name, tile_base_uri, x, y, z) = r
 
+            all_exist= True
             exists= ""
-            if os.path.isfile(tile_uri):
+            # we use min() so we can support low zoom levels with less than meta_size tiles
+            for tile_x in range (x, x+min (self.meta_size, 2**z)):
+                for tile_y in range (y, y+min (self.meta_size, 2**z)):
+                    tile_uri= os.path.join (tile_base_uri, str (z), str (tile_x), str(tile_y)+'.png')
+                    all_exist= all_exist and os.path.isfile(tile_uri)
+                    # print "%s: %s" % (tile_uri, all_exist)
+
+            if all_exist:
                 exists= "exists"
             else:
                 self.render_tile(tile_base_uri, x, y, z)
