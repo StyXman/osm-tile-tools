@@ -230,6 +230,7 @@ def render_tiles(bbox, mapfile, tile_dir, minZoom=1,maxZoom=18, name="unknown",
 if __name__ == "__main__":
     parser= OptionParser ()
 
+    parser.add_option ('-b', '--bbox',          dest='bbox',      default='-180,-90,180,90')
     parser.add_option ('-i', '--input-file',    dest='mapfile',   default='osm.xml')
     parser.add_option ('-m', '--metatile-size', dest='meta_size', default=1, type='int')
     parser.add_option ('-n', '--min-zoom',      dest='mn_zoom',   default=0, type="int")
@@ -237,21 +238,12 @@ if __name__ == "__main__":
     parser.add_option ('-t', '--threads',       dest='threads',   default=NUM_CPUS, type="int")
     parser.add_option ('-x', '--max-zoom',      dest='mx_zoom',   default=18, type="int")
     options, args= parser.parse_args ()
-    
-    if len (args)!=4:
-        parser.print_help ()
-        sys.exit (1)
-        
+
     if options.tile_dir[-1]!='/':
         # we need the trailing /, it's actually a series of BUG s in render_tiles()
         options.tile_dir+= '/'
 
-    # E, S, W, N, minz, maxz
-    try:
-        bbox = [ float (x) for x in args ]
-    except ValueError:
-        # treat each argv as a triple deg,min,sec
-        bbox= [ int(d) + float(m)/60 + float(s)/3600 for d, m, s in [ arg.split (',') for arg in args ] ]
+    bbox = [ float (x) for x in options.bbox.split (',') ]
 
     render_tiles(bbox, options.mapfile, options.tile_dir,
                  options.mn_zoom, options.mx_zoom, "Elevation",
