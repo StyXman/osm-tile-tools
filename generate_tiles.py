@@ -12,11 +12,15 @@ try:
 except:
     import mapnik
 
+import multiprocessing
+
 DEG_TO_RAD = pi/180
 RAD_TO_DEG = 180/pi
 
-# Default number of rendering threads to spawn, should be roughly equal to number of CPU cores available
-NUM_THREADS = 4
+try:
+    NUM_CPUS = multiprocessing.cpu_count ()
+except NotImplementedError:
+    NUM_CPUS = 1
 
 
 def minmax (a,b,c):
@@ -125,8 +129,7 @@ class RenderThread:
             self.q.task_done()
 
 
-
-def render_tiles(bbox, mapfile, tile_dir, minZoom=1,maxZoom=18, name="unknown", num_threads=NUM_THREADS, tms_scheme=False):
+def render_tiles(bbox, mapfile, tile_dir, minZoom=1,maxZoom=18, name="unknown", num_threads=NUM_CPUS, tms_scheme=False):
     print "render_tiles(",bbox, mapfile, tile_dir, minZoom,maxZoom, name,")"
 
     # Launch rendering threads
@@ -190,12 +193,13 @@ def render_tiles(bbox, mapfile, tile_dir, minZoom=1,maxZoom=18, name="unknown", 
         renderers[i].join()
 
 if __name__ == "__main__":
-    parser= OptionParser (usage= "%prog [options] E S W N\n E, S, W and N can be suplied as floats (2.5) or degree triplets (2,30,0)")
-    
-    parser.add_option ('-i', '--input-file', dest='mapfile',  default='osm.xml')
-    parser.add_option ('-o', '--output-dir', dest='tile_dir', default='tiles/')
-    parser.add_option ('-x', '--max-zoom',   dest='mx_zoom',  default=18, type="int")
-    parser.add_option ('-n', '--min-zoom',   dest='mn_zoom',  default=0,  type="int")
+    parser= OptionParser ()
+
+    parser.add_option ('-i', '--input-file',    dest='mapfile',   default='osm.xml')
+    parser.add_option ('-n', '--min-zoom',      dest='mn_zoom',   default=0, type="int")
+    parser.add_option ('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
+    parser.add_option ('-t', '--threads',       dest='threads',   default=NUM_CPUS, type="int")
+    parser.add_option ('-x', '--max-zoom',      dest='mx_zoom',   default=18, type="int")
     options, args= parser.parse_args ()
     
     if len (args)!=4:
@@ -213,6 +217,6 @@ if __name__ == "__main__":
         # treat each argv as a triple deg,min,sec
         bbox= [ int(d) + float(m)/60 + float(s)/3600 for d, m, s in [ arg.split (',') for arg in args ] ]
 
-    os.system ('make')
-    
-    render_tiles(bbox, options.mapfile, options.tile_dir, options.mn_zoom, options.mx_zoom, "Elevation")
+    render_tiles(bbox, options.mapfile, options.tile_dir,
+                 options.mn_zoom, options.mx_zoom, "Elevation",
+                 num_threads=options.threads)
