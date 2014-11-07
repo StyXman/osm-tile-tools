@@ -148,13 +148,14 @@ class RenderThread:
                 self.q.task_done()
                 break
             else:
-                (name, tile_uri, x, y, z) = r
+                (name, tile_base_uri, x, y, z) = r
 
             exists= ""
             if os.path.isfile(tile_uri):
                 exists= "exists"
             else:
-                self.render_tile(tile_uri, x, y, z)
+                self.render_tile(tile_base_uri, x, y, z)
+
             bytes=os.stat(tile_uri)[6]
             empty= ''
             if bytes == 103:
@@ -182,7 +183,7 @@ def render_tiles(bbox, mapfile, tile_dir, minZoom=1,maxZoom=18, name="unknown",
     if not os.path.isdir(tile_dir):
          os.mkdir(tile_dir)
 
-    gprj = GoogleProjection(maxZoom+1) 
+    gprj = GoogleProjection(maxZoom+1)
 
     ll0 = (bbox[0],bbox[3])
     ll1 = (bbox[2],bbox[1])
