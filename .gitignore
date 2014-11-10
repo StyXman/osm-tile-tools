@@ -15,3 +15,4 @@ data/height/*.tif
 openstreetmap-carto.xml
 openstreetmap-carto/
 tilemill/
+*.log
