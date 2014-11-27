@@ -7,7 +7,6 @@ from Queue import Queue
 from optparse import OptionParser
 import time
 import errno
-
 import threading
 
 try:
@@ -21,21 +20,21 @@ DEG_TO_RAD = pi/180
 RAD_TO_DEG = 180/pi
 
 try:
-    NUM_CPUS = multiprocessing.cpu_count ()
+    NUM_CPUS= multiprocessing.cpu_count ()
 except NotImplementedError:
-    NUM_CPUS = 1
+    NUM_CPUS= 1
 
 
-def makedirs(_dirname):
+def makedirs (_dirname):
     """ Better replacement for os.makedirs():
         doesn't fails if some intermediate dir already exists.
     """
-    dirs = _dirname.split('/')
-    i = ''
-    while len(dirs):
-        i += dirs.pop(0)+'/'
+    dirs= _dirname.split ('/')
+    i= ''
+    while len (dirs):
+        i+= dirs.pop (0)+'/'
         try:
-            os.mkdir(i)
+            os.mkdir (i)
         except OSError, e:
             if e.args[0]!=errno.EEXIST:
                 raise e
@@ -55,7 +54,7 @@ class GoogleProjection:
         self.Ac = []
         c = 256
         for d in range(0,levels):
-            e = c/2;
+            e = c/2
             self.Bc.append(c/360.0)
             self.Cc.append(c/(2 * pi))
             self.zc.append((e,e))
@@ -77,173 +76,194 @@ class GoogleProjection:
          return (f,h)
 
 
+class DiskBackend:
+    def __init__ (self, base):
+        self.base_dir= base
+
+    def tile_uri (self, z, x, y):
+        return os.path.join (self.base_dir, str (z), str (x), str (y)+'.png')
+
+    def store (self, z, x, y, img):
+        tile_uri= self.tile_uri (z, x, y)
+        makedirs (os.path.dirname (tile_uri))
+        img.save (tile_uri, 'png256')
+
+    def exists (self, z, x, y):
+        tile_uri= self.tile_uri (z, x, y)
+        return os.path.isfile (tile_uri)
+
 
 class RenderThread:
-    def __init__(self, tile_dir, mapfile, q, printLock, maxZoom, meta_size):
-        self.tile_dir = tile_dir
+    def __init__(self, backend, mapfile, q, maxZoom, meta_size):
+        self.backend= backend
         self.q = q
         self.meta_size= meta_size
         self.tile_size= 256
         self.image_size= self.tile_size*self.meta_size
-        self.m = mapnik.Map(self.image_size, self.image_size)
-        self.printLock = printLock
+        self.m = mapnik.Map (self.image_size, self.image_size)
+        # self.printLock = printLock
         # Load style XML
-        mapnik.load_map(self.m, mapfile, True)
+        mapnik.load_map (self.m, mapfile, True)
         # Obtain <Map> projection
-        self.prj = mapnik.Projection(self.m.srs)
+        self.prj= mapnik.Projection (self.m.srs)
         # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
-        self.tileproj = GoogleProjection(maxZoom+1)
+        self.tileproj= GoogleProjection (maxZoom+1)
 
-
-    def render_tile(self, tile_base_dir, x, y, z):
+    def render_tile (self, x, y, z):
         # Calculate pixel positions of bottom-left & top-right
-        p0 = (x * self.tile_size, (y + self.meta_size) * self.tile_size)
-        p1 = ((x + self.meta_size) * self.tile_size, y * self.tile_size)
+        p0= (x * self.tile_size, (y + self.meta_size) * self.tile_size)
+        p1= ((x + self.meta_size) * self.tile_size, y * self.tile_size)
 
         # Convert to LatLong (EPSG:4326)
-        l0 = self.tileproj.fromPixelToLL(p0, z);
-        l1 = self.tileproj.fromPixelToLL(p1, z);
+        l0= self.tileproj.fromPixelToLL (p0, z);
+        l1= self.tileproj.fromPixelToLL (p1, z);
 
         # Convert to map projection (e.g. mercator co-ords EPSG:900913)
-        c0 = self.prj.forward(mapnik.Coord(l0[0],l0[1]))
-        c1 = self.prj.forward(mapnik.Coord(l1[0],l1[1]))
+        c0= self.prj.forward(mapnik.Coord (l0[0], l0[1]))
+        c1= self.prj.forward(mapnik.Coord (l1[0], l1[1]))
 
         # Bounding box for the tile
-        if hasattr(mapnik,'mapnik_version') and mapnik.mapnik_version() >= 800:
-            bbox = mapnik.Box2d(c0.x,c0.y, c1.x,c1.y)
+        if hasattr (mapnik, 'mapnik_version') and mapnik.mapnik_version () >= 800:
+            bbox= mapnik.Box2d(c0.x, c0.y, c1.x, c1.y)
         else:
-            bbox = mapnik.Envelope(c0.x,c0.y, c1.x,c1.y)
+            bbox= mapnik.Envelope(c0.x, c0.y, c1.x, c1.y)
 
-        self.m.resize(self.image_size, self.image_size)
-        self.m.zoom_to_box(bbox)
-        if(self.m.buffer_size < 128):
-            self.m.buffer_size = 128
+        self.m.resize (self.image_size, self.image_size)
+        self.m.zoom_to_box (bbox)
+        if self.m.buffer_size < 128:
+            self.m.buffer_size= 128
 
         # Render image with default Agg renderer
         start= time.time ()
-        im = mapnik.Image(self.image_size, self.image_size)
-        mapnik.render(self.m, im)
+        im = mapnik.Image (self.image_size, self.image_size)
+        mapnik.render (self.m, im)
         end= time.time ()
 
         # save the image, splitting it in the right amount of tiles
         # we use min() so we can support low zoom levels with less than meta_size tiles
         for i in xrange (min (self.meta_size, 2**z)):
-            tile_dir= os.path.join (tile_base_dir, str (z), str (x+i))
-            makedirs (tile_dir)
             for j in xrange (min (self.meta_size, 2**z)):
-                # print "%d:%d:%d" % (x+i, y+j, z)
-                k= im.view (i*self.tile_size, j*self.tile_size, self.tile_size, self.tile_size)
-                tile_uri = os.path.join (tile_dir, str (y+j)+'.png')
-                k.save(tile_uri, 'png256')
+                img= im.view (i*self.tile_size, j*self.tile_size, self.tile_size, self.tile_size)
+                self.backend.store (z, x+i, y+j, img)
 
         # self.printLock.acquire()
         print "%d:%d:%d: %f" % (x, y, z, end-start)
         # self.printLock.release()
 
-    def loop(self):
+    def loop (self):
         while True:
             # Fetch a tile from the queue and render it
-            r = self.q.get()
-            if (r == None):
-                self.q.task_done()
+            r= self.q.get ()
+            if r is None:
+                self.q.task_done ()
                 break
             else:
-                (name, tile_base_uri, x, y, z) = r
+                (x, y, z)= r
 
             all_exist= True
-            exists= ""
+            # exists= ""
             # we use min() so we can support low zoom levels with less than meta_size tiles
             for tile_x in range (x, x+min (self.meta_size, 2**z)):
                 for tile_y in range (y, y+min (self.meta_size, 2**z)):
-                    tile_uri= os.path.join (tile_base_uri, str (z), str (tile_x), str(tile_y)+'.png')
-                    all_exist= all_exist and os.path.isfile(tile_uri)
+                    all_exist= all_exist and self.backend.exists (z, tile_x, tile_y)
                     # print "%s: %s" % (tile_uri, all_exist)
 
-            if all_exist:
-                exists= "exists"
-            else:
-                self.render_tile(tile_base_uri, x, y, z)
+            if not all_exist:
+                self.render_tile (x, y, z)
 
-            bytes=os.stat(tile_uri)[6]
-            empty= ''
-            if bytes == 103:
-                empty = " Empty Tile "
+            # bytes= os.stat (tile_uri)[6]
+            # empty= ''
+            # if bytes==103:
+            #     empty = " Empty Tile "
             # print name, ":", z, x, y, exists, empty
-            self.q.task_done()
+            self.q.task_done ()
 
 
-def render_tiles(bbox, mapfile, tile_dir, minZoom=1,maxZoom=18, name="unknown",
-                 num_threads=NUM_CPUS, tms_scheme=False, meta_size=1):
-    print "render_tiles(",bbox, mapfile, tile_dir, minZoom,maxZoom, name,")"
+def render_tiles(opts):
+    print "render_tiles(",opts,")"
+
+    backends= dict (
+        tiles= DiskBackend,
+        )
+
+    try:
+        backend= backends[opts.format](opts.tile_dir)
+    except KeyError:
+        raise
 
     # Launch rendering threads
-    queue = Queue(32)
-    printLock = threading.Lock()
-    renderers = {}
-    for i in range(num_threads):
-        renderer = RenderThread(tile_dir, mapfile, queue, printLock, maxZoom,
-                                meta_size)
-        render_thread = threading.Thread(target=renderer.loop)
-        render_thread.start()
+    queue= Queue (32)
+    renderers= {}
+    for i in range (opts.threads):
+        renderer= RenderThread (backend, opts.mapfile, queue, opts.max_zoom,
+                                opts.meta_size)
+        render_thread= threading.Thread (target=renderer.loop)
+        render_thread.start ()
         #print "Started render thread %s" % render_thread.getName()
-        renderers[i] = render_thread
+        renderers[i]= render_thread
 
-    if not os.path.isdir(tile_dir):
-         os.mkdir(tile_dir)
+    if not os.path.isdir (opts.tile_dir):
+         os.mkdir (opts.tile_dir)
 
-    gprj = GoogleProjection(maxZoom+1)
+    gprj= GoogleProjection (opts.max_zoom+1)
 
-    ll0 = (bbox[0],bbox[3])
-    ll1 = (bbox[2],bbox[1])
+    ll0= (bbox[0], bbox[3])
+    ll1= (bbox[2], bbox[1])
 
-    image_size=256.0*meta_size
+    image_size= 256.0*opts.meta_size
 
-    for z in range(minZoom,maxZoom + 1):
-        px0 = gprj.fromLLtoPixel(ll0,z)
-        px1 = gprj.fromLLtoPixel(ll1,z)
+    for z in range (opts.min_zoom, opts.max_zoom + 1):
+        px0= gprj.fromLLtoPixel (ll0, z)
+        px1= gprj.fromLLtoPixel (ll1, z)
 
-        for x in range(int(px0[0]/image_size),int(px1[0]/image_size)+1):
+        for x in range (int (px0[0]/image_size), int (px1[0]/image_size)+1):
             # Validate x co-ordinate
-            if (x < 0) or (x*meta_size >= 2**z):
+            if (x < 0) or (x*opts.meta_size >= 2**z):
                 continue
 
-            for y in range(int(px0[1]/image_size),int(px1[1]/image_size)+1):
+            for y in range (int (px0[1]/image_size), int (px1[1]/image_size)+1):
                 # Validate x co-ordinate
-                if (y < 0) or (y*meta_size >= 2**z):
+                if (y < 0) or (y*opts.meta_size >= 2**z):
                     continue
 
                 # Submit tile to be rendered into the queue
-                t = (name, tile_dir, x*meta_size, y*meta_size, z)
+                t= (x*opts.meta_size, y*opts.meta_size, z)
                 try:
-                    queue.put(t)
+                    queue.put (t)
                 except KeyboardInterrupt:
                     raise SystemExit("Ctrl-c detected, exiting...")
 
     # Signal render threads to exit by sending empty request to queue
-    for i in range(num_threads):
-        queue.put(None)
+    for i in range (opts.threads):
+        queue.put (None)
     # wait for pending rendering jobs to complete
-    queue.join()
-    for i in range(num_threads):
-        renderers[i].join()
+    queue.join ()
+    for i in range (opts.threads):
+        renderers[i].join ()
 
 if __name__ == "__main__":
     parser= OptionParser ()
-    parser.add_option ('-b', '--bbox',          dest='bbox',      default='-180,-90,180,90')
+    parser.add_option ('-b', '--bbox',          dest='bbox',      default='-180,-85,180,85')
+    parser.add_option ('-f', '--format',        dest='format',    default='tiles') # also 'mbtiles'
     parser.add_option ('-i', '--input-file',    dest='mapfile',   default='osm.xml')
     parser.add_option ('-m', '--metatile-size', dest='meta_size', default=1, type='int')
-    parser.add_option ('-n', '--min-zoom',      dest='mn_zoom',   default=0, type="int")
+    parser.add_option ('-n', '--min-zoom',      dest='min_zoom',   default=0, type="int")
     parser.add_option ('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
+    parser.add_option ('-r', '--root-dir',      dest='root',      default='.')
     parser.add_option ('-t', '--threads',       dest='threads',   default=NUM_CPUS, type="int")
-    parser.add_option ('-x', '--max-zoom',      dest='mx_zoom',   default=18, type="int")
-    options, args= parser.parse_args ()
+    parser.add_option ('-x', '--max-zoom',      dest='max_zoom',   default=18, type="int")
+    opts, args= parser.parse_args ()
 
-    if options.tile_dir[-1]!='/':
+    if opts.format=='tiles' and opts.tile_dir[-1]!='/':
         # we need the trailing /, it's actually a series of BUG s in render_tiles()
-        options.tile_dir+= '/'
+        opts.tile_dir+= '/'
 
-    bbox = [ float (x) for x in options.bbox.split (',') ]
+    bbox = [ float (x) for x in opts.bbox.split (',') ]
 
-    render_tiles(bbox, options.mapfile, options.tile_dir,
-                 options.mn_zoom, options.mx_zoom, "Elevation",
-                 num_threads=options.threads, meta_size=options.meta_size)
+    opts.tile_dir= os.path.abspath (opts.tile_dir)
+    opts.root=     os.path.abspath (opts.root)
+
+    # so we find any relative resources
+    os.chdir (opts.root)
+
+    render_tiles(opts)
