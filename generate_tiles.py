@@ -8,6 +8,9 @@ from optparse import OptionParser
 import time
 import errno
 import threading
+import sqlalchemy
+import sqlalchemy.ext.declarative
+import sqlalchemy.orm
 
 try:
     import mapnik2 as mapnik
@@ -92,6 +95,62 @@ class DiskBackend:
         tile_uri= self.tile_uri (z, x, y)
         return os.path.isfile (tile_uri)
 
+    def commit (self):
+        # TODO: flush?
+        pass
+
+Master= sqlalchemy.ext.declarative.declarative_base ()
+
+class KeyValue (Master):
+    __tablename__= 'metadata'
+    name= sqlalchemy.Column (sqlalchemy.String, primary_key=True)
+    value= sqlalchemy.Column (sqlalchemy.String)
+
+class Tile (Master):
+    __tablename__= 'tiles'
+    # primary key
+    __table_args__= (
+        sqlalchemy.PrimaryKeyConstraint ('zoom_level', 'tile_column', 'tile_row',
+                                         name='z_x_y'),
+        )
+
+    # id= sqlalchemy.Column (sqlalchemy.Integer, primary_key=True)
+    zoom_level= sqlalchemy.Column (sqlalchemy.Integer)
+    tile_column= sqlalchemy.Column (sqlalchemy.Integer)
+    tile_row= sqlalchemy.Column (sqlalchemy.Integer)
+    tile_data= sqlalchemy.Column (sqlalchemy.LargeBinary)
+
+Session= sqlalchemy.orm.sessionmaker ()
+
+class MBTilesBackend:
+    def __init__ (self, base):
+        self.eng= sqlalchemy.create_engine ("sqlite:///%s.mbt" % base)
+        Master.metadata.create_all (self.eng)
+        Session.configure (bind=self.eng)
+        self.session= Session ()
+
+        # generate metadata
+        name= KeyValue (name='name', value='perrito')
+        self.session.add (name)
+        type_= KeyValue (name='type', value='baselayer')
+        self.session.add (type_)
+        version= KeyValue (name='version', value='0.1')
+        self.session.add (version)
+        description= KeyValue (name='description', value='A tileset for a friend')
+        self.session.add (description)
+        format_= KeyValue (name='format', value='png')
+        self.session.add (format_)
+        self.session.commit ()
+
+    def store (self, z, x, y, img):
+        t= Tile (zoom_level=z, tile_column=x, tile_row=y, tile_data=img.tostring ())
+        self.session.add (t)
+
+    def commit (self):
+        self.session.commit ()
+
+    def exists (self, z, x, y):
+        return False
 
 class RenderThread:
     def __init__(self, backend, mapfile, q, maxZoom, meta_size):
@@ -146,6 +205,8 @@ class RenderThread:
                 img= im.view (i*self.tile_size, j*self.tile_size, self.tile_size, self.tile_size)
                 self.backend.store (z, x+i, y+j, img)
 
+            self.backend.commit ()
+
         # self.printLock.acquire()
         print "%d:%d:%d: %f" % (x, y, z, end-start)
         # self.printLock.release()
@@ -183,7 +244,8 @@ def render_tiles(opts):
     print "render_tiles(",opts,")"
 
     backends= dict (
-        tiles= DiskBackend,
+        tiles=   DiskBackend,
+        mbtiles= MBTilesBackend,
         )
 
     try:
