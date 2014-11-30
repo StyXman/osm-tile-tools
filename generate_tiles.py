@@ -11,6 +11,7 @@ import threading
 import sqlalchemy
 import sqlalchemy.ext.declarative
 import sqlalchemy.orm
+import sqlalchemy.exc
 
 try:
     import mapnik2 as mapnik
@@ -130,19 +131,42 @@ class MBTilesBackend:
         self.session= Session ()
 
         # generate metadata
-        name= KeyValue (name='name', value='perrito')
-        self.session.add (name)
-        type_= KeyValue (name='type', value='baselayer')
-        self.session.add (type_)
-        version= KeyValue (name='version', value='0.1')
-        self.session.add (version)
-        description= KeyValue (name='description', value='A tileset for a friend')
-        self.session.add (description)
-        format_= KeyValue (name='format', value='png')
-        self.session.add (format_)
-        bounds= KeyValue (name='bounds', value=bounds)
-        self.session.add (bounds)
-        self.session.commit ()
+        try:
+            name= KeyValue (name='name', value='perrito')
+            self.session.add (name)
+            self.session.commit ()
+        except sqlalchemy.exc.IntegrityError:
+            self.session.rollback ()
+        try:
+            type_= KeyValue (name='type', value='baselayer')
+            self.session.add (type_)
+            self.session.commit ()
+        except sqlalchemy.exc.IntegrityError:
+            self.session.rollback ()
+        try:
+            version= KeyValue (name='version', value='0.1')
+            self.session.add (version)
+            self.session.commit ()
+        except sqlalchemy.exc.IntegrityError:
+            self.session.rollback ()
+        try:
+            description= KeyValue (name='description', value='A tileset for a friend')
+            self.session.add (description)
+            self.session.commit ()
+        except sqlalchemy.exc.IntegrityError:
+            self.session.rollback ()
+        try:
+            format_= KeyValue (name='format', value='png')
+            self.session.add (format_)
+            self.session.commit ()
+        except sqlalchemy.exc.IntegrityError:
+            self.session.rollback ()
+        try:
+            bounds= KeyValue (name='bounds', value=bounds)
+            self.session.add (bounds)
+            self.session.commit ()
+        except sqlalchemy.exc.IntegrityError:
+            self.session.rollback ()
 
     def store (self, z, x, y, img):
         t= Tile (zoom_level=z, tile_column=x, tile_row=y, tile_data=img.tostring ('png256'))
