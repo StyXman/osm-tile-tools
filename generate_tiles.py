@@ -143,7 +143,7 @@ class MBTilesBackend:
         self.session.commit ()
 
     def store (self, z, x, y, img):
-        t= Tile (zoom_level=z, tile_column=x, tile_row=y, tile_data=img.tostring ())
+        t= Tile (zoom_level=z, tile_column=x, tile_row=y, tile_data=img.tostring ('png256'))
         self.session.add (t)
 
     def commit (self):
