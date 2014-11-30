@@ -80,7 +80,7 @@ class GoogleProjection:
 
 
 class DiskBackend:
-    def __init__ (self, base):
+    def __init__ (self, base, *more):
         self.base_dir= base
 
     def tile_uri (self, z, x, y):
@@ -123,7 +123,7 @@ class Tile (Master):
 Session= sqlalchemy.orm.sessionmaker ()
 
 class MBTilesBackend:
-    def __init__ (self, base):
+    def __init__ (self, base, bounds):
         self.eng= sqlalchemy.create_engine ("sqlite:///%s.mbt" % base)
         Master.metadata.create_all (self.eng)
         Session.configure (bind=self.eng)
@@ -140,6 +140,8 @@ class MBTilesBackend:
         self.session.add (description)
         format_= KeyValue (name='format', value='png')
         self.session.add (format_)
+        bounds= KeyValue (name='bounds', value=bounds)
+        self.session.add (bounds)
         self.session.commit ()
 
     def store (self, z, x, y, img):
@@ -249,7 +251,7 @@ def render_tiles(opts):
         )
 
     try:
-        backend= backends[opts.format](opts.tile_dir)
+        backend= backends[opts.format](opts.tile_dir, opts.bbox)
     except KeyError:
         raise
 
