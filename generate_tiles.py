@@ -152,7 +152,10 @@ class MBTilesBackend:
         self.session.commit ()
 
     def exists (self, z, x, y):
-        return False
+        return self.session.query (sqlalchemy.func.count (Tile.zoom_level)).\
+                            filter (Tile.zoom_level==z).\
+                            filter (Tile.tile_column==x).\
+                            filter (Tile.tile_row==y)[0][0]==1 # 1st col, 1st row
 
 class RenderThread:
     def __init__(self, backend, mapfile, q, maxZoom, meta_size):
