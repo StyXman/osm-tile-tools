@@ -340,7 +340,6 @@ if __name__ == "__main__":
     parser.add_option ('-m', '--metatile-size', dest='meta_size', default=1, type='int')
     parser.add_option ('-n', '--min-zoom',      dest='min_zoom',   default=0, type="int")
     parser.add_option ('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
-    parser.add_option ('-r', '--root-dir',      dest='root',      default='.')
     parser.add_option ('-t', '--threads',       dest='threads',   default=NUM_CPUS, type="int")
     parser.add_option ('-x', '--max-zoom',      dest='max_zoom',   default=18, type="int")
     opts, args= parser.parse_args ()
@@ -352,9 +351,9 @@ if __name__ == "__main__":
     bbox = [ float (x) for x in opts.bbox.split (',') ]
 
     opts.tile_dir= os.path.abspath (opts.tile_dir)
-    opts.root=     os.path.abspath (opts.root)
 
     # so we find any relative resources
-    os.chdir (opts.root)
+    os.chdir (os.path.dirname (opts.mapfile))
+    opts.mapfile= os.path.basename (opts.mapfile)
 
     render_tiles(opts)
