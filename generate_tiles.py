@@ -252,15 +252,17 @@ class RenderThread:
             else:
                 (x, y, z)= r
 
-            all_exist= True
-            # exists= ""
-            # we use min() so we can support low zoom levels with less than meta_size tiles
-            for tile_x in range (x, x+min (self.meta_size, 2**z)):
-                for tile_y in range (y, y+min (self.meta_size, 2**z)):
-                    all_exist= all_exist and self.backend.exists (z, tile_x, tile_y)
-                    # print "%s: %s" % (tile_uri, all_exist)
+            if self.skip_existing:
+                skip= True
+                # we use min() so we can support low zoom levels with less than meta_size tiles
+                for tile_x in range (x, x+min (self.meta_size, 2**z)):
+                    for tile_y in range (y, y+min (self.meta_size, 2**z)):
+                        skip= skip and self.backend.exists (z, tile_x, tile_y)
+                        # print "%s: %s" % (tile_uri, all_exist)
+            else:
+                skip= False
 
-            if not all_exist:
+            if not skip:
                 self.render_tile (x, y, z)
 
             # bytes= os.stat (tile_uri)[6]
@@ -339,10 +341,11 @@ if __name__ == "__main__":
     parser.add_option ('-f', '--format',        dest='format',    default='tiles') # also 'mbtiles'
     parser.add_option ('-i', '--input-file',    dest='mapfile',   default='osm.xml')
     parser.add_option ('-m', '--metatile-size', dest='meta_size', default=1, type='int')
-    parser.add_option ('-n', '--min-zoom',      dest='min_zoom',   default=0, type="int")
+    parser.add_option ('-n', '--min-zoom',      dest='min_zoom',  default=0, type="int")
     parser.add_option ('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
+    parser.add_option ('-s', '--skip-existing', dest='skip',      default=False, action='store_true')
     parser.add_option ('-t', '--threads',       dest='threads',   default=NUM_CPUS, type="int")
-    parser.add_option ('-x', '--max-zoom',      dest='max_zoom',   default=18, type="int")
+    parser.add_option ('-x', '--max-zoom',      dest='max_zoom',  default=18, type="int")
     opts, args= parser.parse_args ()
 
     if opts.format=='tiles' and opts.tile_dir[-1]!='/':
