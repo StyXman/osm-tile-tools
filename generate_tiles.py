@@ -183,20 +183,21 @@ class MBTilesBackend:
                             filter (Tile.tile_row==y)[0][0]==1 # 1st col, 1st row
 
 class RenderThread:
-    def __init__(self, backend, mapfile, q, maxZoom, meta_size):
+    def __init__(self, opts, backend, queue):
         self.backend= backend
-        self.q = q
-        self.meta_size= meta_size
+        self.q = queue
+        self.skip_existing= opts.skip
+        self.meta_size= opts.meta_size
         self.tile_size= 256
         self.image_size= self.tile_size*self.meta_size
         self.m = mapnik.Map (self.image_size, self.image_size)
         # self.printLock = printLock
         # Load style XML
-        mapnik.load_map (self.m, mapfile, True)
+        mapnik.load_map (self.m, opts.mapfile, True)
         # Obtain <Map> projection
         self.prj= mapnik.Projection (self.m.srs)
         # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
-        self.tileproj= GoogleProjection (maxZoom+1)
+        self.tileproj= GoogleProjection (opts.max_zoom+1)
 
     def render_tile (self, x, y, z):
         # Calculate pixel positions of bottom-left & top-right
@@ -287,8 +288,7 @@ def render_tiles(opts):
     queue= Queue (32)
     renderers= {}
     for i in range (opts.threads):
-        renderer= RenderThread (backend, opts.mapfile, queue, opts.max_zoom,
-                                opts.meta_size)
+        renderer= RenderThread (opts, backend, queue)
         render_thread= threading.Thread (target=renderer.loop)
         render_thread.start ()
         #print "Started render thread %s" % render_thread.getName()
