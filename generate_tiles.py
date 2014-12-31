@@ -173,7 +173,8 @@ class MBTilesBackend:
         self.session.add (t)
 
     def commit (self):
-        self.session.commit ()
+        if len (self.session.dirty)>0:
+            self.session.commit ()
 
     def exists (self, z, x, y):
         return self.session.query (sqlalchemy.func.count (Tile.zoom_level)).\
