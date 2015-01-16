@@ -1,78 +1,157 @@
-#! /usr/bin/env ayrton -f
+#! /usr/bin/env ayrton
 
 # (c) 2013 Marcos Dione <mdione@grulic.org.ar>
 # for licensing details see the file LICENSE.txt
 
-from sh import ErrorReturnCode
 import re
 import math
-# import urllib.request
-# import urllib.error
 
 option ('-e')
 
-download= True
-if argv[1] in ('-n', '--dry-run'):
-    download= False
-    shift ()
+def deFerrantis_1as (lon, lat):
+    # TODO
+    # NOR
+    # PYRENEES1
+    # TATRA (???)
+    # M29,32,33
+    # N29,30,32,33
+    # O31..35
+    # P29-1,31..36
+    # Q32..36
+    # R33..36
+    if lon<0:
+        nsl= "S"
+    else:
+        nsql= "N"
 
+    if lat<0:
+        ewl= "W"
+    else:
+        ewl= "E"
 
-pbf_file= argv[1]
-extent= grep (head (osmpbf_outline (pbf_file, _out=Capture), n=100, _out=Capture), 'bbox', _out=Capture)
+    nsd= abs (lat)
+    ewd= abs (lon)
 
-#     bbox: 9.5267800,46.3685100,17.1627300,49.0240300
-try:
-    west, south, east, north= [ float (x) for x in re.split ("[:,]", str (extent))[1:] ]
-except (ValueError, AttributeError) as e:
-    print ("cannot find the extent of %s [%s]; bailing out" % (pbf_file, e))
-    exit (1)
+    return ("%s%02d%s%03d.hgt" % (nsl, nsd, ewl, ewd),
+            "http://www.viewfinderpanoramas.org/dem1/",
+            "%s%02d%s%03d.zip" % (nsl, nsd, ewl, ewd))
 
-print (west, south, east, north)
+def deFerrantis_3as (lon, lat):
+    # 4x6!!!
+    # TODO: v2!
 
-# we have 5x5 degrees squares
-#  1, 1 for -180,+59,-179,+60
-# 13,37 for    0,  0,  +1, +1
-# 24,72 for +179,-60,+180,-59
+    # lat>0 -> A..U
+    # lat<0 -> SA..SR
+    # 01-60
 
-srtm_v41_w= math.floor (west/5)+37
-srtm_v41_s= math.floor (-south/5)+13
-srtm_v41_e= math.floor (east/5)+37
-srtm_v41_n= math.floor (-north/5)+13
-if srtm_v41_n<0:
-    srtm_v41_n= 0
-if srtm_v41_s<0:
-    srtm_v41_s= 0
+    alat= abs (lat)
+    #  0  ->  A
+    #  45 ->  L
+    #  -1 -> SA
+    # -45 -> SL
+    nsl= chr (65+int (math.floor (alat/4)))
 
-print (srtm_v41_w, srtm_v41_s, srtm_v41_e, srtm_v41_n)
+    if lat<0:
+        nsl= "S"+nsl
 
-if not download:
-    exit (0)
+    # -180 -> 01
+    # 0    -> 31
+    # 179  -> 60
+    ewd= math.floor ((lon+180)/6)+1
 
-cd ('../height')
+    code= "%s%02d" % (nsl, ewd)
 
-# +1 so they're proper bounds for range
-for lat in range (srtm_v41_n, srtm_v41_s+1):
-    for lon in range (srtm_v41_w, srtm_v41_e+1):
-        zip_file= "srtm_%02d_%02d.zip" % (lon, lat)
+    # except for:
+    # GL-N, GL-S, GL-E, GL-W, ISL, AN1..4
+    # P..R07, H15,16, K19 are marked in red (???)
+    if code in ("Q26", "Q27", "Q28",
+                "P26", "P27", "P28"):
+        code= "ISL"
 
-        if not _f ("srtm_%02d_%02d.hdr" % (lon, lat)):
-            # url= "http://srtm.csi.cgiar.org/SRT-ZIP/SRTM_V41/SRTM_Data_GeoTiff/%s" % zip_file
-            url= "ftp://srtm.csi.cgiar.org/SRTM_v41/SRTM_Data_GeoTIFF/%s" % zip_file
-            try:
-                wget ('--verbose', '--progress=bar', '--continue',
-                      '--output-document', zip_file, url, _out_bufsize=0)
-            except CommandFailed as e:
-                if e.code==8:
-                    # 404
-                    pass
-                else:
-                    raise e
-            else:
+    return ("%s.hgt" % code,
+            "http://www.viewfinderpanoramas.org/dem3/",
+            "%s.zip" % code)
+
+def SRTM_3as_v41 (north, west):
+    # we have 5x5 degrees squares
+    #  1, 1 for -180,+59,-179,+60
+    # 13,37 for    0,  0,  +1, +1
+    # 24,72 for +179,-60,+180,-59
+
+    # bbox: -34.4929600,30.8165900,45.0000000,81.4729900
+    # w, s, e, n
+    # -34 -> -35/-30 -> 30
+    #  30 ->  30/ 35 ->  7
+
+    srtm_v41_n= math.floor (-north/5)+13
+    if srtm_v41_n<1:
+        srtm_v41_n= 1
+    srtm_v41_w= math.floor (west/5)+37
+
+    return ("srtm_%02d_%02d.hdr" % (srtm_v41_w, srtm_v41_n),
+            # "http://srtm.csi.cgiar.org/SRT-ZIP/SRTM_V41/SRTM_Data_GeoTiff"
+            "ftp://srtm.csi.cgiar.org/SRTM_v41/SRTM_Data_GeoTIFF",
+            "srtm_%02d_%02d.zip" % (srtm_v41_w, srtm_v41_n))
+
+def SRTM_1as (lon, lat):
+    # TODO: URL?
+    pass
+
+def ASTER_GDEM_v002 (lon, lat):
+    # TODO:
+    # ASTGMT2_N42E008.zip
+    # URL?
+    pass
+
+def main ():
+    download= True
+    if argv[1] in ('-n', '--dry-run'):
+        download= False
+        shift ()
+
+    pbf_file= argv[1]
+    extent= grep (head (osmpbf_outline (pbf_file, _fails=True), n=100), 'bbox',
+                  _out=Capture, _fails=True)
+
+    # TODO: handle grep failing
+
+    # bbox: 9.5267800,46.3685100,17.1627300,49.0240300
+    # bbox: -34.4929600,30.8165900,45.0000000,81.4729900
+    try:
+        west, south, east, north= [ float (x) for x in re.split ("[:,]", str (extent))[1:] ]
+    except (ValueError, AttributeError) as e:
+        print ("cannot find the extent of %s [%s]; bailing out" % (pbf_file, e))
+        exit (1)
+
+    if not download:
+        exit (0)
+
+    cd ('../height')
+
+    got= {}
+
+    # +1 so they're proper bounds for range
+    for lat in range (math.floor (north), math.floor (south)+1, -1):
+        for lon in range (math.floor (west), math.floor (east)+1):
+            f, u, z= SRTM_3as_v41 (lat, lon)
+
+            if not _f (f) and not z in got:
+                url= "%s/%s" % (u, z)
                 try:
-                    unzip ('-o', zip_file)
-                    # unlink (zip_file)
-                    pass
-                except ErrorReturnCode as e:
-                    print ("unzipping %s failed; keeping..." % zip_file)
+                    wget ('--verbose', '--progress=bar', '--continue',
+                          '--output-document', z, url, _out_bufsize=0)
+                    got[z]= True
+                except CommandFailed as e:
+                    # wget leaves an empty file if the download failed!
+                    rm (z)
+                else:
+                    try:
+                        unzip ('-o', z)
+                        # unlink (zip_file)
+                        pass
+                    except CommandFailed as e:
+                        print ("unzipping %s failed[%s]; keeping..." % (z, e))
 
-            sleep (1)
+                sleep (1)
+
+main ()
