@@ -128,19 +128,16 @@ def main ():
 
     cd ('../height')
 
-    got= {}
-
     # +1 so they're proper bounds for range
     for lat in range (math.floor (north), math.floor (south)+1, -1):
         for lon in range (math.floor (west), math.floor (east)+1):
             f, u, z= SRTM_3as_v41 (lat, lon)
 
-            if not _f (f) and not z in got:
+            if not _f (f):
                 url= "%s/%s" % (u, z)
                 try:
                     wget ('--verbose', '--progress=bar', '--continue',
                           '--output-document', z, url, _out_bufsize=0)
-                    got[z]= True
                 except CommandFailed as e:
                     # wget leaves an empty file if the download failed!
                     rm (z)
