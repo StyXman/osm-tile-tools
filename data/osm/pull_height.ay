@@ -95,6 +95,7 @@ def SRTM_3as_v41 (north, west):
 
 def SRTM_1as (lon, lat):
     # TODO: URL?
+    # https://lta.cr.usgs.gov/SRTM1Arc
     pass
 
 def ASTER_GDEM_v002 (lon, lat):
@@ -128,17 +129,24 @@ def main ():
 
     cd ('../height')
 
+    not_found= set ()
+
     # +1 so they're proper bounds for range
     for lat in range (math.floor (north), math.floor (south)+1, -1):
         for lon in range (math.floor (west), math.floor (east)+1):
             f, u, z= SRTM_3as_v41 (lat, lon)
 
-            if not _f (f):
+            if not _f (f) and z not in not_found:
                 url= "%s/%s" % (u, z)
                 try:
                     wget ('--verbose', '--progress=bar', '--continue',
                           '--output-document', z, url, _out_bufsize=0)
                 except CommandFailed as e:
+                    if e.command.exit_code ()==8:
+                        # most probably 404
+                        # TODO: use curl instead
+                        not_found.add (z)
+
                     # wget leaves an empty file if the download failed!
                     rm (z)
                 else:
