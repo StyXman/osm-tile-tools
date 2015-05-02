@@ -4,7 +4,7 @@ from math import pi,cos,sin,log,exp,atan
 from subprocess import call
 import sys, os, os.path
 from Queue import Queue
-from optparse import OptionParser
+from argparse import ArgumentParser
 import time
 import errno
 import threading
@@ -336,17 +336,23 @@ def render_tiles(opts):
         renderers[i].join ()
 
 if __name__ == "__main__":
-    parser= OptionParser ()
-    parser.add_option ('-b', '--bbox',          dest='bbox',      default='-180,-85,180,85')
-    parser.add_option ('-f', '--format',        dest='format',    default='tiles') # also 'mbtiles'
-    parser.add_option ('-i', '--input-file',    dest='mapfile',   default='osm.xml')
-    parser.add_option ('-m', '--metatile-size', dest='meta_size', default=1, type='int')
-    parser.add_option ('-n', '--min-zoom',      dest='min_zoom',  default=0, type="int")
-    parser.add_option ('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
-    parser.add_option ('-s', '--skip-existing', dest='skip',      default=False, action='store_true')
-    parser.add_option ('-t', '--threads',       dest='threads',   default=NUM_CPUS, type="int")
-    parser.add_option ('-x', '--max-zoom',      dest='max_zoom',  default=18, type="int")
-    opts, args= parser.parse_args ()
+    parser= ArgumentParser ()
+
+    # g1= parser.add_mutually_exclusive_group ()
+    # g2= g1.add_argument_group ()
+    parser.add_argument ('-b', '--bbox',          dest='bbox',      default='-180,-85,180,85')
+    parser.add_argument ('-n', '--min-zoom',      dest='min_zoom',  default=0, type=int)
+    parser.add_argument ('-x', '--max-zoom',      dest='max_zoom',  default=18, type=int)
+
+    parser.add_argument       ('--tile',          dest='tiles',     default= None, nargs='*', metavar='Z,X,Y')
+
+    parser.add_argument ('-f', '--format',        dest='format',    default='tiles') # also 'mbtiles'
+    parser.add_argument ('-i', '--input-file',    dest='mapfile',   default='osm.xml')
+    parser.add_argument ('-m', '--metatile-size', dest='meta_size', default=1, type=int)
+    parser.add_argument ('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
+    parser.add_argument ('-s', '--skip-existing', dest='skip',      default=False, action='store_true')
+    parser.add_argument ('-t', '--threads',       dest='threads',   default=NUM_CPUS, type=int)
+    opts= parser.parse_args ()
 
     if opts.format=='tiles' and opts.tile_dir[-1]!='/':
         # we need the trailing /, it's actually a series of BUG s in render_tiles()
