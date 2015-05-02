@@ -88,9 +88,17 @@ class DiskBackend:
         return os.path.join (self.base_dir, str (z), str (x), str (y)+'.png')
 
     def store (self, z, x, y, img):
+        data= img.tostring ('png256')
+        if len (data)==103:
+            # empty tile, skip
+            print "%d/%d/%d.png: empty" % (z, x, y)
+            return
+
         tile_uri= self.tile_uri (z, x, y)
         makedirs (os.path.dirname (tile_uri))
-        img.save (tile_uri, 'png256')
+        f= open (tile_uri, 'w+')
+        f.write (data)
+        f.close ()
 
     def exists (self, z, x, y):
         tile_uri= self.tile_uri (z, x, y)
@@ -169,7 +177,13 @@ class MBTilesBackend:
             self.session.rollback ()
 
     def store (self, z, x, y, img):
-        t= Tile (zoom_level=z, tile_column=x, tile_row=y, tile_data=img.tostring ('png256'))
+        data= img.tostring ('png256')
+        if len (data)==103:
+            # empty tile, skip
+            print "%d/%d/%d.png: empty" % (z, x, y)
+            return
+
+        t= Tile (zoom_level=z, tile_column=x, tile_row=y, tile_data=data)
         self.session.add (t)
 
     def commit (self):
@@ -265,11 +279,6 @@ class RenderThread:
             if not skip:
                 self.render_tile (x, y, z)
 
-            # bytes= os.stat (tile_uri)[6]
-            # empty= ''
-            # if bytes==103:
-            #     empty = " Empty Tile "
-            # print name, ":", z, x, y, exists, empty
             self.q.task_done ()
 
 
