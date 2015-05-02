@@ -22,7 +22,7 @@ def deFerrantis_1as (lon, lat):
     if lon<0:
         nsl= "S"
     else:
-        nsql= "N"
+        nsl= "N"
 
     if lat<0:
         ewl= "W"
@@ -95,14 +95,50 @@ def SRTM_3as_v41 (north, west):
 
 def SRTM_1as (lon, lat):
     # TODO: URL?
-    # https://lta.cr.usgs.gov/SRTM1Arc
-    pass
+    # http://dds.cr.usgs.gov/ltaauth//hsm/lta1/srtm_v3/tif/1arcsec/e046/n53_e046_1arc_v3.tif?id=rmui4p494bcknp5gfmsj5ivfd3&iid=SRTM1N53E046V3&did=88512880&ver=production
+    # http://earthexplorer.usgs.gov/
+    n= abs (lat)
+    w= abs (lon)
+
+    if lat<0:
+        nsc= 's'
+    else:
+        nsc= 'n'
+
+    if lon<0:
+        ewc= 'w'
+    else:
+        ewc= 'e'
+
+    return ("%s%02d_%s%03d_1arc_v3.tif" % (ewc, w, nsc, n),
+            "http://dds.cr.usgs.gov/ltaauth//hsm/lta1/srtm_v3/tif/1arcsec/e046/n53_e046_1arc_v3.tif?id=rmui4p494bcknp5gfmsj5ivfd3&iid=SRTM1N53E046V3&did=88512880&ver=production",
+            "%s%02d_%s%03d_1arc_v3.tif" % (ewc, w, nsc, n))
 
 def ASTER_GDEM_v002 (lon, lat):
     # TODO:
     # ASTGMT2_N42E008.zip
     # URL?
     pass
+
+def SRTMGL1v003 (lon, lat):
+    # http://e4ftl01.cr.usgs.gov//MODV6_Dal_D/SRTM/SRTMGL1.003/2000.02.11/N{3{5,6,7,8,9},{4,5}{0,0,1,2,3,4,5,6,7,8,9}}{W00{1,2,3,4,5,6,7},E0{{0,2,3}{0,1,2,3,4,5,6,7,8,9},4{0,1,2,3,4,5,6,7}}}.SRTMGL1.hgt.zip
+    # http://e4ftl01.cr.usgs.gov//MODV6_Dal_D/SRTM/SRTMGL1.003/2000.02.11/
+    n= abs (lat)
+    w= abs (lon)
+
+    if lat<0:
+        nsc= 'S'
+    else:
+        nsc= 'N'
+
+    if lon<0:
+        ewc= 'W'
+    else:
+        ewc= 'E'
+
+    return ("%s%02d%s%03d.SRTMGL1.hgt.zip" % (ewc, w, nsc, n),
+            "http://e4ftl01.cr.usgs.gov//MODV6_Dal_D/SRTM/SRTMGL1.003/2000.02.11",
+            "%s%02d%s%03d.SRTMGL1.hgt.zip" % (ewc, w, nsc, n))
 
 def main ():
     download= True
@@ -134,7 +170,7 @@ def main ():
     # +1 so they're proper bounds for range
     for lat in range (math.floor (north), math.floor (south)+1, -1):
         for lon in range (math.floor (west), math.floor (east)+1):
-            f, u, z= SRTM_3as_v41 (lat, lon)
+            f, u, z= SRTMGL1v003 (lat, lon)
 
             if not _f (f) and z not in not_found:
                 url= "%s/%s" % (u, z)
