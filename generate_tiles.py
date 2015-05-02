@@ -308,8 +308,19 @@ def render_tiles(opts):
     if not os.path.isdir (opts.tile_dir):
          os.mkdir (opts.tile_dir)
 
+    if opts.tiles is None:
+        render_bbox (opts, queue, renderers)
+    else:
+        for i in opts.tiles:
+            z, x, y= map (int, i.split (','))
+            queue.put ((x, y, z))
+
+    finish (queue, renderers)
+
+def render_bbox (opts, queue, renderers):
     gprj= GoogleProjection (opts.max_zoom+1)
 
+    bbox = map (float, opts.bbox.split (','))
     ll0= (bbox[0], bbox[3])
     ll1= (bbox[2], bbox[1])
 
@@ -336,9 +347,11 @@ def render_tiles(opts):
                 except KeyboardInterrupt:
                     raise SystemExit("Ctrl-c detected, exiting...")
 
+def finish (queue, renderers):
     # Signal render threads to exit by sending empty request to queue
     for i in range (opts.threads):
         queue.put (None)
+
     # wait for pending rendering jobs to complete
     queue.join ()
     for i in range (opts.threads):
@@ -366,8 +379,6 @@ if __name__ == "__main__":
     if opts.format=='tiles' and opts.tile_dir[-1]!='/':
         # we need the trailing /, it's actually a series of BUG s in render_tiles()
         opts.tile_dir+= '/'
-
-    bbox = [ float (x) for x in opts.bbox.split (',') ]
 
     opts.tile_dir= os.path.abspath (opts.tile_dir)
 
