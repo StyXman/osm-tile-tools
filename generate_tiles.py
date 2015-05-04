@@ -12,6 +12,8 @@ import sqlalchemy
 import sqlalchemy.ext.declarative
 import sqlalchemy.orm
 import sqlalchemy.exc
+import datetime
+import errno
 
 try:
     import mapnik2 as mapnik
@@ -103,6 +105,16 @@ class DiskBackend:
     def exists (self, z, x, y):
         tile_uri= self.tile_uri (z, x, y)
         return os.path.isfile (tile_uri)
+
+    def newer_than (self, z, x, y, date):
+        tile_uri= self.tile_uri (z, x, y)
+        try:
+            return datetime.datetime.fromtimestamp (os.stat (tile_uri).st_mtime)>date
+        except OSError as e:
+            if e.errno==errno.ENOENT:
+                return False
+            else:
+                raise
 
     def commit (self):
         # TODO: flush?
@@ -212,6 +224,7 @@ class RenderThread:
         self.prj= mapnik.Projection (self.m.srs)
         # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
         self.tileproj= GoogleProjection (opts.max_zoom+1)
+        self.skip_newer= opts.skip_newer
 
     def render_tile (self, x, y, z):
         # Calculate pixel positions of bottom-left & top-right
@@ -252,9 +265,7 @@ class RenderThread:
 
             self.backend.commit ()
 
-        # self.printLock.acquire()
         print "%d:%d:%d: %f" % (x, y, z, end-start)
-        # self.printLock.release()
 
     def loop (self):
         while True:
@@ -266,18 +277,27 @@ class RenderThread:
             else:
                 (x, y, z)= r
 
-            if self.skip_existing:
+            if self.skip_existing or self.skip_newer is not None:
                 skip= True
                 # we use min() so we can support low zoom levels with less than meta_size tiles
                 for tile_x in range (x, x+min (self.meta_size, 2**z)):
                     for tile_y in range (y, y+min (self.meta_size, 2**z)):
-                        skip= skip and self.backend.exists (z, tile_x, tile_y)
-                        # print "%s: %s" % (tile_uri, all_exist)
+                        if self.skip_existing:
+                            skip= skip and self.backend.exists (z, tile_x, tile_y)
+                        else:
+                            skip= (skip and
+                                self.backend.newer_than (z, tile_x, tile_y,
+                                                         self.skip_newer))
             else:
                 skip= False
 
             if not skip:
                 self.render_tile (x, y, z)
+            else:
+                if self.skip_existing:
+                    print "%d:%d:%d: present, skipping" % (x, y, z)
+                else:
+                    print "%d:%d:%d: too new, skipping" % (x, y, z)
 
             self.q.task_done ()
 
@@ -362,18 +382,19 @@ if __name__ == "__main__":
 
     # g1= parser.add_mutually_exclusive_group ()
     # g2= g1.add_argument_group ()
-    parser.add_argument ('-b', '--bbox',          dest='bbox',      default='-180,-85,180,85')
-    parser.add_argument ('-n', '--min-zoom',      dest='min_zoom',  default=0, type=int)
-    parser.add_argument ('-x', '--max-zoom',      dest='max_zoom',  default=18, type=int)
+    parser.add_argument ('-b', '--bbox',          dest='bbox',       default='-180,-85,180,85')
+    parser.add_argument ('-n', '--min-zoom',      dest='min_zoom',   default=0, type=int)
+    parser.add_argument ('-x', '--max-zoom',      dest='max_zoom',   default=18, type=int)
 
-    parser.add_argument       ('--tile',          dest='tiles',     default= None, nargs='*', metavar='Z,X,Y')
+    parser.add_argument       ('--tile',          dest='tiles',      default= None, nargs='*', metavar='Z,X,Y')
 
-    parser.add_argument ('-f', '--format',        dest='format',    default='tiles') # also 'mbtiles'
-    parser.add_argument ('-i', '--input-file',    dest='mapfile',   default='osm.xml')
-    parser.add_argument ('-m', '--metatile-size', dest='meta_size', default=1, type=int)
-    parser.add_argument ('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
-    parser.add_argument ('-s', '--skip-existing', dest='skip',      default=False, action='store_true')
-    parser.add_argument ('-t', '--threads',       dest='threads',   default=NUM_CPUS, type=int)
+    parser.add_argument ('-f', '--format',        dest='format',     default='tiles') # also 'mbtiles'
+    parser.add_argument ('-i', '--input-file',    dest='mapfile',    default='osm.xml')
+    parser.add_argument ('-m', '--metatile-size', dest='meta_size',  default=1, type=int)
+    parser.add_argument ('-o', '--output-dir',    dest='tile_dir',   default='tiles/')
+    parser.add_argument ('-s', '--skip-existing', dest='skip',       default=False, action='store_true')
+    parser.add_argument ('-N', '--skip-newer',    dest='skip_newer', default=None, type=int)
+    parser.add_argument ('-t', '--threads',       dest='threads',    default=NUM_CPUS, type=int)
     opts= parser.parse_args ()
 
     if opts.format=='tiles' and opts.tile_dir[-1]!='/':
@@ -381,9 +402,11 @@ if __name__ == "__main__":
         opts.tile_dir+= '/'
 
     opts.tile_dir= os.path.abspath (opts.tile_dir)
+    if opts.skip_newer is not None:
+        opts.skip_newer= datetime.datetime.now ()-datetime.timedelta (days=opts.skip_newer)
 
     # so we find any relative resources
-    os.chdir (os.path.dirname (opts.mapfile))
+    # os.chdir (os.path.dirname (opts.mapfile))
     opts.mapfile= os.path.basename (opts.mapfile)
 
     render_tiles(opts)
