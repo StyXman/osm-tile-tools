@@ -45,6 +45,8 @@ def makedirs (_dirname):
             if e.args[0]!=errno.EEXIST:
                 raise e
 
+def is_empty (data):
+    return len (data)==103 and data[41:44]=='\xb5\xd0\xd0'
 
 def minmax (a,b,c):
     a = max(a,b)
