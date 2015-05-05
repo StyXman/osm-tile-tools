@@ -91,13 +91,7 @@ class DiskBackend:
     def tile_uri (self, z, x, y):
         return os.path.join (self.base_dir, str (z), str (x), str (y)+'.png')
 
-    def store (self, z, x, y, img):
-        data= img.tostring ('png256')
-        if len (data)==103:
-            # empty tile, skip
-            print "%d/%d/%d.png: empty" % (z, x, y)
-            return
-
+    def store (self, z, x, y, data):
         tile_uri= self.tile_uri (z, x, y)
         makedirs (os.path.dirname (tile_uri))
         f= open (tile_uri, 'w+')
@@ -190,13 +184,7 @@ class MBTilesBackend:
         except sqlalchemy.exc.IntegrityError:
             self.session.rollback ()
 
-    def store (self, z, x, y, img):
-        data= img.tostring ('png256')
-        if len (data)==103:
-            # empty tile, skip
-            print "%d/%d/%d.png: empty" % (z, x, y)
-            return
-
+    def store (self, z, x, y, data):
         t= Tile (zoom_level=z, tile_column=x, tile_row=y, tile_data=data)
         self.session.add (t)
 
@@ -263,7 +251,13 @@ class RenderThread:
         for i in xrange (min (self.meta_size, 2**z)):
             for j in xrange (min (self.meta_size, 2**z)):
                 img= im.view (i*self.tile_size, j*self.tile_size, self.tile_size, self.tile_size)
-                self.backend.store (z, x+i, y+j, img)
+                data= img.tostring ('png256')
+                if not is_empty (data):
+                    self.backend.store (z, x+i, y+j, data)
+                else:
+                    # empty tile, skip
+                    print "%d:%d:%d: empty" % (z, x, y)
+                    continue
 
             self.backend.commit ()
 
