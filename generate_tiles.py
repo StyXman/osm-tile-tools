@@ -203,7 +203,7 @@ class RenderThread:
     def __init__(self, opts, backend, queue):
         self.backend= backend
         self.q = queue
-        self.skip_existing= opts.skip
+        self.opts= opts
         self.meta_size= opts.meta_size
         self.tile_size= 256
         self.image_size= self.tile_size*self.meta_size
@@ -215,7 +215,6 @@ class RenderThread:
         self.prj= mapnik.Projection (self.m.srs)
         # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
         self.tileproj= GoogleProjection (opts.max_zoom+1)
-        self.skip_newer= opts.skip_newer
 
     def render_tile (self, x, y, z):
         # Calculate pixel positions of bottom-left & top-right
@@ -256,9 +255,10 @@ class RenderThread:
                 if not is_empty (data):
                     self.backend.store (z, x+i, y+j, data)
                 else:
-                    # empty tile, skip
-                    print "%d:%d:%d: empty" % (z, x, y)
-                    continue
+                    if self.opts.empty=='skip':
+                        # empty tile, skip
+                        print "%d:%d:%d: empty" % (z, x, y)
+                        continue
 
             self.backend.commit ()
 
@@ -274,17 +274,17 @@ class RenderThread:
             else:
                 (x, y, z)= r
 
-            if self.skip_existing or self.skip_newer is not None:
+            if self.opts.skip_existing or self.opts.skip_newer is not None:
                 skip= True
                 # we use min() so we can support low zoom levels with less than meta_size tiles
                 for tile_x in range (x, x+min (self.meta_size, 2**z)):
                     for tile_y in range (y, y+min (self.meta_size, 2**z)):
-                        if self.skip_existing:
+                        if self.opts.skip_existing:
                             skip= skip and self.backend.exists (z, tile_x, tile_y)
                         else:
                             skip= (skip and
                                 self.backend.newer_than (z, tile_x, tile_y,
-                                                         self.skip_newer))
+                                                         self.opts.skip_newer))
             else:
                 skip= False
 
@@ -379,19 +379,23 @@ if __name__ == "__main__":
 
     # g1= parser.add_mutually_exclusive_group ()
     # g2= g1.add_argument_group ()
-    parser.add_argument ('-b', '--bbox',          dest='bbox',       default='-180,-85,180,85')
-    parser.add_argument ('-n', '--min-zoom',      dest='min_zoom',   default=0, type=int)
-    parser.add_argument ('-x', '--max-zoom',      dest='max_zoom',   default=18, type=int)
+    parser.add_argument ('-b', '--bbox',          dest='bbox',      default='-180,-85,180,85')
+    parser.add_argument ('-n', '--min-zoom',      dest='min_zoom',  default=0, type=int)
+    parser.add_argument ('-x', '--max-zoom',      dest='max_zoom',  default=18, type=int)
 
-    parser.add_argument       ('--tile',          dest='tiles',      default= None, nargs='*', metavar='Z,X,Y')
+    parser.add_argument (      '--tile',          dest='tiles',     default= None, nargs='*', metavar='Z,X,Y')
 
-    parser.add_argument ('-f', '--format',        dest='format',     default='tiles') # also 'mbtiles'
-    parser.add_argument ('-i', '--input-file',    dest='mapfile',    default='osm.xml')
-    parser.add_argument ('-m', '--metatile-size', dest='meta_size',  default=1, type=int)
-    parser.add_argument ('-o', '--output-dir',    dest='tile_dir',   default='tiles/')
-    parser.add_argument ('-s', '--skip-existing', dest='skip',       default=False, action='store_true')
+    parser.add_argument ('-i', '--input-file',    dest='mapfile',   default='osm.xml')
+    parser.add_argument ('-f', '--format',        dest='format',    default='tiles') # also 'mbtiles'
+    parser.add_argument ('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
+
+    parser.add_argument ('-m', '--metatile-size', dest='meta_size', default=1, type=int)
+    parser.add_argument ('-t', '--threads',       dest='threads',   default=NUM_CPUS, type=int)
+
+    parser.add_argument ('-X', '--skip-existing', dest='skip_existing', default=False, action='store_true')
     parser.add_argument ('-N', '--skip-newer',    dest='skip_newer', default=None, type=int)
-    parser.add_argument ('-t', '--threads',       dest='threads',    default=NUM_CPUS, type=int)
+    # parser.add_argument ('-L', '--skip-symlinks', dest='skip_', default=None, type=int)
+    parser.add_argument ('-E', '--empty',         dest='empty',     default='skip', choices=('skip', 'link', 'render'))
     opts= parser.parse_args ()
 
     if opts.format=='tiles' and opts.tile_dir[-1]!='/':
