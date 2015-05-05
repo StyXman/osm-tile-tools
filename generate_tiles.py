@@ -46,7 +46,8 @@ def makedirs (_dirname):
                 raise e
 
 def is_empty (data):
-    return len (data)==103 and data[41:44]=='\xb5\xd0\xd0'
+    # TODO: this is *completely* style dependent!
+    return len (data)==103 and data[41:44]=='\xc4\xe2\xe2'
 
 def minmax (a,b,c):
     a = max(a,b)
