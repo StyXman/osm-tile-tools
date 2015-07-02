@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from math import pi,cos,sin,log,exp,atan
 from subprocess import call
 import sys, os, os.path
 from Queue import Queue
@@ -8,12 +7,10 @@ from argparse import ArgumentParser
 import time
 import errno
 import threading
-import sqlalchemy
-import sqlalchemy.ext.declarative
-import sqlalchemy.orm
-import sqlalchemy.exc
 import datetime
 import errno
+
+import map_utils
 
 try:
     import mapnik2 as mapnik
@@ -22,182 +19,10 @@ except:
 
 import multiprocessing
 
-DEG_TO_RAD = pi/180
-RAD_TO_DEG = 180/pi
-
 try:
     NUM_CPUS= multiprocessing.cpu_count ()
 except NotImplementedError:
     NUM_CPUS= 1
-
-
-def makedirs (_dirname):
-    """ Better replacement for os.makedirs():
-        doesn't fails if some intermediate dir already exists.
-    """
-    dirs= _dirname.split ('/')
-    i= ''
-    while len (dirs):
-        i+= dirs.pop (0)+'/'
-        try:
-            os.mkdir (i)
-        except OSError, e:
-            if e.args[0]!=errno.EEXIST:
-                raise e
-
-def is_empty (data):
-    # TODO: this is *completely* style dependent!
-    return len (data)==103 and data[41:44]=='\xc4\xe2\xe2'
-
-def minmax (a,b,c):
-    a = max(a,b)
-    a = min(a,c)
-    return a
-
-
-class GoogleProjection:
-    def __init__(self,levels=18):
-        self.Bc = []
-        self.Cc = []
-        self.zc = []
-        self.Ac = []
-        c = 256
-        for d in range(0,levels):
-            e = c/2
-            self.Bc.append(c/360.0)
-            self.Cc.append(c/(2 * pi))
-            self.zc.append((e,e))
-            self.Ac.append(c)
-            c *= 2
-
-    def fromLLtoPixel(self,ll,zoom):
-         d = self.zc[zoom]
-         e = round(d[0] + ll[0] * self.Bc[zoom])
-         f = minmax(sin(DEG_TO_RAD * ll[1]),-0.9999,0.9999)
-         g = round(d[1] + 0.5*log((1+f)/(1-f))*-self.Cc[zoom])
-         return (e,g)
-
-    def fromPixelToLL(self,px,zoom):
-         e = self.zc[zoom]
-         f = (px[0] - e[0])/self.Bc[zoom]
-         g = (px[1] - e[1])/-self.Cc[zoom]
-         h = RAD_TO_DEG * ( 2 * atan(exp(g)) - 0.5 * pi)
-         return (f,h)
-
-
-class DiskBackend:
-    def __init__ (self, base, *more):
-        self.base_dir= base
-
-    def tile_uri (self, z, x, y):
-        return os.path.join (self.base_dir, str (z), str (x), str (y)+'.png')
-
-    def store (self, z, x, y, data):
-        tile_uri= self.tile_uri (z, x, y)
-        makedirs (os.path.dirname (tile_uri))
-        f= open (tile_uri, 'w+')
-        f.write (data)
-        f.close ()
-
-    def exists (self, z, x, y):
-        tile_uri= self.tile_uri (z, x, y)
-        return os.path.isfile (tile_uri)
-
-    def newer_than (self, z, x, y, date):
-        tile_uri= self.tile_uri (z, x, y)
-        try:
-            return datetime.datetime.fromtimestamp (os.stat (tile_uri).st_mtime)>date
-        except OSError as e:
-            if e.errno==errno.ENOENT:
-                return False
-            else:
-                raise
-
-    def commit (self):
-        # TODO: flush?
-        pass
-
-Master= sqlalchemy.ext.declarative.declarative_base ()
-
-class KeyValue (Master):
-    __tablename__= 'metadata'
-    name= sqlalchemy.Column (sqlalchemy.String, primary_key=True)
-    value= sqlalchemy.Column (sqlalchemy.String)
-
-class Tile (Master):
-    __tablename__= 'tiles'
-    # primary key
-    __table_args__= (
-        sqlalchemy.PrimaryKeyConstraint ('zoom_level', 'tile_column', 'tile_row',
-                                         name='z_x_y'),
-        )
-
-    # id= sqlalchemy.Column (sqlalchemy.Integer, primary_key=True)
-    zoom_level= sqlalchemy.Column (sqlalchemy.Integer)
-    tile_column= sqlalchemy.Column (sqlalchemy.Integer)
-    tile_row= sqlalchemy.Column (sqlalchemy.Integer)
-    tile_data= sqlalchemy.Column (sqlalchemy.LargeBinary)
-
-Session= sqlalchemy.orm.sessionmaker ()
-
-class MBTilesBackend:
-    def __init__ (self, base, bounds):
-        self.eng= sqlalchemy.create_engine ("sqlite:///%s.mbt" % base)
-        Master.metadata.create_all (self.eng)
-        Session.configure (bind=self.eng)
-        self.session= Session ()
-
-        # generate metadata
-        try:
-            name= KeyValue (name='name', value='perrito')
-            self.session.add (name)
-            self.session.commit ()
-        except sqlalchemy.exc.IntegrityError:
-            self.session.rollback ()
-        try:
-            type_= KeyValue (name='type', value='baselayer')
-            self.session.add (type_)
-            self.session.commit ()
-        except sqlalchemy.exc.IntegrityError:
-            self.session.rollback ()
-        try:
-            version= KeyValue (name='version', value='0.1')
-            self.session.add (version)
-            self.session.commit ()
-        except sqlalchemy.exc.IntegrityError:
-            self.session.rollback ()
-        try:
-            description= KeyValue (name='description', value='A tileset for a friend')
-            self.session.add (description)
-            self.session.commit ()
-        except sqlalchemy.exc.IntegrityError:
-            self.session.rollback ()
-        try:
-            format_= KeyValue (name='format', value='png')
-            self.session.add (format_)
-            self.session.commit ()
-        except sqlalchemy.exc.IntegrityError:
-            self.session.rollback ()
-        try:
-            bounds= KeyValue (name='bounds', value=bounds)
-            self.session.add (bounds)
-            self.session.commit ()
-        except sqlalchemy.exc.IntegrityError:
-            self.session.rollback ()
-
-    def store (self, z, x, y, data):
-        t= Tile (zoom_level=z, tile_column=x, tile_row=y, tile_data=data)
-        self.session.add (t)
-
-    def commit (self):
-        if len (self.session.dirty)>0:
-            self.session.commit ()
-
-    def exists (self, z, x, y):
-        return self.session.query (sqlalchemy.func.count (Tile.zoom_level)).\
-                            filter (Tile.zoom_level==z).\
-                            filter (Tile.tile_column==x).\
-                            filter (Tile.tile_row==y)[0][0]==1 # 1st col, 1st row
 
 class RenderThread:
     def __init__(self, opts, backend, queue):
@@ -214,7 +39,7 @@ class RenderThread:
         # Obtain <Map> projection
         self.prj= mapnik.Projection (self.m.srs)
         # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
-        self.tileproj= GoogleProjection (opts.max_zoom+1)
+        self.tileproj= map_utils.GoogleProjection (opts.max_zoom+1)
 
     def render_tile (self, x, y, z):
         # Calculate pixel positions of bottom-left & top-right
@@ -252,7 +77,7 @@ class RenderThread:
             for j in xrange (min (self.meta_size, 2**z)):
                 img= im.view (i*self.tile_size, j*self.tile_size, self.tile_size, self.tile_size)
                 data= img.tostring ('png256')
-                if not is_empty (data):
+                if not map_utils.is_empty (data):
                     self.backend.store (z, x+i, y+j, data)
                 else:
                     if self.opts.empty=='skip':
@@ -303,8 +128,8 @@ def render_tiles(opts):
     print "render_tiles(",opts,")"
 
     backends= dict (
-        tiles=   DiskBackend,
-        mbtiles= MBTilesBackend,
+        tiles=   map_utils.DiskBackend,
+        mbtiles= map_utils.MBTilesBackend,
         )
 
     try:
@@ -335,7 +160,7 @@ def render_tiles(opts):
     finish (queue, renderers)
 
 def render_bbox (opts, queue, renderers):
-    gprj= GoogleProjection (opts.max_zoom+1)
+    gprj= map_utils.GoogleProjection (opts.max_zoom+1)
 
     bbox = map (float, opts.bbox.split (','))
     ll0= (bbox[0], bbox[3])
