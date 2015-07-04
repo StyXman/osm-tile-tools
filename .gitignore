@@ -24,3 +24,9 @@ tilemill/
 *.log
 .kate-swp
 *~
+data/height/*.vrt
+data/height/*.tif
+*.pyc
+*.pyo
+openstreetmap-carto*
+*.xml
