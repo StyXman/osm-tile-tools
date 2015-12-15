@@ -199,12 +199,30 @@ def finish (queue, renderers):
     for i in range (opts.threads):
         renderers[i].join ()
 
+def bbox (value):
+    data= value.split (',')
+    for index, deg in enumerate (data):
+        try:
+            deg= float (deg)
+        except ValueError:
+            # let's try with x:y[:z]
+            d= deg.split (':')
+            if len (d)==2:
+                d.append ('0')
+
+            deg, mn, sec= [ int (x) for x in d ]
+            deg= deg+1/60.0*mn+1/3600.0*sec
+
+        data[index]= deg
+
+    return data
+
 if __name__ == "__main__":
     parser= ArgumentParser ()
 
     # g1= parser.add_mutually_exclusive_group ()
     # g2= g1.add_argument_group ()
-    parser.add_argument ('-b', '--bbox',          dest='bbox',      default='-180,-85,180,85')
+    parser.add_argument ('-b', '--bbox',          dest='bbox',      default=[-180, -85, 180, 85], type=bbox)
     parser.add_argument ('-n', '--min-zoom',      dest='min_zoom',  default=0, type=int)
     parser.add_argument ('-x', '--max-zoom',      dest='max_zoom',  default=18, type=int)
 
