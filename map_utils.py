@@ -194,6 +194,7 @@ def bbox (value):
 
 class Map:
     def __init__ (self, bbox, max_z):
+        self.bbox= bbox
         ll0 = (bbox[0],bbox[3])
         ll1 = (bbox[2],bbox[1])
         gprj = GoogleProjection(max_z+1)
@@ -236,36 +237,36 @@ class Map:
 
 class Atlas:
     def __init__ (self, sectors):
-        self.maps= []
+        self.maps= {}
         c= ConfigParser ()
         c.read ('bboxes.ini')
         self.minZoom= 0
         self.maxZoom= 0
 
         for sector in sectors:
-            sector= [ float (x) for x in c.get ('bboxes', sector).split (',') ]
+            bb= bbox (c.get ('bboxes', sector))
             # #4 is the max_z
-            if sector[4]>self.maxZoom:
-                self.maxZoom= int (sector[4])
+            if bb[4]>self.maxZoom:
+                self.maxZoom= int (bb[4])
 
         for sector in sectors:
-            sector= [ float (x) for x in c.get ('bboxes', sector).split (',') ]
-            self.maps.append (Map (sector[:4], self.maxZoom))
+            bb= bbox (c.get ('bboxes', sector))
+            self.maps[sector]= Map (bb[:4], self.maxZoom)
 
     def __contains__ (self, t):
         w= False
-        for m in self.maps:
+        for m in self.maps.values ():
             w= w or t in m
 
         return w
 
     def iterate_x (self, z):
-        for m in self.maps:
+        for m in self.maps.values ():
             for x in m.iterate_x (z):
                 yield x
 
     def iterate_y (self, z, x):
-        for m in self.maps:
+        for m in self.maps.values ():
             if (z, x) in m:
                 for y in m.iterate_y (z):
                     yield y
