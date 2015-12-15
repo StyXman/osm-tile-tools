@@ -162,7 +162,7 @@ def render_tiles(opts):
 def render_bbox (opts, queue, renderers):
     gprj= map_utils.GoogleProjection (opts.max_zoom+1)
 
-    bbox = map (float, opts.bbox.split (','))
+    bbox = opts.bbox
     ll0= (bbox[0], bbox[3])
     ll1= (bbox[2], bbox[1])
 
