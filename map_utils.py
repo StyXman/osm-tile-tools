@@ -174,6 +174,24 @@ def coord_range (mn, mx, zoom):
     return ( coord for coord in range (mn, mx+1)
                    if coord >= 0 and coord < 2**zoom )
 
+def bbox (value):
+    data= value.split (',')
+    for index, deg in enumerate (data):
+        try:
+            deg= float (deg)
+        except ValueError:
+            # let's try with x:y[:z]
+            d= deg.split (':')
+            if len (d)==2:
+                d.append ('0')
+
+            deg, mn, sec= [ int (x) for x in d ]
+            deg= deg+1/60.0*mn+1/3600.0*sec
+
+        data[index]= deg
+
+    return data
+
 class Map:
     def __init__ (self, bbox, max_z):
         ll0 = (bbox[0],bbox[3])
