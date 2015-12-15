@@ -68,26 +68,32 @@ class RenderThread:
         # Render image with default Agg renderer
         start= time.time ()
         im = mapnik.Image (self.image_size, self.image_size)
-        mapnik.render (self.m, im)
+        try:
+            mapnik.render (self.m, im)
+            rendered= True
+        except RuntimeError as e:
+            print e
+            rendered= False
         end= time.time ()
 
-        # save the image, splitting it in the right amount of tiles
-        # we use min() so we can support low zoom levels with less than meta_size tiles
-        for i in xrange (min (self.meta_size, 2**z)):
-            for j in xrange (min (self.meta_size, 2**z)):
-                img= im.view (i*self.tile_size, j*self.tile_size, self.tile_size, self.tile_size)
-                data= img.tostring ('png256')
-                if not map_utils.is_empty (data):
-                    self.backend.store (z, x+i, y+j, data)
-                else:
-                    if self.opts.empty=='skip':
-                        # empty tile, skip
-                        print "%d:%d:%d: empty" % (z, x+i, y+j)
-                        continue
+        if rendered:
+            # save the image, splitting it in the right amount of tiles
+            # we use min() so we can support low zoom levels with less than meta_size tiles
+            for i in xrange (min (self.meta_size, 2**z)):
+                for j in xrange (min (self.meta_size, 2**z)):
+                    img= im.view (i*self.tile_size, j*self.tile_size, self.tile_size, self.tile_size)
+                    data= img.tostring ('png256')
+                    if not map_utils.is_empty (data):
+                        self.backend.store (z, x+i, y+j, data)
+                    else:
+                        if self.opts.empty=='skip':
+                            # empty tile, skip
+                            print "%d:%d:%d: empty" % (z, x+i, y+j)
+                            continue
 
-            self.backend.commit ()
+                self.backend.commit ()
 
-        print "%d:%d:%d: %f" % (x, y, z, end-start)
+            print "%d:%d:%d: %f" % (x, y, z, end-start)
 
     def loop (self):
         while True:
