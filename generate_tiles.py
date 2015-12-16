@@ -70,13 +70,11 @@ class RenderThread:
         im = mapnik.Image (self.image_size, self.image_size)
         try:
             mapnik.render (self.m, im)
-            rendered= True
         except RuntimeError as e:
-            print e
-            rendered= False
-        end= time.time ()
+            print "%d:%d:%d: %s" % (x, y, z, e)
+        else:
+            end= time.time ()
 
-        if rendered:
             # save the image, splitting it in the right amount of tiles
             # we use min() so we can support low zoom levels with less than meta_size tiles
             for i in xrange (min (self.meta_size, 2**z)):
