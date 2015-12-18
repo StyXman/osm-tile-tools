@@ -120,7 +120,7 @@ class RenderThread:
             if not skip:
                 self.render_tile (x, y, z)
             else:
-                if self.skip_existing:
+                if self.opts.skip_existing:
                     print "%d:%d:%d: present, skipping" % (x, y, z)
                 else:
                     print "%d:%d:%d: too new, skipping" % (x, y, z)
