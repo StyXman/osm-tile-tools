@@ -1,0 +1,37 @@
+#! /usr/bin/env ayrton
+
+option ('-e')
+
+# TODO: do it properly with datetime
+# NOTE: this eclipses the date command
+commit_date= date (--rfc-3339='seconds') | sed (-e='s/ /T/; s/\+/Z+/; s/:/\./g', _out=Capture)
+# TODO:
+commit_date= str (commit_date).strip ()
+
+with cd ('openstreetmap-carto'):
+    # TODO: check if there's a diff
+
+    # TODO: this should be a try
+    if True: # all this happens in the render branch
+        git ('checkout', 'render', --merge=True)
+        try:
+            git ('merge', -m="[/|] Merge branch 'local' into 'render'.",
+                 'local')
+        except CommandFailed as e:
+            if e.command.exit_code ()!=1:
+                raise
+            print ("""
+Conflicts ocurred when trying to merge 'local' to 'render'.
+Please fix them and press Enter.""")
+            input ()
+
+        git ('commit', -a=True, -m=commit_date, _fails=True)
+        git ('tag', commit_date)
+
+    git ('checkout', 'local')
+    git ('diff', 'local', 'render') | patch (-p=True, '1')
+
+# NOTE: should argv have only from 1- ?
+make (-C=True, 'openstreetmap-carto')
+make ()
+run ('./generate_tiles.py', *argv[1:])
