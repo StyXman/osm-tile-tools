@@ -9,6 +9,7 @@ from os.path import dirname, basename, join as path_join
 from os import listdir, stat, unlink, mkdir, walk
 from errno import ENOENT, EEXIST
 from shutil import copy, rmtree
+import datetime
 
 DEG_TO_RAD = pi/180
 RAD_TO_DEG = 180/pi
