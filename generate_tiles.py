@@ -98,7 +98,7 @@ class RenderThread:
             # Fetch a tile from the queue and render it
             r= self.q.get ()
             if r is None:
-                self.q.task_done ()
+                # self.q.task_done ()
                 break
             else:
                 (x, y, z)= r
@@ -125,7 +125,7 @@ class RenderThread:
                 else:
                     print "%d:%d:%d: too new, skipping" % (x, y, z)
 
-            self.q.task_done ()
+            # self.q.task_done ()
 
 
 def render_tiles(opts):
@@ -142,11 +142,13 @@ def render_tiles(opts):
         raise
 
     # Launch rendering threads
-    queue= Queue (32)
+    # queue= Queue (32)
+    queue= multiprocessing.Queue (32)
     renderers= {}
     for i in range (opts.threads):
         renderer= RenderThread (opts, backend, queue)
-        render_thread= threading.Thread (target=renderer.loop)
+        # render_thread= threading.Thread (target=renderer.loop)
+        render_thread= multiprocessing.Process (target=renderer.loop)
         render_thread.start ()
         #print "Started render thread %s" % render_thread.getName()
         renderers[i]= render_thread
@@ -199,7 +201,9 @@ def finish (queue, renderers):
         queue.put (None)
 
     # wait for pending rendering jobs to complete
-    queue.join ()
+    # queue.join ()
+    queue.close ()
+    queue.join_thread ()
     for i in range (opts.threads):
         renderers[i].join ()
 
