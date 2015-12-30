@@ -142,13 +142,20 @@ def render_tiles(opts):
         raise
 
     # Launch rendering threads
-    # queue= Queue (32)
-    queue= multiprocessing.Queue (32)
+    if not opts.fork:
+        queue= Queue (32)
+    else:
+        queue= multiprocessing.Queue (32)
+
     renderers= {}
+
     for i in range (opts.threads):
-        renderer= RenderThread (opts, backend, queue)
-        # render_thread= threading.Thread (target=renderer.loop)
-        render_thread= multiprocessing.Process (target=renderer.loop)
+        if not opts.fork:
+            render_thread= threading.Thread (target=renderer.loop)
+        else:
+            renderer= RenderThread (opts, backend, queue)
+            render_thread= multiprocessing.Process (target=renderer.loop)
+
         render_thread.start ()
         #print "Started render thread %s" % render_thread.getName()
         renderers[i]= render_thread
@@ -193,17 +200,21 @@ def render_bbox (opts, queue, renderers):
                 try:
                     queue.put (t)
                 except KeyboardInterrupt:
+                    finish (opts, queue, renderers)
                     raise SystemExit("Ctrl-c detected, exiting...")
 
-def finish (queue, renderers):
+def finish (opts, queue, renderers):
     # Signal render threads to exit by sending empty request to queue
     for i in range (opts.threads):
         queue.put (None)
 
     # wait for pending rendering jobs to complete
-    # queue.join ()
-    queue.close ()
-    queue.join_thread ()
+    if not opts.fork:
+        queue.join ()
+    else:
+        queue.close ()
+        queue.join_thread ()
+
     for i in range (opts.threads):
         renderers[i].join ()
 
@@ -225,9 +236,10 @@ if __name__ == "__main__":
 
     parser.add_argument ('-m', '--metatile-size', dest='meta_size', default=1, type=int)
     parser.add_argument ('-t', '--threads',       dest='threads',   default=NUM_CPUS, type=int)
+    parser.add_argument ('-F', '--fork',          dest='fork',      default=False, action='store_true')
 
     parser.add_argument ('-X', '--skip-existing', dest='skip_existing', default=False, action='store_true')
-    parser.add_argument ('-N', '--skip-newer',    dest='skip_newer', default=None, type=int)
+    parser.add_argument ('-N', '--skip-newer',    dest='skip_newer', default=None, type=int, metavar='DAYS')
     # parser.add_argument ('-L', '--skip-symlinks', dest='skip_', default=None, type=int)
     parser.add_argument ('-E', '--empty',         dest='empty',     default='skip', choices=('skip', 'link', 'render'))
     opts= parser.parse_args ()
