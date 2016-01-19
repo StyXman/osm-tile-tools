@@ -48,22 +48,15 @@ function cookieFromTrip (trip) {
     createCookie ('tripplanner_trip_'+trip.name, data, 30);
 }
 
-function markersFromCookies (map) {
-    var cookies= readCookies ("marker");
+function tripFromCookie (name, manager) {
+    var cookie= readCookie ('tripplanner_trip_'+name);
 
-    for (var i= 0; i<cookies.length; i++) {
-        var cookie= cookies[i];
+    var data= cookie.split (':');
+    for (var i= 0; i<data.length; i++) {
+        var coords= data[i].split (',');
+        // the doc does not say so, but latLng() accepts an array
+        var latlong= L.latLng (coords);
 
-        var data= cookie.split (',');
-        // it's lat,lon,text,url
-        var marker= L.marker([data[0], data[1]]).addTo (map);
-        // reconstruct the url in case it got split
-        // var url= .join (',')
-        if (data[3].length>0) {
-            marker.bindPopup ('<a href="'+data[3]+'">'+data[2]+'</a>').openPopup ();
-        } else {
-            marker.bindPopup (data[2]).openPopup ();
-        }
+        manager.addPoint (latlong);
     }
 }
-

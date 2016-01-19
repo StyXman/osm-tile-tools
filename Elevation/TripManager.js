@@ -26,5 +26,12 @@ function TripManager (map, trip) {
         marker.remove ();
     }
 
+    self.load= function () {
+        // TODO: try URL
+
+        // try cookies
+        tripFromCookie ('default', self);
+    }
+
     map.on ('singleclick', self.addPoint);
 }
