@@ -88,4 +88,8 @@ function setup_map () {
         this._map.fitBounds(result.bbox);
         return this;
     };
+
+    // trip planner
+    var trip= new Trip ('default');
+    var planner= new TripManager (map, trip);
 }
