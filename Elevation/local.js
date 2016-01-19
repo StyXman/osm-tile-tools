@@ -84,4 +84,8 @@ function setup_map () {
         showResultIcons: true
     });
     geocoder.addTo(map);
+    geocoder.markGeocode = function(result) {
+        this._map.fitBounds(result.bbox);
+        return this;
+    };
 }
