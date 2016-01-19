@@ -78,4 +78,10 @@ function setup_map () {
     var hash = new L.Hash(map);
 
     markersFromCookies (map);
+
+    var geocoder = L.Control.geocoder({
+        collapsed: false,
+        showResultIcons: true
+    });
+    geocoder.addTo(map);
 }
