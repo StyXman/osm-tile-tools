@@ -77,7 +77,7 @@ function setup_map () {
 
     var hash = new L.Hash(map);
 
-    markersFromCookies (map);
+    // markersFromCookies (map);
 
     var geocoder = L.Control.geocoder({
         collapsed: false,
