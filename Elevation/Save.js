@@ -25,7 +25,7 @@ var SaveControl= L.Control.extend ({
     },
 
     cookies: function (e) {
-        cookieFromTrip (this.controller.options.trip);
+        cookieFromTrip (this.controller.options.manager.trip);
     }
 });
 
