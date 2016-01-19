@@ -29,7 +29,8 @@ function setup_map () {
 
     // trip planner
     var trip= new Trip ('default');
-    var planner= new TripManager (map, trip);
+    var manager= new TripManager (map, trip);
+    manager.load ();
 
     var save= new SaveControl ({'manager': manager});
     save.addTo (map);
