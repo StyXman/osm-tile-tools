@@ -5,20 +5,25 @@ function TripManager (map, trip) {
     self.trip= trip;
     self.markers= [];
 
-    self.addPoint= function (e) {
-        var latlong= e.latlng;
+    self.mapClicked= function (e) {
+        self.addPoint (e.latlng);
+    }
 
+    self.addPoint= function (latlong) {
         self.trip.addPoint (latlong);
 
         var marker= L.marker (latlong);
         self.markers.push ();
         marker.addTo (self.map);
 
-        marker.on ('dblclick', self.removePoint);
+        marker.on ('dblclick', self.markerDoubleClicked);
     };
 
-    self.removePoint= function (e) {
-        var marker= e.target;
+    self.markerDoubleClicked= function (e) {
+        self.removePoint (e.target);
+    }
+
+    self.removePoint= function (marker) {
         var latlong= marker.getLatLng ();
 
         self.trip.removePoint (latlong);
@@ -33,5 +38,5 @@ function TripManager (map, trip) {
         tripFromCookie ('default', self);
     }
 
-    map.on ('singleclick', self.addPoint);
+    map.on ('singleclick', self.mapClicked);
 }
