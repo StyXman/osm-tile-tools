@@ -20,6 +20,13 @@ function setup_map () {
         return this;
     };
 
+    // scale
+    var scale= L.control.scale ({
+        imperial: false,
+        maxWidth: 500
+    });
+    scale.addTo (map);
+
     // trip planner
     var trip= new Trip ('default');
     var planner= new TripManager (map, trip);
