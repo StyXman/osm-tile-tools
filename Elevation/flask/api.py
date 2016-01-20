@@ -34,7 +34,7 @@ class TripsController (Resource):
         trip= Trip.fromJson (request.form['trip'])
         session.add (trip)
         session.commit ()
-        return '', 201
+        return trip.toJson (), 201
 
 
 api.add_resource (TripController, '/trips/<name>')
@@ -42,4 +42,3 @@ api.add_resource (TripsController, '/trips')
 
 if __name__=='__main__':
     app.run (debug=True)
-
