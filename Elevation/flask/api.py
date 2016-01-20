@@ -28,8 +28,18 @@ class TripsController (Resource):
         trips= session.query (Trip).all ()
         return [ trip.toJson () for trip in trips ]
 
+    # POST    http://[hostname]/trips
+    def post (self):
+        # trip={ "name": "default", "points": [ [ 43.55277819471542, 6.934947967529298 ], [ 43.581136968065685, 6.942672729492188 ] ] }
+        trip= Trip.fromJson (request.form['trip'])
+        session.add (trip)
+        session.commit ()
+        return '', 201
+
+
 api.add_resource (TripController, '/trips/<name>')
 api.add_resource (TripsController, '/trips')
 
 if __name__=='__main__':
     app.run (debug=True)
+
