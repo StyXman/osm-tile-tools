@@ -51,12 +51,14 @@ function cookieFromTrip (trip) {
 function tripFromCookie (name, manager) {
     var cookie= readCookie ('tripplanner_trip_'+name);
 
-    var data= cookie.split (':');
-    for (var i= 0; i<data.length; i++) {
-        var coords= data[i].split (',');
-        // the doc does not say so, but latLng() accepts an array
-        var latlong= L.latLng (coords);
+    if (cookie) {
+        var data= cookie.split (':');
+        for (var i= 0; i<data.length; i++) {
+            var coords= data[i].split (',');
+            // the doc does not say so, but latLng() accepts an array
+            var latlong= L.latLng (coords);
 
-        manager.addPoint (latlong);
+            manager.addPoint (latlong);
+        }
     }
 }
