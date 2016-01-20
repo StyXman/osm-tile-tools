@@ -1,5 +1,5 @@
-from flask import Flask
-from flask_restful import reqparse, abort, Api, Resource
+from flask import Flask, request
+from flask_restful import abort, Api, Resource
 from model import Trip, session
 
 app= Flask (__name__)
@@ -9,11 +9,8 @@ api= Api (app)
 # PUT     http://[hostname]/trips/[name]
 # DELETE  http://[hostname]/trips/[name]
 
-parser= reqparse.RequestParser ()
-parser.add_argument ('name')
-parser.add_argument ('coord', type=float, action='append')
-
 class TripController (Resource):
+
     def get (self, name):
         # GET     http://[hostname]/trips/[name]
         trip= session.query (Trip).filter_by (name=name).first ()
