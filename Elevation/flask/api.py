@@ -5,9 +5,6 @@ from model import Trip, session
 app= Flask (__name__)
 api= Api (app)
 
-# Method  URI     Action
-# PUT     http://[hostname]/trips/[name]
-# DELETE  http://[hostname]/trips/[name]
 
 class TripController (Resource):
 
@@ -16,6 +13,20 @@ class TripController (Resource):
         trip= session.query (Trip).filter_by (name=name).first ()
 
         return trip.toJson ()
+
+    def put (self, name):
+        # PUT     http://[hostname]/trips/[name]
+        trip= session.query (Trip).filter_by (name=name).first ()
+        trip.updatePoints (request.form['trip'])
+
+        session.add (trip)
+        session.commit ()
+
+        return trip.toJson (), 201
+
+    # TODO:
+    # POST    http://[hostname]/trips
+    # DELETE  http://[hostname]/trips/[name]
 
 # this is kinda silly
 class TripsController (Resource):
