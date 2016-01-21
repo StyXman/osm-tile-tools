@@ -75,7 +75,7 @@ function tripFromCookie (name, manager) {
 function saveToREST (trip) {
     var j= trip.toJson ();
 
-    var ans= $.ajax ('http://192.168.0.42:5000/trips/default', {
+    var ans= $.ajax ('http://grulicueva.homelinux.net:5000/trips/default', {
         'method': 'POST',
         // 'data': window.JSON.stringify ({ 'trip': j}), // jQuery does not provide a shortcut for this...
         // 'data': { trip: window.JSON.stringify (j) }, // jQuery does not provide a shortcut for this...
