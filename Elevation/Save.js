@@ -68,7 +68,7 @@ function tripFromCookie (name, manager) {
 function saveToREST (trip) {
     var j= trip.toJson ();
 
-    var ans= $.ajax ('http://grulicueva.homelinux.net:5000/trips/default', {
+    var ans= $.ajax ('http://grulicueva.homenet.org:5000/trips/default', {
         'method': 'POST',
         'data': { trip: window.JSON.stringify (j) }, // jQuery does not provide a shortcut for this...
         'crossDomain': true
