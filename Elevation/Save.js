@@ -70,11 +70,8 @@ function saveToREST (trip) {
 
     var ans= $.ajax ('http://grulicueva.homelinux.net:5000/trips/default', {
         'method': 'POST',
-        // 'data': window.JSON.stringify ({ 'trip': j}), // jQuery does not provide a shortcut for this...
-        // 'data': { trip: window.JSON.stringify (j) }, // jQuery does not provide a shortcut for this...
-        'data': 'trip='+window.JSON.stringify (j), // jQuery does not provide a shortcut for this...
-        'crossDomain': true,
-        'processData': false // TODO: find out why flask is not URLdecoding this
+        'data': { trip: window.JSON.stringify (j) }, // jQuery does not provide a shortcut for this...
+        'crossDomain': true
     })
     // debug
     .done(function() {
