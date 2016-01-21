@@ -19,6 +19,11 @@ var SaveControl= L.Control.extend ({
         cookies.controller= this;
         L.DomEvent.addListener (cookies, 'click', this.cookies);
 
+        var rest= L.DomUtil.create ('div', 'leaflet-control-save-rest', container);
+        rest.innerHTML= 'In server';
+        rest.controller= this;
+        L.DomEvent.addListener (rest, 'click', this.rest);
+
         L.DomEvent.disableClickPropagation(container);
 
         return container;
@@ -26,6 +31,10 @@ var SaveControl= L.Control.extend ({
 
     cookies: function (e) {
         cookieFromTrip (this.controller.options.manager.trip);
+    },
+
+    rest: function (e) {
+        saveToREST (this.controller.options.manager.trip);
     }
 });
 
@@ -61,4 +70,24 @@ function tripFromCookie (name, manager) {
             manager.addPoint (latlong);
         }
     }
+}
+
+function saveToREST (trip) {
+    var j= trip.toJson ();
+
+    var ans= $.ajax ('http://192.168.0.42:5000/trips/default', {
+        'method': 'POST',
+        // 'data': window.JSON.stringify ({ 'trip': j}), // jQuery does not provide a shortcut for this...
+        // 'data': { trip: window.JSON.stringify (j) }, // jQuery does not provide a shortcut for this...
+        'data': 'trip='+window.JSON.stringify (j), // jQuery does not provide a shortcut for this...
+        'crossDomain': true,
+        'processData': false // TODO: find out why flask is not URLdecoding this
+    })
+    // debug
+    .done(function() {
+        alert( "success" );
+    })
+    .fail(function(j, t, e) {
+        alert( "error" + t + e);
+    });
 }
