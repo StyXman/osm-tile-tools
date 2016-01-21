@@ -42,11 +42,11 @@ class TripsController (Resource):
         trip= Trip.fromJson (request.form['trip'])
         session.add (trip)
         session.commit ()
-        return trip.toJson (), 201
+        return trip.toJson (), 201, CORPSE
 
 
 api.add_resource (TripController, '/trips/<name>')
 api.add_resource (TripsController, '/trips')
 
 if __name__=='__main__':
-    app.run (debug=True)
+    app.run (host='0.0.0.0', debug=True)
