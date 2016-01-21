@@ -3,13 +3,6 @@ var SaveControl= L.Control.extend ({
         position: 'topright'
     },
 
-    /*
-    initialize: function (opts) {
-        L.Util.setOptions (this, options);
-
-    }
-    */
-
     onAdd: function (map) {
         // create the control container with a particular class name
         var container= L.DomUtil.create ('div', 'leaflet-control-save');
