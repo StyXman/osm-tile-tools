@@ -6,13 +6,15 @@ app= Flask (__name__)
 api= Api (app)
 
 
+CORPSE= { 'Access-Control-Allow-Origin': '*' }
+
 class TripController (Resource):
 
     def get (self, name):
         # GET     http://[hostname]/trips/[name]
         trip= session.query (Trip).filter_by (name=name).first ()
 
-        return trip.toJson ()
+        return trip.toJson (), 200, CORPSE
 
     def put (self, name):
         # PUT     http://[hostname]/trips/[name]
@@ -22,9 +24,9 @@ class TripController (Resource):
         session.add (trip)
         session.commit ()
 
-        return trip.toJson (), 201
+        return trip.toJson (), 201, CORPSE
 
-    # POST    http://[hostname]/trips
+    # POST    http://[hostname]/trips/[name]
     def post (self, name):
         """This method extends the RESTful convention to implement UPSERT"""
         q= session.query (Trip).filter_by (name=name)
@@ -39,7 +41,7 @@ class TripController (Resource):
         session.add (trip)
         session.commit ()
 
-        return trip.toJson (), 201
+        return trip.toJson (), 201, CORPSE
 
     # TODO:
     # DELETE  http://[hostname]/trips/[name]
@@ -50,7 +52,7 @@ class TripsController (Resource):
     def get (self):
         # GET     http://[hostname]/trips
         trips= session.query (Trip).all ()
-        return [ trip.toJson () for trip in trips ]
+        return [ trip.toJson () for trip in trips ], 200, CORPSE
 
     # POST    http://[hostname]/trips
     def post (self):
