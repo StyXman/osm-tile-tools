@@ -50,6 +50,12 @@ class Trip (Tables):
 
         return Trip (name=data['name'], points=points)
 
+    def updatePoints (self, s):
+        data= json.loads (s)
+
+        # convert from [ (x, y), ... ] to [ f, ... ]
+        self.points= [ x for x in flatten (data['points']) ]
+
 Tables.metadata.create_all (engine)
 
 Session= sessionmaker (bind=engine)
