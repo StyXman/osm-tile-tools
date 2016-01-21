@@ -24,8 +24,24 @@ class TripController (Resource):
 
         return trip.toJson (), 201
 
-    # TODO:
     # POST    http://[hostname]/trips
+    def post (self, name):
+        """This method extends the RESTful convention to implement UPSERT"""
+        q= session.query (Trip).filter_by (name=name)
+        if q.count ()==0:
+            # INSERT
+            trip= Trip.fromJson (request.form['trip'])
+        else:
+            # UPDATE
+            trip= q.first ()
+            trip.updatePoints (request.form['trip'])
+
+        session.add (trip)
+        session.commit ()
+
+        return trip.toJson (), 201
+
+    # TODO:
     # DELETE  http://[hostname]/trips/[name]
 
 # this is kinda silly
