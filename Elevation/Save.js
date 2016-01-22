@@ -5,14 +5,15 @@ var SaveControl= L.Control.extend ({
 
     onAdd: function (map) {
         // create the control container with a particular class name
-        var container= L.DomUtil.create ('div', 'leaflet-control-save');
+        var container= L.DomUtil.create ('div', 'leaflet-control-save leaflet-bar');
+        container.innerHTML= 'Save';
 
-        var cookies= L.DomUtil.create ('div', 'leaflet-control-save-cookies', container);
+        var cookies= L.DomUtil.create ('div', 'leaflet-control-save-cookies leaflet-control-save-button', container);
         cookies.innerHTML= 'In browser cookies';
         cookies.controller= this;
         L.DomEvent.addListener (cookies, 'click', this.cookies);
 
-        var rest= L.DomUtil.create ('div', 'leaflet-control-save-rest', container);
+        var rest= L.DomUtil.create ('div', 'leaflet-control-save-rest leaflet-control-save-button', container);
         rest.innerHTML= 'In server';
         rest.controller= this;
         L.DomEvent.addListener (rest, 'click', this.rest);

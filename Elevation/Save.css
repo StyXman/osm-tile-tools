@@ -1,0 +1,12 @@
+.leaflet-control-save {
+    background: white;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.leaflet-control-save-button {
+    background: darkgrey;
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
