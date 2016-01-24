@@ -17,6 +17,20 @@ function TripManager (map, trip) {
         marker.addTo (self.map);
 
         marker.on ('dblclick', self.markerDoubleClicked);
+
+        var url= 'http://nominatim.openstreetmap.org/reverse';
+        $.ajax (url, {
+            'method': 'GET',
+            'data': {
+                'format': 'json',
+                'lat': latlong.lat,
+                'lon': latlong.lng,
+                'zoom': 18
+            },
+            'crossDomain': true
+        }).done (function (data, status, xhr) {
+            self.setPopup (marker, data)
+        });
     };
 
     self.markerDoubleClicked= function (e) {
@@ -36,6 +50,11 @@ function TripManager (map, trip) {
 
         // try cookies
         tripFromCookie ('default', self);
+    }
+
+    self.setPopup= function (marker, data) {
+        marker.bindPopup (data.display_name);
+        marker.openPopup ();
     }
 
     map.on ('singleclick', self.mapClicked);
