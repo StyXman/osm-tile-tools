@@ -61,7 +61,7 @@ function tripFromCookie (name, manager) {
             // the doc does not say so, but latLng() accepts an array
             var latlong= L.latLng (coords);
 
-            manager.addPoint (latlong);
+            manager.addPoint (latlong, false); // avoid a storm of calls
         }
     }
 }

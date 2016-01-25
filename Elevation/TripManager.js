@@ -9,7 +9,9 @@ function TripManager (map, trip) {
         self.addPoint (e.latlng);
     }
 
-    self.addPoint= function (latlong) {
+    // self.addPoint= function (latlong, get_addr=true) {
+    // default parameters is not recognized yet?
+    self.addPoint= function (latlong, get_addr) {
         self.trip.addPoint (latlong);
 
         var marker= L.marker (latlong);
@@ -18,19 +20,23 @@ function TripManager (map, trip) {
 
         marker.on ('dblclick', self.markerDoubleClicked);
 
-        var url= 'http://nominatim.openstreetmap.org/reverse';
-        $.ajax (url, {
-            'method': 'GET',
-            'data': {
-                'format': 'json',
-                'lat': latlong.lat,
-                'lon': latlong.lng,
-                'zoom': 18
-            },
-            'crossDomain': true
-        }).done (function (data, status, xhr) {
-            self.setPopup (marker, data)
-        });
+        if (get_addr) {
+            var url= 'http://nominatim.openstreetmap.org/reverse';
+            $.ajax (url, {
+                'method': 'GET',
+                'data': {
+                    'format': 'json',
+                    'lat': latlong.lat,
+                    'lon': latlong.lng,
+                    'zoom': 18
+                },
+                'crossDomain': true
+            }).done (function (data, status, xhr) {
+                self.setPopup (marker, data)
+            });
+        } else {
+            // TODO
+        }
     };
 
     self.markerDoubleClicked= function (e) {
