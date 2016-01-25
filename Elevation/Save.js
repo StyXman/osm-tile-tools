@@ -18,6 +18,11 @@ var SaveControl= L.Control.extend ({
         rest.controller= this;
         L.DomEvent.addListener (rest, 'click', this.rest);
 
+        var router= L.DomUtil.create ('div', 'leaflet-control-save-router leaflet-control-save-button', container);
+        router.innerHTML= 'Calculate route';
+        router.controller= this;
+        L.DomEvent.addListener (router, 'click', this.route);
+
         L.DomEvent.disableClickPropagation(container);
 
         return container;
@@ -29,6 +34,10 @@ var SaveControl= L.Control.extend ({
 
     rest: function (e) {
         saveToREST (this.controller.options.manager.trip);
+    },
+
+    route: function (e) {
+        calculateRoute (this.controller.options.manager.map, this.controller.options.manager.trip);
     }
 });
 
@@ -80,5 +89,31 @@ function saveToREST (trip) {
     })
     .fail(function(j, t, e) {
         alert( "error" + t + e);
+    });
+}
+
+function calculateRoute (map, trip) {
+    var locs= [];
+    for (var i= 0; i<trip.points.length; i++) {
+        locs.push (trip.points[i].lat+','+trip.points[i].lng);
+    }
+
+    $.ajax ('http://router.project-osrm.org/viaroute', {
+        'method': 'GET',
+        'data': {
+            loc: locs,
+            z: map.getZoom ()
+        },
+        'traditional': true,
+        'crossDomain': true
+    }).done (function (data, status) {
+        var points= polyline.decode (data.route_geometry);
+        var latlongs= points.map (function (e, i, a) {
+            // 13:47 < RichardF> StyXman: divide by 10, OSRM has greater precision than the standard
+            // yes, LatLng objects are created with the latLng() function...
+            var latlong= L.latLng (e[0]/10, e[1]/10);
+            return latlong;
+        });
+        var route= L.polyline (latlongs).addTo (map);
     });
 }
