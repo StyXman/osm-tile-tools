@@ -2,7 +2,7 @@ function setup_map () {
     var map = L.map('map').setView([47.946,10.195], 5);
 
     L.tileLayer('http://grulicueva.homenet.org/~mdione/Elevation/{z}/{x}/{y}.png', {
-        attribution: 'Map data (C) <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+        attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a> | Design &copy; <a href="https://www.grulic.org.ar/~mdione/glob/">Marcos Dione</a>, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a> | Routing information &copy; <a href="http://project-osrm.org/">OSRM</a>, <a href="http://opendatacommons.org/licenses/odbl/">ODbL</a>',
         maxZoom: 18
     }).addTo(map);
 
