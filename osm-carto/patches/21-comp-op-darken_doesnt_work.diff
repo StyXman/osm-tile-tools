@@ -1,0 +1,36 @@
+--- a/admin.mss
++++ b/admin.mss
+@@ -14,18 +14,18 @@
+   [admin_level = '2']/*,
+   [admin_level = '3']*/ {
+     [zoom >= 4] {
+-      background/line-color: white;
+-      background/line-width: 0.6;
++      // background/line-color: white;
++      // background/line-width: 0.6;
+       line-color: @admin-boundaries;
+       line-width: 0.6;
+     }
+     [zoom >= 7] {
+-      background/line-width: 2;
++      // background/line-width: 2;
+       line-width: 2;
+     }
+     [zoom >= 10] {
+       [admin_level = '2'] {
+-        background/line-width: 6;
++        // background/line-width: 6;
+         line-width: 6;
+       }
+       /*
+@@ -119,8 +119,8 @@
+       line-clip: false;
+     }
+   }
+-  opacity: 0.5;
+-  comp-op: darken;
++  opacity: 0.7;
++  // comp-op: darken;
+ }
+ */
+ 

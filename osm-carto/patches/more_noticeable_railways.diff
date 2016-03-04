@@ -1,0 +1,40 @@
+--- a/roads.mss
++++ b/roads.mss
+@@ -1813,13 +1813,13 @@
+       }
+     }
+ 
+-    [feature = 'railway_rail'][zoom >= 7],
++    [feature = 'railway_rail'][zoom >= 5],
+     [feature = 'railway_INT-spur-siding-yard'][zoom >= 13] {
+       [zoom < 13] {
+-        line-color: #787878;
++        line-color: @rail-fill;
+         line-width: 0.5;
+-        [zoom >= 8] { line-width: 0.8; }
+-        [zoom >= 12] { line-width: 0.9; }
++        [zoom >= 7] { line-width: 1.0; }
++        [zoom >= 9] { line-width: 2.0; }
+         line-join: round;
+         .roads_low_zoom[int_tunnel = 'yes'], .tunnels-fill {
+           line-dasharray: 5,2;
+@@ -1831,7 +1831,7 @@
+           light/line-color: white;
+           light/line-join: round;
+           [feature = 'railway_rail'] {
+-            dark/line-color: #787878;
++            dark/line-color: @rail-fill;
+             dark/line-width: 3;
+             light/line-width: 1;
+             light/line-dasharray: 8,8;
+--- a/style.mss
++++ b/style.mss
+@@ -102,6 +102,8 @@
+ @tertiary-tunnel-fill: lighten(@tertiary-fill, 5%);
+ @residential-tunnel-fill: lighten(@residential-fill, 10%);
+ 
++@rail-fill: #404040;
++
+ // terrain-small [0-6], terrain-medium [7-8], terrain-big [9-]
+ .terrain {
+   raster-scaling: lanczos;

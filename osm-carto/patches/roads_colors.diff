@@ -1,0 +1,125 @@
+--- a/style.mss
++++ b/style.mss
+@@ -18,8 +18,82 @@
+                 "Droid Sans Fallback Regular", "Unifont Medium";
+ 
+ @water-color: #b5d0d0;
++@water-dark: #5A5AA1;
++@water-text: #5A5AA1;
+ @land-color: #bfbfbf;
+ 
++// admin
++@admin-boundaries: purple;
++
++// amenities
++@attraction: #f2caea;
++@barracks: #ff8f8f;
++
++@darken-lighten: 15%;
++
++// roads
++@oneway: #aaa;
++
++// @motorway-fill: #3030bf;
++@motorway-fill: #cf3030;
++@motorway-low-zoom: #e88b00;
++@motorway-casing: darken(@motorway-fill, @darken-lighten);
++@motorway-tunnel-fill: lighten(@motorway-fill, @darken-lighten);
++
++// @trunk-fill: #bf30bf;
++// @trunk-fill-alternative: #bf30bf;
++@trunk-fill: @motorway-fill;
++@trunk-low-zoom: @motorway-fill;
++@trunk-casing: darken(@trunk-fill, @darken-lighten);
++@trunk-tunnel-fill: lighten(@trunk-fill, @darken-lighten);
++
++// @primary-fill: #bf3030;
++@primary-fill: #8a5c00;
++@primary-low-zoom: @primary-fill;
++@primary-casing: darken(@primary-fill, @darken-lighten);
++@primary-tunnel-fill: lighten(@primary-fill, @darken-lighten);
++
++@secondary-fill: #2f6f2f;
++@secondary-low-zoom: @secondary-fill;
++@secondary-casing: darken(@secondary-fill, @darken-lighten);
++@secondary-tunnel-fill: lighten(@secondary-fill, @darken-lighten);
++
++// @tertiary-fill: #8a5c00;
++@residential-fill: #ffffff;
++@service-fill: #ffffff;
++@living-street-fill: #ccc;
++@pedestrian-fill: #ededed;
++@road-fill: #ddd;
++@path-fill: black;
++@footway-fill: salmon;
++@steps-fill: @footway-fill;
++@cycleway-fill: blue;
++@bridleway-fill: green;
++@byway-fill: #ffcc00;
++@track-fill: #996600;
++@track-grade1-fill: #b37700;
++@track-grade2-fill: #a87000;
++@aeroway-fill: #bbc;
++@runway-fill: @aeroway-fill;
++@taxiway-fill: @aeroway-fill;
++@helipad-fill: @aeroway-fill;
++
++@tertiary-casing: #c6c68a;
++@residential-casing: #bbb;
++@service-casing: #999;
++@living-street-casing: @default-casing;
++@pedestrian-casing: grey;
++@path-casing: @default-casing;
++@footway-casing: @default-casing;
++@steps-casing: @default-casing;
++@cycleway-casing: @default-casing;
++@bridleway-casing: @default-casing;
++@byway-casing: @default-casing;
++@track-casing: @default-casing;
++
++@tertiary-tunnel-fill: lighten(@tertiary-fill, 5%);
++@residential-tunnel-fill: lighten(@residential-fill, 10%);
++
+ // terrain-small [0-6], terrain-medium [7-8], terrain-big [9-]
+ .terrain {
+   raster-scaling: lanczos;
+--- a/roads.mss
++++ b/roads.mss
+@@ -1288,11 +1288,11 @@
+ 
+     [feature = 'highway_secondary'] {
+       [zoom >= 9] {
+-        line-color: @unimportant-road;
++        line-color: @secondary-low-zoom;
+         line-width: @secondary-width-z9;
+       }
+       [zoom >=10] {
+-        line-color: @unimportant-road;
++        line-color: @secondary-low-zoom;
+         line-width: @secondary-width-z10;
+       }
+       [zoom >= 11] { line-width: @secondary-width-z11; }
+@@ -2067,6 +2067,23 @@
+       }
+     }
+   }
++
++  ::strip {
++    [feature = 'highway_motorway'][link = 'no'],
++    [feature = 'highway_trunk'][link = 'no'] {
++      [zoom >= 12] {
++        line-width: 1;
++        [feature = 'highway_motorway'] {
++          line-color: yellow;
++        }
++        [feature = 'highway_trunk'][link = 'no'] {
++          line-color: white;
++        }
++      }
++      [zoom >= 14] { line-width: 1.5; }
++      [zoom >= 16] { line-width: 2; }
++    }
++  }
+ }
+ 
+ #turning-circle-casing {

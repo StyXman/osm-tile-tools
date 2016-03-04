@@ -1,0 +1,58 @@
+--- a/project.yaml
++++ b/project.yaml
+@@ -567,6 +567,27 @@
+     properties:
+       minzoom: 14
+     advanced: {}
++  - id: "nature-reserve-boundaries"
++    name: "nature-reserve-boundaries"
++    class: ""
++    geometry: "polygon"
++    <<: *extents
++    Datasource:
++      <<: *osm2pgsql
++      table: |-
++        (SELECT
++            way,
++            name,
++            boundary,
++            way_area/NULLIF(!pixel_width!::real*!pixel_height!::real,0) AS way_pixels
++          FROM planet_osm_polygon
++          WHERE (boundary = 'national_park' OR leisure = 'nature_reserve')
++            AND building IS NULL
++            AND way_area > 0.01*!pixel_width!::real*!pixel_height!::real
++        ) AS national_park_boundaries
++    properties:
++      minzoom: 7
++    advanced: {}
+   - id: "piers-poly"
+     name: "piers-poly"
+     class: ""
+@@ -1558,27 +1579,6 @@
+     properties:
+       minzoom: 13
+     advanced: {}
+-  - id: "nature-reserve-boundaries"
+-    name: "nature-reserve-boundaries"
+-    class: ""
+-    geometry: "polygon"
+-    <<: *extents
+-    Datasource:
+-      <<: *osm2pgsql
+-      table: |-
+-        (SELECT
+-            way,
+-            name,
+-            boundary,
+-            way_area/NULLIF(!pixel_width!::real*!pixel_height!::real,0) AS way_pixels
+-          FROM planet_osm_polygon
+-          WHERE (boundary = 'national_park' OR leisure = 'nature_reserve')
+-            AND building IS NULL
+-            AND way_area > 0.01*!pixel_width!::real*!pixel_height!::real
+-        ) AS national_park_boundaries
+-    properties:
+-      minzoom: 7
+-    advanced: {}
+   - id: "tourism-boundary"
+     name: "tourism-boundary"
+     class: ""

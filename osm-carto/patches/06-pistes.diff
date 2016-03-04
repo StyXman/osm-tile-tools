@@ -1,0 +1,63 @@
+--- a/project.yaml
++++ b/project.yaml
+@@ -1239,6 +1239,23 @@
+     properties:
+       minzoom: 10
+     advanced: {}
++  - id: "pistes"
++    name: "pistes"
++    class: ""
++    geometry: "linestring"
++    <<: *extents
++    Datasource:
++      <<: *osm2pgsql
++      table: |-
++        (SELECT way,
++          ('piste_' || "piste:type") AS feature,
++          "piste:difficulty" AS grade,
++          name
++        FROM planet_osm_line
++        WHERE
++          "piste:type" IN ('downhill')
++        ) AS pistes
++    advanced: {}
+   - id: "turning-circle-fill"
+     name: "turning-circle-fill"
+     class: ""
+--- a/style.mss
++++ b/style.mss
+@@ -153,3 +153,34 @@
+     text-spacing: 400;
+   }
+ }
++
++#pistes {
++  [zoom >= 14] {
++    [grade = 'novice'] {
++      line-color: green;
++    }
++    [grade = 'easy'] {
++      line-color: blue;
++    }
++    [grade = 'intermediate'] {
++      line-color: red;
++    }
++    [grade = 'advanced'] {
++      line-color: black;
++    }
++
++    line-width: 2;
++    line-opacity: 0.6;
++    line-smooth: 0.4;
++  }
++
++  [zoom >= 15] {
++    line-width: 4;
++    text-name: "[name]";
++    text-size: 10;
++    text-fill: #666;
++    text-face-name: @book-fonts;
++    text-halo-radius: 1;
++    text-placement: line;
++  }
++}

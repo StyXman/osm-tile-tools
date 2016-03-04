@@ -1,0 +1,18 @@
+--- a/placenames.mss
++++ b/placenames.mss
+@@ -16,6 +16,7 @@
+   }
+ }
+ 
++/*
+ .state {
+   [admin_level = '4'] {
+     [zoom >= 4][zoom < 5][way_pixels > 750],
+@@ -38,6 +39,7 @@
+     }
+   }
+ }
++*/
+ 
+ #placenames-medium::high-importance {
+   [category = 1][zoom < 14] {

@@ -1,0 +1,15 @@
+--- a/project.yaml
++++ b/project.yaml
+@@ -10,9 +10,9 @@
+   - 180
+   - 85.05112877980659
+ center:
+-  - 0
+-  - 0
+-  - 4
++  - 7.1329
++  - 43.6788
++  - 11
+ format: "png"
+ interactivity: false
+ minzoom: 0

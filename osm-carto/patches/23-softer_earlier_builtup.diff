@@ -1,0 +1,23 @@
+--- a/project.yaml
++++ b/project.yaml
+@@ -121,7 +121,7 @@
+       file: "data/world_boundaries/builtup_area.shp"
+       type: "shape"
+     properties:
+-      minzoom: 8
++      minzoom: 6
+       maxzoom: 9
+     advanced: {}
+   - id: "necountries"
+--- a/shapefiles.mss
++++ b/shapefiles.mss
+@@ -43,7 +43,8 @@
+ }
+ 
+ #builtup {
+-  [zoom >= 8][zoom < 10] {
++  [zoom >= 6][zoom < 10] {
+     polygon-fill: #ddd;
++    polygon-opacity: 0.5;
+   }
+ }

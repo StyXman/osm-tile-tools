@@ -1,0 +1,35 @@
+--- a/amenity-points.mss
++++ b/amenity-points.mss
+@@ -200,7 +200,9 @@
+   }
+ 
+   [feature = 'amenity_fuel'][zoom >= @emergency] {
+-    marker-file: url('symbols/fuel.16.svg');
++    // too small
++    // marker-file: url('symbols/fuel.16.svg');
++    marker-file: url('symbols/fuel-24.png');
+     marker-fill: @transportation-icon;
+     marker-placement: interior;
+     marker-clip: false;
+@@ -302,7 +304,9 @@
+   [feature = 'amenity_bicycle_parking'][way_pixels > 900],
+   [feature = 'amenity_motorcycle_parking'][way_pixels > 900] {
+     [feature = 'amenity_parking'] {
+-      marker-file: url('symbols/parking.svg');
++      // the color is too light
++      // marker-file: url('symbols/parking.svg');
++      marker-file: url('symbols/parking-24.png');
+     }
+     [feature = 'amenity_bicycle_parking'] {
+       marker-file: url('symbols/bicycle_parking.16.svg');
+--- a/stations.mss
++++ b/stations.mss
+@@ -5,7 +5,7 @@
+ 
+ .stations {
+   [railway = 'subway_entrance'][zoom >= @nice] {
+-    marker-file: url('symbols/entrance.10.svg');
++    marker-file: url('symbols/london-underground-18.png');
+     marker-placement: interior;
+     marker-fill: @transportation-icon;
+     marker-clip: false;

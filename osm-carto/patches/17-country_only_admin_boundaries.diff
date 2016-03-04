@@ -1,0 +1,114 @@
+--- a/project.yaml
++++ b/project.yaml
+@@ -1534,50 +1534,8 @@
+             admin_level
+           FROM planet_osm_roads
+           WHERE boundary = 'administrative'
+-            AND admin_level IN ('0', '1', '2', '3', '4')
+-          ORDER BY admin_level DESC
++            AND admin_level IN ('2')
+         ) AS admin_low_zoom
+-    properties:
+-      maxzoom: 10
+-    advanced: {}
+-  - id: "admin-mid-zoom"
+-    name: "admin-mid-zoom"
+-    class: ""
+-    geometry: "linestring"
+-    <<: *extents
+-    Datasource:
+-      <<: *osm2pgsql
+-      table: |-
+-        (SELECT
+-            way,
+-            admin_level
+-          FROM planet_osm_roads
+-          WHERE boundary = 'administrative'
+-            AND admin_level IN ('0', '1', '2', '3', '4', '5', '6', '7', '8')
+-          ORDER BY admin_level DESC
+-        ) AS admin_mid_zoom
+-    properties:
+-      minzoom: 11
+-      maxzoom: 12
+-    advanced: {}
+-  - id: "admin-high-zoom"
+-    name: "admin-high-zoom"
+-    class: ""
+-    geometry: "linestring"
+-    <<: *extents
+-    Datasource:
+-      <<: *osm2pgsql
+-      table: |-
+-        (SELECT
+-            way,
+-            admin_level
+-          FROM planet_osm_roads
+-          WHERE boundary = 'administrative'
+-            AND admin_level IN ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10')
+-          ORDER BY admin_level::integer DESC -- With 10 as a valid value, we need to do a numeric ordering, not a text ordering
+-        ) AS admin_high_zoom
+-    properties:
+-      minzoom: 13
+     advanced: {}
+   - id: "tourism-boundary"
+     name: "tourism-boundary"
+--- a/admin.mss
++++ b/admin.mss
+@@ -8,11 +8,11 @@
+ overlapping borders correctly.
+ */
+ 
+-#admin-low-zoom[zoom < 11],
++#admin-low-zoom/*[zoom < 11],
+ #admin-mid-zoom[zoom >= 11][zoom < 13],
+-#admin-high-zoom[zoom >= 13] {
+-  [admin_level = '2'],
+-  [admin_level = '3'] {
++#admin-high-zoom[zoom >= 13]*/ {
++  [admin_level = '2']/*,
++  [admin_level = '3']*/ {
+     [zoom >= 4] {
+       background/line-color: white;
+       background/line-width: 0.6;
+@@ -28,14 +28,17 @@
+         background/line-width: 6;
+         line-width: 6;
+       }
++      /*
+       [admin_level = '3'] {
+         background/line-width: 5;
+         line-width: 5;
+         line-dasharray: 4,2;
+         line-clip: false;
+       }
++      */
+     }
+   }
++  /*
+   [admin_level = '4'] {
+     [zoom >= 4] {
+       background/line-color: white;
+@@ -54,6 +57,7 @@
+       line-width: 3;
+     }
+   }
++  */
+   /*
+   The following code prevents admin boundaries from being rendered on top of
+   each other. Comp-op works on the entire attachment, not on the individual
+@@ -69,6 +73,7 @@
+   comp-op: darken;
+ }
+ 
++/*
+ #admin-mid-zoom[zoom >= 11][zoom < 13],
+ #admin-high-zoom[zoom >= 13] {
+   [admin_level = '5'][zoom >= 11] {
+@@ -117,6 +122,7 @@
+   opacity: 0.5;
+   comp-op: darken;
+ }
++*/
+ 
+ /*
+ #admin-text[zoom >= 16] {

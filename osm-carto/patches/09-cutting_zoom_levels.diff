@@ -1,0 +1,129 @@
+--- a/amenity-points.mss
++++ b/amenity-points.mss
+@@ -34,7 +34,7 @@
+     point-placement: interior;
+   }
+ 
+-  [feature = 'amenity_atm'][zoom >= 17] {
++  [feature = 'amenity_atm'][zoom >= @useful] {
+     marker-file: url('symbols/atm.16.svg');
+     marker-fill: @amenity-brown;
+     marker-placement: interior;
+@@ -199,7 +199,7 @@
+     }
+   }
+ 
+-  [feature = 'amenity_fuel'][zoom >= 17] {
++  [feature = 'amenity_fuel'][zoom >= @emergency] {
+     marker-file: url('symbols/fuel.16.svg');
+     marker-fill: @transportation-icon;
+     marker-placement: interior;
+@@ -211,7 +211,7 @@
+     point-placement: interior;
+   }
+ 
+-  [feature = 'amenity_hospital'][zoom >= 15] {
++  [feature = 'amenity_hospital'][zoom >= @emergency] {
+     marker-file: url('symbols/hospital.16.svg');
+     marker-fill: @health-color;
+     marker-placement: interior;
+@@ -318,7 +318,7 @@
+     }
+   }
+ 
+-  [feature = 'amenity_pharmacy'][zoom >= 17] {
++  [feature = 'amenity_pharmacy'][zoom >= @useful] {
+     marker-file: url('symbols/pharmacy.16.svg');
+     marker-fill: @health-color;
+     marker-placement: interior;
+@@ -389,7 +389,7 @@
+     marker-clip: false;
+   }
+ 
+-  [feature = 'amenity_police'][zoom >= 16] {
++  [feature = 'amenity_police'][zoom >= @useful] {
+     marker-file: url('symbols/police.16.svg');
+     marker-fill: @amenity-brown;
+     marker-placement: interior;
+@@ -403,7 +403,7 @@
+     marker-clip: false;
+   }
+ 
+-  [feature = 'amenity_post_office'][zoom >= 17] {
++  [feature = 'amenity_post_office'][zoom >= @useful] {
+     marker-file: url('symbols/post_office-14.svg');
+     marker-fill: @amenity-brown;
+     marker-placement: interior;
+@@ -470,7 +470,7 @@
+     marker-clip: false;
+   }
+ 
+-  [feature = 'amenity_toilets'][zoom >= 17] {
++  [feature = 'amenity_toilets'][zoom >= @useful] {
+     marker-file: url('symbols/toilets.16.svg');
+     marker-fill: @amenity-brown;
+     marker-placement: interior;
+@@ -491,7 +491,7 @@
+     marker-clip: false;
+   }
+ 
+-  [feature = 'tourism_viewpoint'][zoom >= 16] {
++  [feature = 'tourism_viewpoint'][zoom >= @nice] {
+     marker-file: url('symbols/viewpoint.16.svg');
+     marker-placement: interior;
+     marker-fill: @amenity-brown;
+@@ -519,7 +519,7 @@
+     marker-clip: false;
+   }
+ 
+-  [feature = 'historic_archaeological_site'][zoom >= 16] {
++  [feature = 'historic_archaeological_site'][zoom >= @nice] {
+     marker-file: url('symbols/archaeological_site.16.svg');
+     marker-fill: @amenity-brown;
+     marker-placement: interior;
+@@ -534,7 +534,7 @@
+     marker-clip: false;
+   }
+ 
+-  [feature = 'shop_supermarket'][zoom >= 16] {
++  [feature = 'shop_supermarket'][zoom >= @useful] {
+     marker-file: url('symbols/shop_supermarket.svg');
+     marker-placement: interior;
+     marker-clip: false;
+@@ -733,7 +733,7 @@
+     marker-clip: false;
+   }
+ 
+-  [feature = 'shop_car_repair'][zoom >= 17] {
++  [feature = 'shop_car_repair'][zoom >= @useful] {
+     marker-file: url('symbols/shopping_car_repair.16.svg');
+     marker-placement: interior;
+     marker-clip: false;
+--- a/style.mss
++++ b/style.mss
+@@ -17,6 +17,14 @@
+                 "TSCu_Paranar Regular", "Tibetan Machine Uni Regular",
+                 "Droid Sans Fallback Regular", "Unifont Medium";
+ 
++// nice stuff is things that are not so common and that I like to see from far,
++// like castles, viewpoints and such
++@nice: 11;
++// it's also the max general zoom level
++@emergency: 14;
++// things that are useful and common enough to see in the near range
++@useful: 16;
++
+ @water-color: #b5d0d0;
+ @water-dark: #5A5AA1;
+ @water-text: #5A5AA1;
+--- a/stations.mss
++++ b/stations.mss
+@@ -4,7 +4,7 @@
+ @station-text: darken(saturate(@station-color, 15%), 10%);
+ 
+ .stations {
+-  [railway = 'subway_entrance'][zoom >= 18] {
++  [railway = 'subway_entrance'][zoom >= @nice] {
+     marker-file: url('symbols/entrance.10.svg');
+     marker-placement: interior;
+     marker-fill: @transportation-icon;

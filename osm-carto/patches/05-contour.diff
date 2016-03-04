@@ -1,0 +1,170 @@
+--- a/project.yaml
++++ b/project.yaml
+@@ -324,6 +324,71 @@
+     advanced: {}
+     properties:
+       minzoom: 9
++  - id: "contour-50"
++    name: "contour-50"
++    class: ""
++    geometry: "linestring"
++    <<: *extents84
++    Datasource:
++      <<: *osm2pgsql
++      table: |-
++        (SELECT height, way
++         FROM contours
++         WHERE height::int%100 = 50
++        ) as c50
++    advanced: {}
++  - id: "contour-100"
++    name: "contour-100"
++    class: ""
++    geometry: "linestring"
++    <<: *extents84
++    Datasource:
++      <<: *osm2pgsql
++      table: |-
++        (SELECT height, way
++         FROM contours
++         WHERE height::int%1000 in (100, 200, 300, 400, 600, 700, 800, 900)
++        ) as c100
++    advanced: {}
++  - id: "contour-250"
++    name: "contour-250"
++    class: ""
++    geometry: "linestring"
++    <<: *extents84
++    Datasource:
++      <<: *osm2pgsql
++      table: |-
++        (SELECT height, way
++         FROM contours
++         WHERE height::int%1000 in (250, 750)
++        ) as c250
++    advanced: {}
++  - id: "contour-500"
++    name: "contour-500"
++    class: ""
++    geometry: "linestring"
++    <<: *extents84
++    Datasource:
++      <<: *osm2pgsql
++      table: |-
++        (SELECT height, way
++         FROM contours
++         WHERE height::int%1000 = 500
++        ) as c500
++    advanced: {}
++  - id: "contour-1000"
++    name: "contour-1000"
++    class: ""
++    geometry: "linestring"
++    <<: *extents84
++    Datasource:
++      <<: *osm2pgsql
++      table: |-
++        (SELECT height, way
++         FROM contours
++         WHERE height::int%1000 = 0
++        ) as c1000
++    advanced: {}
+   - id: "water-lines-casing"
+     name: "water-lines-casing"
+     class: ""
+--- a/style.mss
++++ b/style.mss
+@@ -63,3 +63,93 @@
+   [zoom >=  9] { raster-opacity: 0.8; }
+   [zoom >= 10] { raster-opacity: 0.9; }
+ }
++
++#contour-50 {
++  [zoom >= 13] {
++    line-color: #222;
++    line-width: 0.5;
++    line-smooth: 0.8;
++    line-opacity: 0.2;
++  }
++}
++
++#contour-100 {
++  [zoom >= 11] {
++    line-color: #222;
++    line-width: 0.5;
++    line-smooth: 0.8;
++    line-opacity: 0.6;
++  }
++
++  [zoom >= 13] {
++    text-name: "[height]";
++    text-face-name: @book-fonts;
++    text-size: 12;
++    text-fill: #222;
++    text-opacity: 0.6;
++    text-halo-radius: 1;
++    text-placement: line;
++    text-spacing: 400;
++  }
++}
++
++#contour-250 {
++  [zoom = 10] {
++    line-color: #222;
++    line-width: 0.5;
++    line-smooth: 0.8;
++    line-opacity: 0.6;
++  }
++}
++
++#contour-500 {
++  [zoom >= 9] {
++    line-color: #222;
++    line-width: 0.5;
++    line-smooth: 0.8;
++    line-opacity: 0.6;
++  }
++
++  [zoom >= 11] {
++    line-width: 0.75;
++  }
++
++  [zoom >= 12] {
++    line-width: 1;
++
++    text-name: "[height]";
++    text-face-name: @book-fonts;
++    text-size: 12;
++    text-fill: #222;
++    text-opacity: 0.6;
++    text-halo-radius: 1;
++    text-placement: line;
++    text-spacing: 400;
++  }
++}
++
++#contour-1000 {
++  [zoom >= 8] {
++    line-color: #222;
++    line-width: 0.5;
++    line-smooth: 0.8;
++    line-opacity: 0.6;
++  }
++
++  [zoom >= 10] {
++    line-width: 1.0;
++  }
++
++  [zoom >= 12] {
++    // line-width: 1.5;
++
++    text-name: "[height]";
++    text-face-name: @book-fonts;
++    text-size: 12;
++    text-fill: #222;
++    text-opacity: 0.6;
++    text-halo-radius: 1;
++    text-placement: line;
++    text-spacing: 400;
++  }
++}

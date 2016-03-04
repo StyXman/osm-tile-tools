@@ -1,0 +1,192 @@
+--- a/project.yaml
++++ b/project.yaml
+@@ -76,6 +76,40 @@
+     properties:
+       minzoom: 10
+     advanced: {}
++  - id: "terrain-small"
++    name: "terrain-small"
++    class: "terrain"
++    geometry: "raster"
++    <<: *extents84
++    Datasource:
++      file: "/home/mdione/src/projects/osm/data/height/mixed-terrain-small.tif"
++      type: "gdal"
++    advanced: {}
++    properties:
++      maxzoom: 6
++  - id: "terrain-medium"
++    name: "terrain-medium"
++    class: "terrain"
++    geometry: "raster"
++    <<: *extents84
++    Datasource:
++      file: "/home/mdione/src/projects/osm/data/height/mixed-terrain-medium.tif"
++      type: "gdal"
++    advanced: {}
++    properties:
++      minzoom: 7
++      maxzoom: 8
++  - id: "terrain-big"
++    name: "terrain-big"
++    class: "terrain"
++    geometry: "raster"
++    <<: *extents84
++    Datasource:
++      file: "/home/mdione/src/projects/osm/data/height/mixed-terrain.vrt"
++      type: "gdal"
++    advanced: {}
++    properties:
++      minzoom: 8
+   - id: "builtup"
+     name: "builtup"
+     geometry: "polygon"
+@@ -198,6 +232,98 @@
+     advanced: {}
+     properties:
+       minzoom: 14
++  - id: "shade-small"
++    name: "shade-small"
++    class: "shade-over"
++    geometry: "raster"
++    <<: *extents84
++    Datasource:
++      file: "/home/mdione/src/projects/osm/data/height/mixed-hillshade-small.tif"
++      type: "gdal"
++    advanced: {}
++    properties:
++      maxzoom: 6
++  - id: "shade-medium-over"
++    name: "shade-medium-over"
++    class: "shade-over"
++    geometry: "raster"
++    <<: *extents84
++    Datasource:
++      file: "/home/mdione/src/projects/osm/data/height/mixed-hillshade-medium.tif"
++      type: "gdal"
++    advanced: {}
++    properties:
++      minzoom: 7
++      maxzoom: 7
++  - id: "shade-medium-overlay"
++    name: "shade-medium-overlay"
++    class: "shade-overlay"
++    geometry: "raster"
++    <<: *extents84
++    Datasource:
++      file: "/home/mdione/src/projects/osm/data/height/mixed-hillshade-medium.tif"
++      type: "gdal"
++    advanced: {}
++    properties:
++      minzoom: 8
++      maxzoom: 10
++  - id: "shade-big"
++    name: "shade-big"
++    class: "shade"
++    geometry: "raster"
++    <<: *extents84
++    Datasource:
++      file: "/home/mdione/src/projects/osm/data/height/mixed-hillshade.vrt"
++      type: "gdal"
++    advanced: {}
++    properties:
++      minzoom: 9
++  - id: "slope-small"
++    name: "slope-small"
++    class: "slope-over"
++    geometry: "raster"
++    <<: *extents84
++    Datasource:
++      file: "/home/mdione/src/projects/osm/data/height/mixed-slopeshade-small.tif"
++      type: "gdal"
++    advanced: {}
++    properties:
++      maxzoom: 6
++  - id: "slope-medium-over"
++    name: "slope-medium-over"
++    class: "slope-over"
++    geometry: "raster"
++    <<: *extents84
++    Datasource:
++      file: "/home/mdione/src/projects/osm/data/height/mixed-slopeshade-medium.tif"
++      type: "gdal"
++    advanced: {}
++    properties:
++      minzoom: 7
++      maxzoom: 7
++  - id: "slope-medium-overlay"
++    name: "slope-medium-overlay"
++    class: "slope-overlay"
++    geometry: "raster"
++    <<: *extents84
++    Datasource:
++      file: "/home/mdione/src/projects/osm/data/height/mixed-slopeshade-medium.tif"
++      type: "gdal"
++    advanced: {}
++    properties:
++      minzoom: 8
++      maxzoom: 8
++  - id: "slope-big"
++    name: "slope-big"
++    class: "slope-overlay"
++    geometry: "raster"
++    <<: *extents84
++    Datasource:
++      file: "/home/mdione/src/projects/osm/data/height/mixed-slopeshade.vrt"
++      type: "gdal"
++    advanced: {}
++    properties:
++      minzoom: 9
+   - id: "water-lines-casing"
+     name: "water-lines-casing"
+     class: ""
+--- a/style.mss
++++ b/style.mss
+@@ -19,3 +19,47 @@
+ 
+ @water-color: #b5d0d0;
+ @land-color: #bfbfbf;
++
++// terrain-small [0-6], terrain-medium [7-8], terrain-big [9-]
++.terrain {
++  raster-scaling: lanczos;
++  raster-opacity: 0.9;
++  [zoom >= 7] { raster-opacity: 0.8; }
++  [zoom >= 8] { raster-opacity: 0.7; }
++}
++
++// shade-small [0-6], shade-big [7]
++.shade-over {
++  comp-op: src-over;
++  raster-scaling: lanczos;
++  raster-opacity: 0.15;
++}
++
++// shade-medium [8], shade-big [9-]
++.shade-overlay {
++  raster-scaling: lanczos;
++  [zoom >=8] {
++    comp-op: overlay;
++    raster-opacity: 0.5;
++  }
++}
++
++// slope-small [0-6], slope-medium [7]
++.slope-over {
++  comp-op: src-over;
++  raster-scaling: lanczos;
++  raster-opacity: 0.4;
++  [zoom >=  8] { raster-opacity: 0.27; }
++  [zoom >=  9] { raster-opacity: 0.13; }
++  [zoom >= 10] { raster-opacity: 0.0; }
++}
++
++// slope-medium [8], slope-big [9-]
++.slope-overlay {
++  raster-scaling: lanczos;
++  comp-op: overlay;
++  // comp-op: soft-light;
++  raster-opacity: 0.7;
++  [zoom >=  9] { raster-opacity: 0.8; }
++  [zoom >= 10] { raster-opacity: 0.9; }
++}

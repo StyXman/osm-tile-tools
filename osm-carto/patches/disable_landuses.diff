@@ -1,0 +1,125 @@
+--- a/landcover.mss
++++ b/landcover.mss
+@@ -113,6 +113,8 @@
+     [way_pixels >= 64] { polygon-pattern-gamma: 0.3;  }
+   }
+ 
++  // TODO: make them transparent
++  /*
+   [feature = 'landuse_vineyard'] {
+     [zoom >= 10] {
+       polygon-fill: @orchard;
+@@ -140,6 +142,7 @@
+       [way_pixels >= 64] { polygon-pattern-gamma: 0.3;  }
+     }
+   }
++  */
+ 
+   [feature = 'landuse_cemetery'],
+   [feature = 'amenity_grave_yard'] {
+@@ -228,6 +231,7 @@
+     [way_pixels >= 64] { polygon-gamma: 0.3;  }
+   }
+ 
++  /*
+   [feature = 'landuse_allotments'] {
+     [zoom >= 10][zoom < 14] {
+       polygon-fill: @allotments;
+@@ -241,6 +245,7 @@
+       [way_pixels >= 64] { polygon-pattern-gamma: 0.3;  }
+     }
+   }
++  */
+ 
+   [feature = 'landuse_forest'],
+   [feature = 'natural_wood'] {
+@@ -251,6 +256,7 @@
+     }
+   }
+ 
++  /*
+   [feature = 'landuse_farmyard'][zoom >= 10] {
+     polygon-fill: @farmyard;
+       [zoom >= 16] {
+@@ -263,7 +269,9 @@
+     [way_pixels >= 4]  { polygon-gamma: 0.75; }
+     [way_pixels >= 64] { polygon-gamma: 0.3;  }
+   }
++  */
+ 
++  /*
+   [feature = 'landuse_farm'],
+   [feature = 'landuse_farmland'],
+   [feature = 'landuse_greenhouse_horticulture'] {
+@@ -277,10 +285,13 @@
+       [way_pixels >= 64] { polygon-gamma: 0.3;  }
+     }
+   }
++  */
+ 
++  /*
+   [feature = 'landuse_meadow'],
+   [feature = 'natural_grassland'],
+   [feature = 'landuse_grass'],
++  /*
+   [feature = 'landuse_recreation_ground'],
+   [feature = 'landuse_village_green'],
+   [feature = 'leisure_common'],
+@@ -292,6 +303,7 @@
+     }
+   }
+ 
++  /*
+   [feature = 'landuse_retail'][zoom >= 10] {
+     polygon-fill: @retail;
+     [zoom >= 16] {
+@@ -304,7 +316,9 @@
+       [way_pixels >= 64] { polygon-gamma: 0.3;  }
+     }
+   }
++  */
+ 
++  /*
+   [feature = 'landuse_industrial'][zoom >= 10] {
+     polygon-fill: @industrial;
+     [zoom >= 16] {
+@@ -317,6 +331,7 @@
+     [way_pixels >= 4]  { polygon-gamma: 0.75; }
+     [way_pixels >= 64] { polygon-gamma: 0.3;  }
+   }
++  */
+ 
+   [feature = 'landuse_railway'][zoom >= 10] {
+     polygon-fill: @railway;
+@@ -328,6 +343,7 @@
+     [way_pixels >= 64] { polygon-gamma: 0.3;  }
+   }
+ 
++  /*
+   [feature = 'power_station'][zoom >= 10],
+   [feature = 'power_generator'][zoom >= 10],
+   [feature = 'power_sub_station'][zoom >= 13],
+@@ -346,6 +362,7 @@
+     [way_pixels >= 4]  { polygon-gamma: 0.75; }
+     [way_pixels >= 64] { polygon-gamma: 0.3;  }
+   }
++  */
+ 
+   [feature = 'landuse_commercial'][zoom >= 10] {
+     polygon-fill: @commercial;
+@@ -360,6 +377,7 @@
+     [way_pixels >= 64] { polygon-gamma: 0.3;  }
+   }
+ 
++  /*
+   [feature = 'landuse_brownfield'],
+   [feature = 'landuse_landfill'],
+   [feature = 'landuse_construction'] {
+@@ -369,6 +387,7 @@
+       [way_pixels >= 64] { polygon-gamma: 0.3;  }
+     }
+   }
++  */
+ 
+   [feature = 'natural_bare_rock'][zoom >= 9] {
+     polygon-fill: @bare_ground;
