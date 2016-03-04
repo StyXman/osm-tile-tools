@@ -1,15 +1,21 @@
 --- a/placenames.mss
 +++ b/placenames.mss
-@@ -6,7 +6,7 @@
+@@ -8,11 +8,13 @@
  .country {
-   [admin_level = '2'][zoom >= 2][way_pixels > 3000][way_pixels < 196000] {
+   [admin_level = '2'][zoom >= 3][way_pixels > 1000][way_pixels < 360000] {
      text-name: "[name]";
 -    text-size: 9;
 +    text-size: 10;
-     text-fill: #9d6c9d;
-     text-face-name: @book-fonts;
-     text-halo-radius: 1.5;
-@@ -49,15 +49,15 @@
+ 
++    /*
+     [zoom >= 3] {
+       text-size: 10;
+     }
++    */
+     [zoom >= 4] {
+       text-size: 11;
+     }
+@@ -70,15 +72,15 @@
      [zoom >= 4][score >= 3000000],
      [zoom >= 5][score >= 400000] {
        text-name: "[name]";
@@ -29,7 +35,7 @@
          text-wrap-width: 45;
        }
        [zoom >= 6] {
-@@ -77,24 +77,25 @@
+@@ -98,24 +100,25 @@
      [zoom >= 6][score >= 70000],
      [zoom >= 7] {
        text-name: "[name]";
@@ -62,7 +68,7 @@
        }
      }
    }
-@@ -104,10 +105,10 @@
+@@ -125,10 +128,10 @@
    [category = 2] {
      [zoom >= 9][zoom < 16] {
        text-name: "[name]";
@@ -75,7 +81,7 @@
        text-halo-fill: rgba(255,255,255,0.6);
        text-wrap-width: 45;
        text-min-distance: 10;
-@@ -122,6 +123,7 @@
+@@ -143,6 +146,7 @@
        [zoom >= 14] {
          text-size: 15;
          text-wrap-width: 70;
@@ -83,7 +89,7 @@
        }
      }
    }
-@@ -152,7 +154,7 @@
+@@ -173,7 +177,7 @@
  
  #placenames-small::village {
    [place = 'village'] {

@@ -1,29 +1,69 @@
 --- a/admin.mss
 +++ b/admin.mss
-@@ -14,18 +14,18 @@
-   [admin_level = '2']/*,
-   [admin_level = '3']*/ {
+@@ -13,46 +13,62 @@
+ #admin-high-zoom[zoom >= 13]*/ {
+   [admin_level = '2'] {
      [zoom >= 4] {
--      background/line-color: white;
--      background/line-width: 0.6;
-+      // background/line-color: white;
-+      // background/line-width: 0.6;
++      /*
+       background/line-join: bevel;
+       background/line-color: white;
+       background/line-width: 1.2;
++      */
+       line-join: bevel;
+       line-color: @admin-boundaries;
+       line-width: 1.2;
+     }
+     [zoom >= 5] {
++      /*
+       background/line-width: 1.5;
++      */
+       line-width: 1.5;
+     }
+     [zoom >= 6] {
++      /*
+       background/line-width: 1.8;
++      */
+       line-width: 1.8;
+     }
+     [zoom >= 7] {
++      /*
+       background/line-width: 2;
++      */
+       line-width: 2;
+     }
+     [zoom >= 10] {
++      /*
+       background/line-width: 6;
++      */
+       line-width: 6;
+     }
+   }
+ 
+   [admin_level = '3'] {
+     [zoom >= 4] {
++      /*
+       background/line-join: bevel;
+       background/line-color: white;
+       background/line-width: 0.6;
++      */
+       line-join: bevel;
        line-color: @admin-boundaries;
        line-width: 0.6;
      }
      [zoom >= 7] {
--      background/line-width: 2;
-+      // background/line-width: 2;
-       line-width: 2;
++      /*
+       background/line-width: 1.2;
++      */
+       line-width: 1.2;
      }
      [zoom >= 10] {
-       [admin_level = '2'] {
--        background/line-width: 6;
-+        // background/line-width: 6;
-         line-width: 6;
-       }
-       /*
-@@ -119,8 +119,8 @@
++      /*
+       background/line-width: 4;
++      */
+       line-width: 4;
+       line-dasharray: 4,2;
+       line-clip: false;
+@@ -166,8 +182,8 @@
        line-clip: false;
      }
    }

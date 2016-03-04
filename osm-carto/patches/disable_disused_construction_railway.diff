@@ -9,7 +9,7 @@
                ('highway_motorway', 380),
                ('highway_trunk', 370),
                ('highway_primary', 360),
-@@ -857,8 +855,6 @@
+@@ -859,8 +857,6 @@
                ('railway_turntable', 420),
                ('railway_tram', 410),
                ('railway_tram-service', 405),
@@ -18,7 +18,7 @@
                ('highway_motorway', 380),
                ('highway_trunk', 370),
                ('highway_primary', 360),
-@@ -1012,8 +1008,6 @@
+@@ -1014,8 +1010,6 @@
                ('railway_turntable', 420),
                ('railway_tram', 410),
                ('railway_tram-service', 405),
@@ -27,7 +27,7 @@
                ('highway_motorway', 380),
                ('highway_trunk', 370),
                ('highway_primary', 360),
-@@ -1241,8 +1235,6 @@
+@@ -1243,8 +1237,6 @@
                ('railway_turntable', 420),
                ('railway_tram', 410),
                ('railway_tram-service', 405),
@@ -36,24 +36,6 @@
                ('highway_motorway', 380),
                ('highway_trunk', 370),
                ('highway_primary', 360),
-@@ -1506,7 +1498,6 @@
-             name,
-             railway,
-             aerialway,
--            disused,
-             CASE railway
-               WHEN 'station' THEN 1
-               WHEN 'subway_entrance' THEN 3
-@@ -1533,8 +1524,7 @@
-             way,
-             name,
-             railway,
--            aerialway,
--            disused
-+            aerialway
-         FROM planet_osm_polygon
-         WHERE railway IN ('station', 'halt', 'tram_stop')
-           OR aerialway = 'station'
 --- a/roads.mss
 +++ b/roads.mss
 @@ -802,8 +802,10 @@
