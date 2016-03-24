@@ -10,7 +10,7 @@
 +    geometry: "raster"
 +    <<: *extents84
 +    Datasource:
-+      file: "/home/mdione/src/projects/osm/data/height/mixed-terrain-small.tif"
++      file: "data/height/mixed-terrain-small.tif"
 +      type: "gdal"
 +    advanced: {}
 +    properties:
@@ -21,7 +21,7 @@
 +    geometry: "raster"
 +    <<: *extents84
 +    Datasource:
-+      file: "/home/mdione/src/projects/osm/data/height/mixed-terrain-medium.tif"
++      file: "data/height/mixed-terrain-medium.tif"
 +      type: "gdal"
 +    advanced: {}
 +    properties:
@@ -33,7 +33,7 @@
 +    geometry: "raster"
 +    <<: *extents84
 +    Datasource:
-+      file: "/home/mdione/src/projects/osm/data/height/mixed-terrain.vrt"
++      file: "data/height/mixed-terrain.vrt"
 +      type: "gdal"
 +    advanced: {}
 +    properties:
@@ -51,7 +51,7 @@
 +    geometry: "raster"
 +    <<: *extents84
 +    Datasource:
-+      file: "/home/mdione/src/projects/osm/data/height/mixed-hillshade-small.tif"
++      file: "data/height/mixed-hillshade-small.tif"
 +      type: "gdal"
 +    advanced: {}
 +    properties:
@@ -62,7 +62,7 @@
 +    geometry: "raster"
 +    <<: *extents84
 +    Datasource:
-+      file: "/home/mdione/src/projects/osm/data/height/mixed-hillshade-medium.tif"
++      file: "data/height/mixed-hillshade-medium.tif"
 +      type: "gdal"
 +    advanced: {}
 +    properties:
@@ -74,7 +74,7 @@
 +    geometry: "raster"
 +    <<: *extents84
 +    Datasource:
-+      file: "/home/mdione/src/projects/osm/data/height/mixed-hillshade-medium.tif"
++      file: "data/height/mixed-hillshade-medium.tif"
 +      type: "gdal"
 +    advanced: {}
 +    properties:
@@ -86,7 +86,7 @@
 +    geometry: "raster"
 +    <<: *extents84
 +    Datasource:
-+      file: "/home/mdione/src/projects/osm/data/height/mixed-hillshade.vrt"
++      file: "data/height/mixed-hillshade.vrt"
 +      type: "gdal"
 +    advanced: {}
 +    properties:
@@ -97,7 +97,7 @@
 +    geometry: "raster"
 +    <<: *extents84
 +    Datasource:
-+      file: "/home/mdione/src/projects/osm/data/height/mixed-slopeshade-small.tif"
++      file: "data/height/mixed-slopeshade-small.tif"
 +      type: "gdal"
 +    advanced: {}
 +    properties:
@@ -108,7 +108,7 @@
 +    geometry: "raster"
 +    <<: *extents84
 +    Datasource:
-+      file: "/home/mdione/src/projects/osm/data/height/mixed-slopeshade-medium.tif"
++      file: "data/height/mixed-slopeshade-medium.tif"
 +      type: "gdal"
 +    advanced: {}
 +    properties:
@@ -120,7 +120,7 @@
 +    geometry: "raster"
 +    <<: *extents84
 +    Datasource:
-+      file: "/home/mdione/src/projects/osm/data/height/mixed-slopeshade-medium.tif"
++      file: "data/height/mixed-slopeshade-medium.tif"
 +      type: "gdal"
 +    advanced: {}
 +    properties:
@@ -132,7 +132,7 @@
 +    geometry: "raster"
 +    <<: *extents84
 +    Datasource:
-+      file: "/home/mdione/src/projects/osm/data/height/mixed-slopeshade.vrt"
++      file: "data/height/mixed-slopeshade.vrt"
 +      type: "gdal"
 +    advanced: {}
 +    properties:
