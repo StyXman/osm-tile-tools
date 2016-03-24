@@ -6,7 +6,7 @@ disable_state_names.diff
 disable_construction_roads.diff
 disable_disused_construction_railway.diff
 disable_admin_text.diff
-remove-missing-fonts.diff
+fix-fonts.diff
 old-land-color.diff
 deeper_closer_center.diff
 Makefile.diff
