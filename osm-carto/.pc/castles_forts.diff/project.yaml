@@ -267,7 +267,7 @@ Layer:
       maxzoom: 10
   - id: "shade-big"
     name: "shade-big"
-    class: "shade"
+    class: "shade-overlay"
     geometry: "raster"
     <<: *extents84
     Datasource:
