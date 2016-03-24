@@ -1,5 +1,3 @@
-// kate: indent-width 2;
-
 /* For the main linear features, such as roads and railways. */
 
 //road colors for major roads were generated with scripts/generate_road_colors.py

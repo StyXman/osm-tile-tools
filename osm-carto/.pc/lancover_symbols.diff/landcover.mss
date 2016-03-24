@@ -1,5 +1,3 @@
-// kate: indent-width 2;
-
 // --- Parks, woods, other green things ---
 
 @grass: #cdebb0; // also meadow, common, garden, village_green

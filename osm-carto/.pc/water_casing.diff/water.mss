@@ -1,5 +1,3 @@
-// kate: indent-width 2;
-
 @water-text: #6699cc;
 @glacier: #ddecec;
 @glacier-line: #9cf;

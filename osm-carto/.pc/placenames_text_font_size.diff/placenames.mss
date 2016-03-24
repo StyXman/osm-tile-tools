@@ -1,5 +1,3 @@
-// kate: indent-width 2;
-
 @placenames: #222;
 @placenames-light: #777777;
 @country-labels: darken(@admin-boundaries, 15%);

@@ -1,5 +1,3 @@
-// kate: indent-width 2;
-
 Map {
   background-color: @land-color;
 }

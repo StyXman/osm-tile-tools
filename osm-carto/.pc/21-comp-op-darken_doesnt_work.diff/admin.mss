@@ -1,5 +1,3 @@
-// kate: indent-width 2;
-
 @admin-boundaries: #ac46ac;
 
 /* For performance reasons, the admin border layers are split into three groups

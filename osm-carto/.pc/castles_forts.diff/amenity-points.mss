@@ -1,5 +1,3 @@
-// kate: indent-width 2;
-
 @marina-text: #576ddf; // also swimming_pool
 @wetland-text: darken(#4aa5fa, 25%); /* Also for marsh and mud */
 @shop-icon: #ac39ac;
