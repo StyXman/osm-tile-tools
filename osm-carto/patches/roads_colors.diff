@@ -20,20 +20,16 @@
 +// roads
 +@oneway: #aaa;
 +
-+// @motorway-fill: #3030bf;
 +@motorway-fill: #cf3030;
 +@motorway-low-zoom: @motorway-fill;
 +@motorway-casing: darken(@motorway-fill, @darken-lighten);
 +@motorway-tunnel-fill: lighten(@motorway-fill, @darken-lighten);
 +
-+// @trunk-fill: #bf30bf;
-+// @trunk-fill-alternative: #bf30bf;
 +@trunk-fill: @motorway-fill;
 +@trunk-low-zoom: #cf6868;
 +@trunk-casing: darken(@trunk-fill, @darken-lighten);
 +@trunk-tunnel-fill: lighten(@trunk-fill, @darken-lighten);
 +
-+// @primary-fill: #bf3030;
 +@primary-fill: #8a5c00;
 +@primary-low-zoom: @primary-fill;
 +@primary-casing: darken(@primary-fill, @darken-lighten);
