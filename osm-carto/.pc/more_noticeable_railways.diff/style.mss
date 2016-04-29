@@ -60,10 +60,12 @@ Map {
 @secondary-casing: darken(@secondary-fill, @darken-lighten);
 @secondary-tunnel-fill: lighten(@secondary-fill, @darken-lighten);
 
-@residential-fill: #ffffff;
-@service-fill: #ffffff;
-@living-street-fill: #ccc;
-@pedestrian-fill: #ededed;
+@tertiary-casing: #444;
+
+@residential-casing: #444;
+
+@service-fill: #aaa;
+@pedestrian-fill: #fff;
 @road-fill: #ddd;
 @path-fill: black;
 @footway-fill: salmon;
