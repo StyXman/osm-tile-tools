@@ -32,20 +32,16 @@ Map {
 // roads
 @oneway: #aaa;
 
-// @motorway-fill: #3030bf;
 @motorway-fill: #cf3030;
 @motorway-low-zoom: #e88b00;
 @motorway-casing: darken(@motorway-fill, @darken-lighten);
 @motorway-tunnel-fill: lighten(@motorway-fill, @darken-lighten);
 
-// @trunk-fill: #bf30bf;
-// @trunk-fill-alternative: #bf30bf;
 @trunk-fill: @motorway-fill;
 @trunk-low-zoom: @motorway-fill;
 @trunk-casing: darken(@trunk-fill, @darken-lighten);
 @trunk-tunnel-fill: lighten(@trunk-fill, @darken-lighten);
 
-// @primary-fill: #bf3030;
 @primary-fill: #8a5c00;
 @primary-low-zoom: @primary-fill;
 @primary-casing: darken(@primary-fill, @darken-lighten);
@@ -56,7 +52,6 @@ Map {
 @secondary-casing: darken(@secondary-fill, @darken-lighten);
 @secondary-tunnel-fill: lighten(@secondary-fill, @darken-lighten);
 
-// @tertiary-fill: #8a5c00;
 @residential-fill: #ffffff;
 @service-fill: #ffffff;
 @living-street-fill: #ccc;
