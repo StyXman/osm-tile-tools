@@ -1,6 +1,6 @@
 --- a/style.mss
 +++ b/style.mss
-@@ -18,8 +18,82 @@
+@@ -16,8 +16,79 @@
                  "Droid Sans Fallback Regular", "Unifont Medium";
  
  @water-color: #b5d0d0;
@@ -82,7 +82,7 @@
    raster-scaling: lanczos;
 --- a/roads.mss
 +++ b/roads.mss
-@@ -1288,11 +1288,11 @@
+@@ -1286,11 +1286,11 @@
  
      [feature = 'highway_secondary'] {
        [zoom >= 9] {
@@ -96,7 +96,7 @@
          line-width: @secondary-width-z10;
        }
        [zoom >= 11] { line-width: @secondary-width-z11; }
-@@ -2067,6 +2067,23 @@
+@@ -2065,6 +2065,23 @@
        }
      }
    }
