@@ -41,12 +41,12 @@ Map {
 @oneway: #aaa;
 
 @motorway-fill: #cf3030;
-@motorway-low-zoom: #e88b00;
+@motorway-low-zoom: @motorway-fill;
 @motorway-casing: darken(@motorway-fill, @darken-lighten);
 @motorway-tunnel-fill: lighten(@motorway-fill, @darken-lighten);
 
 @trunk-fill: @motorway-fill;
-@trunk-low-zoom: @motorway-fill;
+@trunk-low-zoom: #cf6868;
 @trunk-casing: darken(@trunk-fill, @darken-lighten);
 @trunk-tunnel-fill: lighten(@trunk-fill, @darken-lighten);
 
