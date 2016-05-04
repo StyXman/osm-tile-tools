@@ -32,62 +32,73 @@ Map {
 // roads
 @oneway: #aaa;
 
-@motorway-fill: #cf3030;
-@motorway-low-zoom: @motorway-fill;
 @motorway-casing: darken(@motorway-fill, @darken-lighten);
+@motorway-low-zoom: @motorway-fill;
+@motorway-fill: #cf3030;
 @motorway-tunnel-fill: lighten(@motorway-fill, @darken-lighten);
 
-@trunk-fill: @motorway-fill;
-@trunk-low-zoom: #cf6868;
 @trunk-casing: darken(@trunk-fill, @darken-lighten);
+@trunk-low-zoom: #cf6868;
+@trunk-fill: @motorway-fill;
 @trunk-tunnel-fill: lighten(@trunk-fill, @darken-lighten);
 
-@primary-fill: #8a5c00;
-@primary-low-zoom: @primary-fill;
 @primary-casing: darken(@primary-fill, @darken-lighten);
+@primary-low-zoom: @primary-fill;
+@primary-fill: #8a5c00;
 @primary-tunnel-fill: lighten(@primary-fill, @darken-lighten);
 
-@secondary-fill: #2f6f2f;
-@secondary-low-zoom: @secondary-fill;
 @secondary-casing: darken(@secondary-fill, @darken-lighten);
+@secondary-low-zoom: @secondary-fill;
+@secondary-fill: #2f6f2f;
 @secondary-tunnel-fill: lighten(@secondary-fill, @darken-lighten);
 
 @tertiary-casing: #444;
+@tertiary-fill: #ffffff;
+@tertiary-tunnel-fill: lighten(@tertiary-fill, 5%);
 
 @residential-casing: #444;
+@residential-fill: #ffffff;
+@residential-tunnel-fill: lighten(@residential-fill, 10%);
 
-@service-fill: #aaa;
-@pedestrian-fill: #fff;
+@living-street-casing: @default-casing;
+@living-street-fill: #ededed;
+
+@service-casing: #999;
+@service-fill: @residential-fill;
+
+@pedestrian-casing: grey;
+@pedestrian-fill: #dddde8;
+
+@road-casing: @residential-casing;
 @road-fill: #ddd;
+
+@path-casing: @default-casing;
 @path-fill: black;
+
+@footway-casing: @default-casing;
 @footway-fill: salmon;
+
+@steps-casing: @default-casing;
 @steps-fill: @footway-fill;
+
+@cycleway-casing: @default-casing;
 @cycleway-fill: blue;
+
+@bridleway-casing: @default-casing;
 @bridleway-fill: green;
+
+@byway-casing: @default-casing;
 @byway-fill: #ffcc00;
+
+@track-casing: @default-casing;
 @track-fill: #996600;
 @track-grade1-fill: #b37700;
 @track-grade2-fill: #a87000;
+
 @aeroway-fill: #bbc;
 @runway-fill: @aeroway-fill;
 @taxiway-fill: @aeroway-fill;
 @helipad-fill: @aeroway-fill;
-
-@tertiary-casing: #c6c68a;
-@residential-casing: #bbb;
-@service-casing: #999;
-@living-street-casing: @default-casing;
-@pedestrian-casing: grey;
-@path-casing: @default-casing;
-@footway-casing: @default-casing;
-@steps-casing: @default-casing;
-@cycleway-casing: @default-casing;
-@bridleway-casing: @default-casing;
-@byway-casing: @default-casing;
-@track-casing: @default-casing;
-
-@tertiary-tunnel-fill: lighten(@tertiary-fill, 5%);
-@residential-tunnel-fill: lighten(@residential-fill, 10%);
 
 // terrain-small [0-6], terrain-medium [7-8], terrain-big [9-]
 .terrain {
