@@ -44,8 +44,8 @@
 +
 +@residential-casing: #444;
 +
-+@service-fill: #aaa;
-+@pedestrian-fill: #fff;
++@service-fill: @residential-fill;
++@pedestrian-fill: #dddde8;
 +@road-fill: #ddd;
 +@path-fill: black;
 +@footway-fill: salmon;
