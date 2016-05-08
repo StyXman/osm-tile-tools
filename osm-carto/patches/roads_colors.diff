@@ -1,6 +1,6 @@
 --- a/style.mss
 +++ b/style.mss
-@@ -16,8 +16,90 @@
+@@ -16,8 +16,99 @@
                  "Droid Sans Fallback Regular", "Unifont Medium";
  
  @water-color: #b5d0d0;
