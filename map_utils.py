@@ -88,6 +88,66 @@ class DiskBackend:
 
 Master= sqlalchemy.ext.declarative.declarative_base ()
 
+#CREATE TABLE map (
+   #zoom_level INTEGER,
+   #tile_column INTEGER,
+   #tile_row INTEGER,
+   #tile_id TEXT,
+   #grid_id TEXT
+#);
+#CREATE TABLE grid_key (
+    #grid_id TEXT,
+    #key_name TEXT
+#);
+#CREATE TABLE keymap (
+    #key_name TEXT,
+    #key_json TEXT
+#);
+#CREATE TABLE grid_utfgrid (
+    #grid_id TEXT,
+    #grid_utfgrid BLOB
+#);
+#CREATE TABLE images (
+    #tile_data blob,
+    #tile_id text
+#);
+#CREATE TABLE metadata (
+    #name text,
+    #value text
+#);
+#CREATE UNIQUE INDEX map_index ON map (zoom_level, tile_column, tile_row);
+#CREATE UNIQUE INDEX grid_key_lookup ON grid_key (grid_id, key_name);
+#CREATE UNIQUE INDEX keymap_lookup ON keymap (key_name);
+#CREATE UNIQUE INDEX grid_utfgrid_lookup ON grid_utfgrid (grid_id);
+#CREATE UNIQUE INDEX images_id ON images (tile_id);
+#CREATE UNIQUE INDEX name ON metadata (name);
+#CREATE VIEW tiles AS
+    #SELECT
+        #map.zoom_level AS zoom_level,
+        #map.tile_column AS tile_column,
+        #map.tile_row AS tile_row,
+        #images.tile_data AS tile_data
+    #FROM map
+    #JOIN images ON images.tile_id = map.tile_id;
+#CREATE VIEW grids AS
+    #SELECT
+        #map.zoom_level AS zoom_level,
+        #map.tile_column AS tile_column,
+        #map.tile_row AS tile_row,
+        #grid_utfgrid.grid_utfgrid AS grid
+    #FROM map
+    #JOIN grid_utfgrid ON grid_utfgrid.grid_id = map.grid_id;
+#CREATE VIEW grid_data AS
+    #SELECT
+        #map.zoom_level AS zoom_level,
+        #map.tile_column AS tile_column,
+        #map.tile_row AS tile_row,
+        #keymap.key_name AS key_name,
+        #keymap.key_json AS key_json
+    #FROM map
+    #JOIN grid_key ON map.grid_id = grid_key.grid_id
+    #JOIN keymap ON grid_key.key_name = keymap.key_name;
+
 class KeyValue (Master):
     __tablename__= 'metadata'
     name= sqlalchemy.Column (sqlalchemy.String, primary_key=True)
@@ -115,6 +175,15 @@ class MBTilesBackend:
         Master.metadata.create_all (self.eng)
         Session.configure (bind=self.eng)
         self.session= Session ()
+
+        #bounds|-27,62,-11,67.5
+        #minzoom|5
+        #maxzoom|10
+        #name|Ísland
+        #version|1.0.0
+        #center|-18.7,65,7
+        #attribution|Map data © OpenStreetMap CC-BY-SA; NASA SRTM; GLISM Glacier Database; ETOPO1 Bathymetry
+        #description|Inspired by the 1975 map of Iceland by the Danish Geodetisk Institut.
 
         # generate metadata
         try:
