@@ -1,6 +1,6 @@
 --- a/project.yaml
 +++ b/project.yaml
-@@ -54,28 +54,6 @@
+@@ -52,28 +52,6 @@
    - "admin.mss"
    - "addressing.mss"
  Layer:
@@ -29,7 +29,7 @@
    - id: "terrain-small"
      name: "terrain-small"
      class: "terrain"
-@@ -422,6 +400,28 @@
+@@ -420,6 +398,28 @@
        minzoom: 8
        maxzoom: 11
      advanced: {}
