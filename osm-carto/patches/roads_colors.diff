@@ -51,6 +51,15 @@
 +@living-street-casing: @default-casing;
 +@living-street-fill: #ededed;
 +
++/*
++minor roads for different zoom levels
++tertiary    10-12
++residential 12-13
++road        10-
++service     13
++*/
++@unimportant-road: #bbb;
++
 +@service-casing: #999;
 +@service-fill: @residential-fill;
 +
