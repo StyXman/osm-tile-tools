@@ -9,7 +9,6 @@ disable_admin_text.diff
 fix-fonts.diff
 old-land-color.diff
 deeper_closer_center.diff
-Makefile.diff
 terrain.diff
 05-contour.diff
 06-pistes.diff
