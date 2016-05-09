@@ -150,10 +150,10 @@ def render_tiles(opts):
     renderers= {}
 
     for i in range (opts.threads):
+        renderer= RenderThread (opts, backend, queue)
         if not opts.fork:
             render_thread= threading.Thread (target=renderer.loop)
         else:
-            renderer= RenderThread (opts, backend, queue)
             render_thread= multiprocessing.Process (target=renderer.loop)
 
         render_thread.start ()
@@ -170,7 +170,7 @@ def render_tiles(opts):
             z, x, y= map (int, i.split (','))
             queue.put ((x, y, z))
 
-    finish (queue, renderers)
+    finish (opts, queue, renderers)
 
 def render_bbox (opts, queue, renderers):
     gprj= map_utils.GoogleProjection (opts.max_zoom+1)
