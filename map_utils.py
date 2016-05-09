@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from math import pi,cos,sin,log,exp,atan
 import sqlalchemy
 import sqlalchemy.ext.declarative
