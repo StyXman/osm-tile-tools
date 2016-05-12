@@ -5,7 +5,7 @@ import sqlalchemy
 import sqlalchemy.ext.declarative
 import sqlalchemy.orm
 import sqlalchemy.exc
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 import os.path
 from os.path import dirname, basename, join as path_join
 from os import listdir, stat, unlink, mkdir, walk
@@ -343,17 +343,3 @@ class Atlas:
             if (z, x) in m:
                 for y in m.iterate_y (z):
                     yield y
-
-def makedirs(_dirname):
-    """ Better replacement for os.makedirs():
-        doesn't fails if some intermediate dir already exists.
-    """
-    dirs = _dirname.split('/')
-    i = ''
-    while len(dirs):
-        i += dirs.pop(0)+'/'
-        try:
-            mkdir(i)
-        except OSError, e:
-            if e.args[0]!=EEXIST:
-                raise e
