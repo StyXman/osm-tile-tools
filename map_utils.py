@@ -65,7 +65,7 @@ class DiskBackend:
 
     def store (self, z, x, y, data):
         tile_uri= self.tile_uri (z, x, y)
-        makedirs (os.path.dirname (tile_uri))
+        makedirs (os.path.dirname (tile_uri), exist_ok=True)
         f= open (tile_uri, 'w+')
         f.write (data)
         f.close ()
