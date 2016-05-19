@@ -1,10 +1,6 @@
 # coding=utf-8
 
 from math import pi,cos,sin,log,exp,atan
-import sqlalchemy
-import sqlalchemy.ext.declarative
-import sqlalchemy.orm
-import sqlalchemy.exc
 from configparser import ConfigParser
 import os.path
 from os.path import dirname, basename, join as path_join
@@ -14,6 +10,7 @@ from shutil import copy, rmtree
 import datetime
 import errno
 import hashlib
+import sqlite3
 
 DEG_TO_RAD = pi/180
 RAD_TO_DEG = 180/pi
@@ -89,73 +86,8 @@ class DiskBackend:
         # TODO: flush?
         pass
 
-Master= sqlalchemy.ext.declarative.declarative_base ()
-
-#CREATE TABLE map (
-   #zoom_level INTEGER,
-   #tile_column INTEGER,
-   #tile_row INTEGER,
-   #tile_id TEXT,
-   #grid_id TEXT
-#);
-#CREATE TABLE grid_key (
-    #grid_id TEXT,
-    #key_name TEXT
-#);
-#CREATE TABLE keymap (
-    #key_name TEXT,
-    #key_json TEXT
-#);
-#CREATE TABLE grid_utfgrid (
-    #grid_id TEXT,
-    #grid_utfgrid BLOB
-#);
-#CREATE TABLE images (
-    #tile_data blob,
-    #tile_id text
-#);
-#CREATE TABLE metadata (
-    #name text,
-    #value text
-#);
-#CREATE UNIQUE INDEX map_index ON map (zoom_level, tile_column, tile_row);
-#CREATE UNIQUE INDEX grid_key_lookup ON grid_key (grid_id, key_name);
-#CREATE UNIQUE INDEX keymap_lookup ON keymap (key_name);
-#CREATE UNIQUE INDEX grid_utfgrid_lookup ON grid_utfgrid (grid_id);
-#CREATE UNIQUE INDEX images_id ON images (tile_id);
-#CREATE UNIQUE INDEX name ON metadata (name);
-#CREATE VIEW tiles AS
-    #SELECT
-        #map.zoom_level AS zoom_level,
-        #map.tile_column AS tile_column,
-        #map.tile_row AS tile_row,
-        #images.tile_data AS tile_data
-    #FROM map
-    #JOIN images ON images.tile_id = map.tile_id;
-#CREATE VIEW grids AS
-    #SELECT
-        #map.zoom_level AS zoom_level,
-        #map.tile_column AS tile_column,
-        #map.tile_row AS tile_row,
-        #grid_utfgrid.grid_utfgrid AS grid
-    #FROM map
-    #JOIN grid_utfgrid ON grid_utfgrid.grid_id = map.grid_id;
-#CREATE VIEW grid_data AS
-    #SELECT
-        #map.zoom_level AS zoom_level,
-        #map.tile_column AS tile_column,
-        #map.tile_row AS tile_row,
-        #keymap.key_name AS key_name,
-        #keymap.key_json AS key_json
-    #FROM map
-    #JOIN grid_key ON map.grid_id = grid_key.grid_id
-    #JOIN keymap ON grid_key.key_name = keymap.key_name;
-
-class KeyValue (Master):
-    __tablename__= 'metadata'
-
-    name=  sqlalchemy.Column (sqlalchemy.String, primary_key=True)
-    value= sqlalchemy.Column (sqlalchemy.String)
+# https://github.com/mapbox/node-mbtiles/blob/master/lib/schema.sql
+# https://github.com/mapbox/mbutil/blob/master/mbutil/util.py
 
 # according to the spec https://github.com/mapbox/mbtiles-spec/blob/master/1.2/spec.md
 # the schemas outlined are meant to be followed as interfaces.
@@ -166,46 +98,39 @@ class KeyValue (Master):
 # it's implemented as a (read only) view on top of map an images
 # but internally we fill tem separately
 
-class Tile (Master):
-    __tablename__= 'map'
-    # primary key
-    __table_args__= (
-        sqlalchemy.PrimaryKeyConstraint ('zoom_level', 'tile_column', 'tile_row',
-                                         name='map_index'),
-        )
-
-    zoom_level=  sqlalchemy.Column (sqlalchemy.Integer)
-    tile_column= sqlalchemy.Column (sqlalchemy.Integer)
-    tile_row=    sqlalchemy.Column (sqlalchemy.Integer)
-    tile_id=     sqlalchemy.Column (sqlalchemy.String (length=32))
-
-class Image (Master):
-    __tablename__= 'images'
-
-    tile_id=   sqlalchemy.Column (sqlalchemy.String (length=32), primary_key=True)
-    tile_data= sqlalchemy.Column (sqlalchemy.LargeBinary)
-
-Session= sqlalchemy.orm.sessionmaker ()
-
 class MBTilesBackend:
     def __init__ (self, base, bounds):
-        self.eng= sqlalchemy.create_engine ("sqlite:///%s.mbt" % base, echo=True)
+        self.session= sqlite3.connect ("%s.mbt" % base)
+        self.session.set_trace_callback (print)
 
-        Master.metadata.create_all (self.eng)
-        # 16:14 < StyXman> can I create views with sqla?
-        # 16:16 <@agronholm> StyXman: you need raw sql for that
-        # fair enough
-        view_query= sqlalchemy.sql.text ("""create view if not exists tiles as
-            select map.zoom_level as zoom_level,
-            map.tile_column as tile_column,
-            map.tile_row as tile_row,
-            images.tile_data as tile_data FROM
-            map JOIN images on images.tile_id = map.tile_id;""")
-        with self.eng.begin () as conn:
-            conn.execute (view_query)
-
-        Session.configure (bind=self.eng)
-        self.session= Session ()
+        cursor= self.session.cursor ()
+        cursor.execute ('''CREATE TABLE IF NOT EXISTS metadata (
+            name VARCHAR NOT NULL,
+            value VARCHAR,
+            PRIMARY KEY (name)
+        );''')
+        cursor.execute ('''CREATE TABLE IF NOT EXISTS map (
+            zoom_level INTEGER NOT NULL,
+            tile_column INTEGER NOT NULL,
+            tile_row INTEGER NOT NULL,
+            tile_id VARCHAR(32),
+            CONSTRAINT map_index PRIMARY KEY (zoom_level, tile_column, tile_row)
+        );''')
+        cursor.execute ('''CREATE TABLE IF NOT EXISTS images (
+            tile_id VARCHAR(32) NOT NULL,
+            tile_data BLOB,
+            PRIMARY KEY (tile_id)
+        );''')
+        cursor.execute ('''CREATE VIEW IF NOT EXISTS tiles AS
+            SELECT
+                map.zoom_level AS zoom_level,
+                map.tile_column AS tile_column,
+                map.tile_row AS tile_row,
+                images.tile_data AS tile_data
+            FROM
+                map JOIN images
+                    ON images.tile_id = map.tile_id;''')
+        self.session.commit ()
 
         #bounds|-27,62,-11,67.5
         #minzoom|5
@@ -217,49 +142,34 @@ class MBTilesBackend:
         #description|Inspired by the 1975 map of Iceland by the Danish Geodetisk Institut.
 
         # generate metadata
+        metadata= dict(
+            name='Elevation',
+            type='baselayer',
+            version='2.39.0-04f6d1b',  # I wonder why git uses only 7 chars by default
+            description="StyXman's simple map",
+            format='png',
+            bounds=bounds,
+            attribution='Map data © OpenStreetMap CC-BY-SA; NASA SRTM',
+            )
+
         try:
-            name= KeyValue (name='name', value='Elevation')
-            self.session.add (name)
+            cursor.executemany ('''INSERT INTO metadata (name, value) VALUES (?, ?)''',
+                                metadata.items ())
+
             self.session.commit ()
         except sqlalchemy.exc.IntegrityError:
             self.session.rollback ()
-        try:
-            type_= KeyValue (name='type', value='baselayer')
-            self.session.add (type_)
-            self.session.commit ()
-        except sqlalchemy.exc.IntegrityError:
-            self.session.rollback ()
-        try:
-            version= KeyValue (name='version', value='2.30.0')
-            self.session.add (version)
-            self.session.commit ()
-        except sqlalchemy.exc.IntegrityError:
-            self.session.rollback ()
-        try:
-            description= KeyValue (name='description', value='My own map')
-            self.session.add (description)
-            self.session.commit ()
-        except sqlalchemy.exc.IntegrityError:
-            self.session.rollback ()
-        try:
-            format_= KeyValue (name='format', value='png')
-            self.session.add (format_)
-            self.session.commit ()
-        except sqlalchemy.exc.IntegrityError:
-            self.session.rollback ()
-        try:
-            bounds= KeyValue (name='bounds', value=bounds)
-            self.session.add (bounds)
-            self.session.commit ()
-        except sqlalchemy.exc.IntegrityError:
-            self.session.rollback ()
+            raise
+
+        cursor.close ()
+
 
     def store (self, z, x, y, data):
         # create one of these each time because there's no way to reset them
         # and barely takes any time
         hasher= hashlib.md5 ()
-
-        # 340282366920938463463374607431768211456 possible values
+        # md5 gives 340282366920938463463374607431768211456 possible values
+        # and is *fast*
         hasher.update (data)
         # thanks Pablo Carranza for pointing out possible collisions
         # further deduplicate with file length
@@ -268,22 +178,49 @@ class MBTilesBackend:
 
         print (z, x, y, img_id)
 
-        tile= Tile (zoom_level=z, tile_column=x, tile_row=y, tile_id=img_id)
-        image= Image (tile_id=img_id, tile_data=data)
-        self.session.add_all ((tile, image))
+
+        cursor= self.session.cursor ()
+        try:
+            cursor.execute ('''INSERT INTO images (tile_id, tile_data) VALUES (?, ?);''',
+                            (img_id, data))
+        except sqlite3.IntegrityError:
+            # it already exists and there's no reason to try to update anything
+            pass
+
+        try:
+            cursor.execute ('''INSERT INTO map (zoom_level, tile_column, tile_row, tile_id)
+                                VALUES (?, ?, ?, ?);''',
+                            (z, x, y, img_id))
+        except sqlite3.IntegrityError:
+            cursor.execute ('''UPDATE map
+                                SET tile_id = ?
+                                WHERE zoom_level = ?
+                                  AND tile_column = ?
+                                  AND tile_row = ?;''',
+                            (img_id, z, x, y))
+        cursor.close ()
+
+
 
     def commit (self):
-        if len (self.session.dirty)>0:
+        if self.session.in_transaction:
             self.session.commit ()
 
+
     def exists (self, z, x, y):
-        return self.session.query (sqlalchemy.func.count (Tile.zoom_level)).\
-                            filter (Tile.zoom_level==z).\
-                            filter (Tile.tile_column==x).\
-                            filter (Tile.tile_row==y)[0][0]==1 # 1st col, 1st row
+        cursor= self.session.cursor ()
+        data= cursor.execute ('''SELECT count(map.zoom_level)
+                                 FROM map
+                                 WHERE map.zoom_level = ?
+                                   AND map.tile_column = ?
+                                   AND map.tile_row = ?;''',
+                              (z, x, y)).fetchall ()
+        return data[0][0]==1
+
 
     def close (self):
         self.session.close ()
+
 
 def coord_range (mn, mx, zoom):
     image_size=256.0
