@@ -248,6 +248,8 @@ def bbox (value):
 class Map:
     def __init__ (self, bbox, max_z):
         self.bbox= bbox
+        self.max_z= max_z
+
         ll0 = (bbox[0],bbox[3])
         ll1 = (bbox[2],bbox[1])
         gprj = GoogleProjection(max_z+1)
