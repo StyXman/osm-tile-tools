@@ -148,7 +148,7 @@ class MBTilesBackend:
             version='2.39.0-04f6d1b',  # I wonder why git uses only 7 chars by default
             description="StyXman's simple map",
             format='png',
-            bounds=bounds,
+            bounds=','.join ([ str (i) for i in bounds ]),
             attribution='Map data © OpenStreetMap CC-BY-SA; NASA SRTM',
             )
 
