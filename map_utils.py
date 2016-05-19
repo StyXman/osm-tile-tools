@@ -13,6 +13,7 @@ from errno import ENOENT, EEXIST
 from shutil import copy, rmtree
 import datetime
 import errno
+import hashlib
 
 DEG_TO_RAD = pi/180
 RAD_TO_DEG = 180/pi
@@ -152,21 +153,36 @@ Master= sqlalchemy.ext.declarative.declarative_base ()
 
 class KeyValue (Master):
     __tablename__= 'metadata'
-    name= sqlalchemy.Column (sqlalchemy.String, primary_key=True)
+
+    name=  sqlalchemy.Column (sqlalchemy.String, primary_key=True)
     value= sqlalchemy.Column (sqlalchemy.String)
 
+# according to the spec https://github.com/mapbox/mbtiles-spec/blob/master/1.2/spec.md
+# the schemas outlined are meant to be followed as interfaces.
+# SQLite views that produce compatible results are equally valid.
+# For convenience, this specification refers to tables and virtual tables (views) as tables.
+
+# so what happens with the tiles tables is exactly that:
+# it's implemented as a (read only) view on top of map an images
+# but internally we fill them separately
+
 class Tile (Master):
-    __tablename__= 'tiles'
+    __tablename__= 'map'
     # primary key
     __table_args__= (
         sqlalchemy.PrimaryKeyConstraint ('zoom_level', 'tile_column', 'tile_row',
-                                         name='z_x_y'),
+                                         name='map_index'),
         )
 
-    # id= sqlalchemy.Column (sqlalchemy.Integer, primary_key=True)
-    zoom_level= sqlalchemy.Column (sqlalchemy.Integer)
+    zoom_level=  sqlalchemy.Column (sqlalchemy.Integer)
     tile_column= sqlalchemy.Column (sqlalchemy.Integer)
-    tile_row= sqlalchemy.Column (sqlalchemy.Integer)
+    tile_row=    sqlalchemy.Column (sqlalchemy.Integer)
+    tile_id=     sqlalchemy.Column (sqlalchemy.String (length=32))
+
+class Image (Master):
+    __tablename__= 'images'
+
+    tile_id=   sqlalchemy.Column (sqlalchemy.String (length=32), primary_key=True)
     tile_data= sqlalchemy.Column (sqlalchemy.LargeBinary)
 
 Session= sqlalchemy.orm.sessionmaker ()
@@ -174,7 +190,20 @@ Session= sqlalchemy.orm.sessionmaker ()
 class MBTilesBackend:
     def __init__ (self, base, bounds):
         self.eng= sqlalchemy.create_engine ("sqlite:///%s.mbt" % base, echo=True)
+
         Master.metadata.create_all (self.eng)
+        # 16:14 < StyXman> can I create views with sqla?
+        # 16:16 <@agronholm> StyXman: you need raw sql for that
+        # fair enough
+        view_query= sqlalchemy.sql.text ("""create view if not exists tiles as
+            select map.zoom_level as zoom_level,
+            map.tile_column as tile_column,
+            map.tile_row as tile_row,
+            images.tile_data as tile_data FROM
+            map JOIN images on images.tile_id = map.tile_id;""")
+        with self.eng.begin () as conn:
+            conn.execute (view_query)
+
         Session.configure (bind=self.eng)
         self.session= Session ()
 
@@ -226,8 +255,23 @@ class MBTilesBackend:
             self.session.rollback ()
 
     def store (self, z, x, y, data):
-        t= Tile (zoom_level=z, tile_column=x, tile_row=y, tile_data=data)
-        self.session.add (t)
+        # create one of these each time because there's no way to reset them
+        # and barely takes any time
+
+        hasher= hashlib.md5 ()
+
+        # 340282366920938463463374607431768211456 possible values
+        hasher.update (data)
+        # thanks Pablo Carranza for pointing out possible collisions
+        # further deduplicate with file length
+        hasher.update (str (len (data).encode ('ascii'))
+        img_id= hasher.hexdigest ()
+
+        print (z, x, y, img_id)
+
+        tile= Tile (zoom_level=z, tile_column=x, tile_row=y, tile_id=img_id)
+        image= Image (tile_id=img_id, tile_data=data)
+        self.session.add_all ((tile, image))
 
     def commit (self):
         if len (self.session.dirty)>0:
