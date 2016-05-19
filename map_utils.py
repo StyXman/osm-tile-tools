@@ -8,7 +8,7 @@ import sqlalchemy.exc
 from configparser import ConfigParser
 import os.path
 from os.path import dirname, basename, join as path_join
-from os import listdir, stat, unlink, mkdir, walk
+from os import listdir, stat, unlink, mkdir, walk, makedirs
 from errno import ENOENT, EEXIST
 from shutil import copy, rmtree
 import datetime

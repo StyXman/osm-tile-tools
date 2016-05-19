@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from subprocess import call
 import sys, os, os.path
-from Queue import Queue
+from queue import Queue
 from argparse import ArgumentParser
 import time
 import errno
@@ -71,14 +71,14 @@ class RenderThread:
         try:
             mapnik.render (self.m, im)
         except RuntimeError as e:
-            print "%d:%d:%d: %s" % (x, y, z, e)
+            print ("%d:%d:%d: %s" % (x, y, z, e))
         else:
             end= time.time ()
 
             # save the image, splitting it in the right amount of tiles
             # we use min() so we can support low zoom levels with less than meta_size tiles
-            for i in xrange (min (self.meta_size, 2**z)):
-                for j in xrange (min (self.meta_size, 2**z)):
+            for i in range (min (self.meta_size, 2**z)):
+                for j in range (min (self.meta_size, 2**z)):
                     img= im.view (i*self.tile_size, j*self.tile_size, self.tile_size, self.tile_size)
                     data= img.tostring ('png256')
                     if not map_utils.is_empty (data):
@@ -86,12 +86,12 @@ class RenderThread:
                     else:
                         if self.opts.empty=='skip':
                             # empty tile, skip
-                            print "%d:%d:%d: empty" % (z, x+i, y+j)
+                            print ("%d:%d:%d: empty" % (z, x+i, y+j))
                             continue
 
                 self.backend.commit ()
 
-            print "%d:%d:%d: %f" % (x, y, z, end-start)
+            print ("%d:%d:%d: %f" % (x, y, z, end-start))
 
     def loop (self):
         while True:
@@ -121,15 +121,15 @@ class RenderThread:
                 self.render_tile (x, y, z)
             else:
                 if self.opts.skip_existing:
-                    print "%d:%d:%d: present, skipping" % (x, y, z)
+                    print ("%d:%d:%d: present, skipping" % (x, y, z))
                 else:
-                    print "%d:%d:%d: too new, skipping" % (x, y, z)
+                    print ("%d:%d:%d: too new, skipping" % (x, y, z))
 
             # self.q.task_done ()
 
 
 def render_tiles(opts):
-    print "render_tiles(",opts,")"
+    print ("render_tiles(",opts,")")
 
     backends= dict (
         tiles=   map_utils.DiskBackend,
@@ -157,7 +157,7 @@ def render_tiles(opts):
             render_thread= multiprocessing.Process (target=renderer.loop)
 
         render_thread.start ()
-        #print "Started render thread %s" % render_thread.getName()
+        #print ("Started render thread %s" % render_thread.getName())
         renderers[i]= render_thread
 
     if not os.path.isdir (opts.tile_dir):
