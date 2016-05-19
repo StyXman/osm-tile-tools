@@ -164,7 +164,7 @@ class KeyValue (Master):
 
 # so what happens with the tiles tables is exactly that:
 # it's implemented as a (read only) view on top of map an images
-# but internally we fill them separately
+# but internally we fill tem separately
 
 class Tile (Master):
     __tablename__= 'map'
@@ -257,14 +257,13 @@ class MBTilesBackend:
     def store (self, z, x, y, data):
         # create one of these each time because there's no way to reset them
         # and barely takes any time
-
         hasher= hashlib.md5 ()
 
         # 340282366920938463463374607431768211456 possible values
         hasher.update (data)
         # thanks Pablo Carranza for pointing out possible collisions
         # further deduplicate with file length
-        hasher.update (str (len (data).encode ('ascii'))
+        hasher.update (str (len (data)).encode ('ascii'))
         img_id= hasher.hexdigest ()
 
         print (z, x, y, img_id)
