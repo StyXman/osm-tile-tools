@@ -10,9 +10,10 @@ class TestMBTiles (unittest.TestCase):
 
     def setUp (self):
         # the bbox is not really important
-        self.backend= map_utils.MBTilesBackend ('TestMBTiles', '10,20,30,40')
-        self.db= sqlite3.connect ('TestMBTiles.mbt').cursor ()
-        self.db.connection.set_trace_callback (print)
+        self.backend= map_utils.MBTilesBackend ('TestMBTiles', [10, 20, 30, 40])
+        session= sqlite3.connect ('TestMBTiles.mbt')
+        self.session.set_trace_callback (print)
+        self.db= session.cursor ()
 
 
     def test_single_tile (self):
