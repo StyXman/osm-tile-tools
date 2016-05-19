@@ -152,14 +152,14 @@ class MBTilesBackend:
             attribution='Map data © OpenStreetMap CC-BY-SA; NASA SRTM',
             )
 
-        try:
-            cursor.executemany ('''INSERT INTO metadata (name, value) VALUES (?, ?)''',
-                                metadata.items ())
-
-            self.session.commit ()
-        except sqlalchemy.exc.IntegrityError:
-            self.session.rollback ()
-            raise
+        for k, v in metadata.items ():
+            try:
+                cursor.execute ('''INSERT INTO metadata (name, value) VALUES (?, ?);''',
+                                (k, v))
+            except sqlite3.IntegrityError:
+                cursor.execute ('''UPDATE metadata SET value = ? WHERE name = ?;''',
+                                (v, k))
+        self.session.commit ()
 
         cursor.close ()
 
