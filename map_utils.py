@@ -52,7 +52,7 @@ class GoogleProjection:
 
 def is_empty (data):
     # TODO: this is *completely* style dependent!
-    return len (data)==103 and data[41:44]=='\xc4\xe2\xe2'
+    return len (data)==103 and data[41:44]==b'\xb5\xd0\xd0'
 
 class DiskBackend:
     def __init__ (self, base, *more):
