@@ -8,9 +8,9 @@ bounds: &world
   - 180
   - 85.05112877980659
 center:
-  - 7.1329
-  - 43.6788
-  - 11
+  - 5.5
+  - 43.25
+  - 12
 format: "png"
 interactivity: false
 minzoom: 0
