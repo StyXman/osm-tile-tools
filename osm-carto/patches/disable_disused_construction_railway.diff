@@ -1,44 +1,40 @@
 --- a/project.yaml
 +++ b/project.yaml
-@@ -574,8 +574,6 @@
+@@ -575,7 +575,6 @@
                ('railway_turntable', 420),
                ('railway_tram', 410),
                ('railway_tram-service', 405),
 -              ('railway_disused', 400),
--              ('railway_construction', 400),
                ('highway_motorway', 380),
                ('highway_trunk', 370),
                ('highway_primary', 360),
-@@ -859,8 +857,6 @@
+@@ -860,7 +859,6 @@
                ('railway_turntable', 420),
                ('railway_tram', 410),
                ('railway_tram-service', 405),
 -              ('railway_disused', 400),
--              ('railway_construction', 400),
                ('highway_motorway', 380),
                ('highway_trunk', 370),
                ('highway_primary', 360),
-@@ -1014,8 +1010,6 @@
+@@ -1030,7 +1028,6 @@
                ('railway_turntable', 420),
                ('railway_tram', 410),
                ('railway_tram-service', 405),
 -              ('railway_disused', 400),
--              ('railway_construction', 400),
                ('highway_motorway', 380),
                ('highway_trunk', 370),
                ('highway_primary', 360),
-@@ -1243,8 +1237,6 @@
+@@ -1260,7 +1257,6 @@
                ('railway_turntable', 420),
                ('railway_tram', 410),
                ('railway_tram-service', 405),
 -              ('railway_disused', 400),
--              ('railway_construction', 400),
                ('highway_motorway', 380),
                ('highway_trunk', 370),
                ('highway_primary', 360),
 --- a/roads.mss
 +++ b/roads.mss
-@@ -802,8 +802,10 @@
+@@ -1019,8 +1019,10 @@
        }
      }
  
@@ -49,36 +45,15 @@
      [feature = 'railway_miniature'][zoom >= 15],
      [feature = 'railway_INT-preserved-ssy'][zoom >= 14] {
        .bridges-casing {
-@@ -1015,8 +1017,10 @@
-       }
+@@ -2018,6 +2020,7 @@
      }
- 
-+    /*
-     [feature = 'railway_disused'][zoom >= 15],
-     [feature = 'railway_construction'],
-+    */
-     [feature = 'railway_miniature'][zoom >= 15],
-     [feature = 'railway_INT-preserved-ssy'][zoom >= 14] {
-       .bridges-casing {
-@@ -1989,6 +1993,7 @@
-       }
-     }
- 
-+    /*
-     [feature = 'railway_construction'] {
-       [zoom >= 13] {
-         line-color: grey;
-@@ -2004,7 +2009,9 @@
-         }
-       }
-     }
-+    */
+     */
  
 +    /*
      [feature = 'railway_disused'] {
        [zoom >= 15] {
          line-color: #aaa;
-@@ -2013,6 +2020,7 @@
+@@ -2026,6 +2029,7 @@
          line-join: round;
        }
      }
