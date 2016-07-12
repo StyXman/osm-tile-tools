@@ -3,7 +3,7 @@ disable_power.diff
 disable_pools.diff
 disable_landuses.diff
 disable_state_names.diff
-disable_construction_roads.diff
+disable_construction.diff
 disable_disused_construction_railway.diff
 disable_admin_text.diff
 fix-fonts.diff
