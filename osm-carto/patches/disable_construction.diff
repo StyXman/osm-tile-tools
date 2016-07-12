@@ -1,5 +1,14 @@
 --- a/project.yaml
 +++ b/project.yaml
+@@ -148,7 +148,7 @@
+               ('landuse_' || (CASE WHEN landuse IN ('quarry', 'vineyard', 'orchard', 'cemetery', 'residential', 'garages', 'meadow', 'grass', 
+                                                     'allotments', 'forest', 'farmyard', 'farm', 'farmland', 'greenhouse_horticulture', 
+                                                     'recreation_ground', 'village_green', 'retail', 'industrial', 'railway', 'commercial', 
+-                                                    'brownfield', 'landfill', 'construction') THEN landuse ELSE NULL END)) AS landuse,
++                                                    'brownfield', 'landfill') THEN landuse ELSE NULL END)) AS landuse,
+               ('leisure_' || (CASE WHEN leisure IN ('swimming_pool', 'playground', 'park', 'recreation_ground', 'common', 'garden', 
+                                                     'golf_course', 'miniature_golf', 'picnic_table', 'sports_centre', 'stadium', 'pitch', 
+                                                     'track') THEN leisure ELSE NULL END)) AS leisure,
 @@ -497,7 +497,7 @@
        # an order is generated in SQL.
        table: |-
@@ -9,7 +18,7 @@
                  service, oneway, link, layernotnull
            FROM ( -- subselect that contains both roads and rail/aero
              SELECT
-@@ -516,7 +516,6 @@
+@@ -517,7 +517,6 @@
                    WHEN access IN ('no', 'private') THEN 'no'::text
                    ELSE NULL
                  END AS access,
@@ -17,7 +26,7 @@
                  CASE
                    WHEN service IN ('parking_aisle', 'drive-through', 'driveway') THEN 'INT-minor'::text
                    ELSE 'INT-normal'::text
-@@ -553,7 +552,6 @@
+@@ -554,7 +553,6 @@
                    WHEN access IN ('no', 'private') THEN 'no'::text
                    ELSE NULL
                  END AS access,
@@ -25,7 +34,15 @@
                  CASE WHEN service IN ('parking_aisle', 'drive-through', 'driveway') THEN 'INT-minor'::text ELSE 'INT-normal'::text END AS service,
                  NULL AS oneway,
                  'no' AS link,
-@@ -604,8 +602,7 @@
+@@ -578,7 +576,6 @@
+               ('railway_tram', 410),
+               ('railway_tram-service', 405),
+               ('railway_disused', 400),
+-              ('railway_construction', 400),
+               ('highway_motorway', 380),
+               ('highway_trunk', 370),
+               ('highway_primary', 360),
+@@ -605,8 +602,7 @@
                ('highway_platform', 90),
                ('railway_platform', 90),
                ('aeroway_runway', 60),
@@ -35,7 +52,7 @@
              ) AS ordertable (feature, prio)
              USING (feature)
            ORDER BY
-@@ -779,7 +776,7 @@
+@@ -782,7 +778,7 @@
        <<: *osm2pgsql
        table: |-
          (SELECT way, (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature,
@@ -44,7 +61,7 @@
                  service, oneway, link, layernotnull
            FROM ( -- subselect that contains both roads and rail/aero
              SELECT
-@@ -798,7 +795,6 @@
+@@ -802,7 +798,6 @@
                    WHEN access IN ('no', 'private') THEN 'no'::text
                    ELSE NULL
                  END AS access,
@@ -52,7 +69,7 @@
                  CASE
                    WHEN service IN ('parking_aisle', 'drive-through', 'driveway') THEN 'INT-minor'::text
                    ELSE 'INT-normal'::text
-@@ -837,7 +833,6 @@
+@@ -841,7 +836,6 @@
                    WHEN access IN ('no', 'private') THEN 'no'::text
                    ELSE NULL
                  END AS access,
@@ -60,7 +77,15 @@
                  CASE WHEN service IN ('parking_aisle', 'drive-through', 'driveway') THEN 'INT-minor'::text ELSE 'INT-normal'::text END AS service,
                  NULL AS oneway,
                  'no' AS link,
-@@ -890,8 +885,7 @@
+@@ -867,7 +861,6 @@
+               ('railway_tram', 410),
+               ('railway_tram-service', 405),
+               ('railway_disused', 400),
+-              ('railway_construction', 400),
+               ('highway_motorway', 380),
+               ('highway_trunk', 370),
+               ('highway_primary', 360),
+@@ -894,8 +887,7 @@
                ('highway_platform', 90),
                ('railway_platform', 90),
                ('aeroway_runway', 60),
@@ -70,7 +95,49 @@
              ) AS ordertable (feature, prio)
              USING (feature)
            ORDER BY
-@@ -937,7 +931,7 @@
+@@ -954,7 +946,6 @@
+             tracktype,
+             int_surface,
+             access,
+-            construction,
+             service,
+             oneway,
+             link,
+@@ -977,7 +968,6 @@
+                   WHEN access IN ('no', 'private') THEN 'no'::text
+                   ELSE NULL
+                 END AS access,
+-                construction,
+                 CASE
+                   WHEN service IN ('parking_aisle', 'drive-through', 'driveway') THEN 'INT-minor'::text
+                   ELSE 'INT-normal'::text
+@@ -1016,7 +1006,6 @@
+                   WHEN access IN ('no', 'private') THEN 'no'::text
+                   ELSE NULL
+                 END AS access,
+-                construction,
+                 CASE WHEN service IN ('parking_aisle', 'drive-through', 'driveway') THEN 'INT-minor'::text ELSE 'INT-normal'::text END AS service,
+                 NULL AS oneway,
+                 'no' AS link,
+@@ -1042,7 +1031,6 @@
+               ('railway_tram', 410),
+               ('railway_tram-service', 405),
+               ('railway_disused', 400),
+-              ('railway_construction', 400),
+               ('highway_motorway', 380),
+               ('highway_trunk', 370),
+               ('highway_primary', 360),
+@@ -1069,8 +1057,7 @@
+               ('highway_platform', 90),
+               ('railway_platform', 90),
+               ('aeroway_runway', 60),
+-              ('aeroway_taxiway', 50),
+-              ('highway_construction', 10)
++              ('aeroway_taxiway', 50)
+             ) AS ordertable (feature, prio)
+             USING (feature)
+           ORDER BY
+@@ -1195,7 +1182,7 @@
        <<: *osm2pgsql
        table: |-
          (SELECT way, (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature,
@@ -79,7 +146,7 @@
                  service, oneway, link, layernotnull
            FROM ( -- subselect that contains both roads and rail/aero
              SELECT
-@@ -956,7 +950,6 @@
+@@ -1215,7 +1202,6 @@
                    WHEN access IN ('no', 'private') THEN 'no'::text
                    ELSE NULL
                  END AS access,
@@ -87,7 +154,7 @@
                  CASE
                    WHEN service IN ('parking_aisle', 'drive-through', 'driveway') THEN 'INT-minor'::text
                    ELSE 'INT-normal'::text
-@@ -995,7 +988,6 @@
+@@ -1252,7 +1238,6 @@
                    WHEN access IN ('no', 'private') THEN 'no'::text
                    ELSE NULL
                  END AS access,
@@ -95,7 +162,15 @@
                  CASE WHEN service IN ('parking_aisle', 'drive-through', 'driveway') THEN 'INT-minor'::text ELSE 'INT-normal'::text END AS service,
                  NULL AS oneway,
                  'no' AS link,
-@@ -1048,8 +1040,7 @@
+@@ -1276,7 +1261,6 @@
+               ('railway_tram', 410),
+               ('railway_tram-service', 405),
+               ('railway_disused', 400),
+-              ('railway_construction', 400),
+               ('highway_motorway', 380),
+               ('highway_trunk', 370),
+               ('highway_primary', 360),
+@@ -1303,8 +1287,7 @@
                ('highway_platform', 90),
                ('railway_platform', 90),
                ('aeroway_runway', 60),
@@ -105,57 +180,58 @@
              ) AS ordertable (feature, prio)
              USING (feature)
            ORDER BY
-@@ -1173,7 +1164,7 @@
-       <<: *osm2pgsql
-       table: |-
-         (SELECT way, (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature,
--                horse, foot, bicycle, tracktype, int_surface, access, construction,
-+                horse, foot, bicycle, tracktype, int_surface, access,
-                 service, oneway, link, layernotnull
-           FROM ( -- subselect that contains both roads and rail/aero
-             SELECT
-@@ -1192,7 +1183,6 @@
-                   WHEN access IN ('no', 'private') THEN 'no'::text
-                   ELSE NULL
-                 END AS access,
--                construction,
-                 CASE
-                   WHEN service IN ('parking_aisle', 'drive-through', 'driveway') THEN 'INT-minor'::text
-                   ELSE 'INT-normal'::text
-@@ -1229,7 +1219,6 @@
-                   WHEN access IN ('no', 'private') THEN 'no'::text
-                   ELSE NULL
-                 END AS access,
--                construction,
-                 CASE WHEN service IN ('parking_aisle', 'drive-through', 'driveway') THEN 'INT-minor'::text ELSE 'INT-normal'::text END AS service,
-                 NULL AS oneway,
-                 'no' AS link,
-@@ -1280,8 +1269,7 @@
-               ('highway_platform', 90),
-               ('railway_platform', 90),
-               ('aeroway_runway', 60),
--              ('aeroway_taxiway', 50),
--              ('highway_construction', 10)
-+              ('aeroway_taxiway', 50)
-             ) AS ordertable (feature, prio)
-             USING (feature)
-           ORDER BY
-@@ -1852,11 +1840,10 @@
+@@ -1879,11 +1862,10 @@
          (SELECT way,
              CASE WHEN substr(highway, length(highway)-3, 4) = 'link' THEN substr(highway, 0, length(highway)-4) ELSE highway END,
              CASE WHEN (tunnel = 'yes' OR tunnel = 'building_passage' OR covered = 'yes') THEN 'yes' ELSE 'no' END AS tunnel,
 -            CASE WHEN construction IN ('service', 'footway', 'cycleway', 'bridleway', 'path', 'track') THEN 'yes' ELSE 'no' END AS int_construction_minor,
              name
            FROM planet_osm_line
-           WHERE highway IN ('motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary', 'secondary_link', 'tertiary',
+           WHERE highway IN ('motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary', 'secondary_link', 'tertiary', 
 -                            'tertiary_link', 'residential', 'unclassified', 'road', 'service', 'pedestrian', 'raceway', 'living_street', 'construction')
 +                            'tertiary_link', 'residential', 'unclassified', 'road', 'service', 'pedestrian', 'raceway', 'living_street')
              AND name IS NOT NULL
          ) AS roads_text_name
      properties:
+@@ -1994,7 +1976,7 @@
+               'landuse_' || CASE WHEN landuse IN ('reservoir', 'basin', 'recreation_ground', 'village_green', 'quarry', 'vineyard', 'orchard', 'cemetery', 
+                                                   'residential', 'garages', 'meadow', 'grass', 'allotments', 'forest', 'farmyard', 'farm', 'farmland', 
+                                                   'greenhouse_horticulture', 'retail', 'industrial', 'railway', 'commercial', 'brownfield', 'landfill', 
+-                                                  'construction', 'military') THEN landuse ELSE NULL END,
++                                                  'military') THEN landuse ELSE NULL END,
+               'man_made_' || CASE WHEN man_made IN ('lighthouse', 'windmill', 'mast', 'water_tower', 'pier', 'breakwater', 'groyne') THEN man_made ELSE NULL END,
+               'natural_' || CASE WHEN "natural" IN ('wood', 'water', 'mud', 'wetland', 'marsh', 'bay', 'spring', 'scree', 'shingle', 'bare_rock', 'sand', 'heath', 
+                                                     'grassland', 'scrub', 'beach', 'shoal', 'reef', 'glacier') THEN "natural" ELSE NULL END,
+@@ -2134,7 +2116,7 @@
+                   'landuse_' || CASE WHEN landuse IN ('reservoir', 'basin', 'recreation_ground', 'village_green', 'quarry', 'vineyard', 'orchard', 'cemetery', 
+                                                       'residential', 'garages', 'meadow', 'grass', 'allotments', 'forest', 'farmyard', 'farm', 'farmland', 
+                                                       'greenhouse_horticulture', 'retail', 'industrial', 'railway', 'commercial', 'brownfield', 'landfill', 
+-                                                      'construction', 'military') THEN landuse ELSE NULL END,
++                                                      'military') THEN landuse ELSE NULL END,
+                   'man_made_' || CASE WHEN man_made IN ('lighthouse', 'windmill', 'mast', 'water_tower') THEN man_made ELSE NULL END,
+                   'natural_' || CASE WHEN "natural" IN ('wood', 'peak', 'volcano', 'saddle', 'cave_entrance', 'water', 'mud', 'wetland', 'marsh', 'bay', 'spring', 
+                                                         'scree', 'shingle', 'bare_rock', 'sand', 'heath', 'grassland', 'scrub', 'beach', 'glacier', 'tree') 
+@@ -2174,7 +2156,7 @@
+                   OR leisure IS NOT NULL
+                   OR landuse IN ('reservoir', 'basin', 'recreation_ground', 'village_green', 'quarry', 'vineyard', 'orchard', 'cemetery', 'residential', 
+                                  'garages', 'meadow', 'grass', 'allotments', 'forest', 'farmyard', 'farm', 'farmland', 'greenhouse_horticulture', 
+-                                 'retail', 'industrial', 'railway', 'commercial', 'brownfield', 'landfill', 'construction', 'military')
++                                 'retail', 'industrial', 'railway', 'commercial', 'brownfield', 'landfill', 'military')
+                   OR man_made IN ('lighthouse', 'windmill', 'mast', 'water_tower', 'cross')
+                   OR "natural" IS NOT NULL
+                   OR place IN ('island', 'islet')
 --- a/roads.mss
 +++ b/roads.mss
-@@ -1086,6 +1086,7 @@
+@@ -805,7 +805,7 @@
+     }
+ 
+     [feature = 'railway_disused'][zoom >= 15],
+-    [feature = 'railway_construction'],
++    // [feature = 'railway_construction'],
+     [feature = 'railway_miniature'][zoom >= 15],
+     [feature = 'railway_INT-preserved-ssy'][zoom >= 14] {
+       .bridges-casing {
+@@ -1090,6 +1090,7 @@
       * https://github.com/mapbox/carto/issues/235
       * https://github.com/mapbox/carto/issues/237
       */
@@ -163,7 +239,7 @@
      [feature = 'highway_construction'] {
        [zoom >= 12] {
          line-width: 2;
-@@ -1161,6 +1162,7 @@
+@@ -1165,6 +1166,7 @@
          }
        }
      }
@@ -171,7 +247,23 @@
  
      [feature = 'highway_motorway'] {
        [zoom >= 5] {
-@@ -2811,6 +2813,7 @@
+@@ -1998,6 +2000,7 @@
+       }
+     }
+ 
++    /*
+     [feature = 'railway_construction'] {
+       [zoom >= 13] {
+         line-color: grey;
+@@ -2013,6 +2016,7 @@
+         }
+       }
+     }
++    */
+ 
+     [feature = 'railway_disused'] {
+       [zoom >= 15] {
+@@ -2830,6 +2834,7 @@
        text-size: 12;
      }
    }
@@ -179,7 +271,7 @@
    [highway = 'construction'] {
      [int_construction_minor = 'no'][zoom >= 13],
      [int_construction_minor = 'yes'][zoom >= 14] {
-@@ -2831,6 +2834,7 @@
+@@ -2850,6 +2855,7 @@
        }
      }
    }
