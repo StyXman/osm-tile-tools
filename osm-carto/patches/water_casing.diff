@@ -44,19 +44,7 @@
  #water-areas {
    [natural = 'glacier']::natural {
      [zoom >= 6] {
-@@ -23,6 +45,11 @@
-  * Water areas, of all types. Because they are rendered all the same,
-  * attachments can be used to reduce combinational rules
-  */
-+ 
-+.ocean::border {
-+  line-width: 1.5;
-+  line-color: @water-dark;
-+}
- 
- #water-areas[waterway = 'dock'][zoom >= 9]::waterway,
- #water-areas[waterway = 'canal'][zoom >= 9]::waterway,
-@@ -49,7 +76,7 @@
+@@ -63,7 +85,7 @@
      [int_tunnel = 'no'] {
        [zoom >= 13] {
          line-width: 2.5;
@@ -65,7 +53,7 @@
          [waterway = 'stream'][zoom >= 15] {
            line-width: 3.5;
          }
-@@ -62,6 +89,35 @@
+@@ -76,6 +98,35 @@
        }
      }
    }
@@ -101,7 +89,7 @@
  }
  
  #water-lines-low-zoom {
-@@ -72,9 +128,13 @@
+@@ -86,9 +137,13 @@
        line-join: round;
        line-clip: false;
      }

@@ -1,6 +1,6 @@
 --- a/roads.mss
 +++ b/roads.mss
-@@ -1813,13 +1813,13 @@
+@@ -1815,13 +1815,13 @@
        }
      }
  
@@ -18,20 +18,11 @@
          line-join: round;
          .roads_low_zoom[int_tunnel = 'yes'], .tunnels-fill {
            line-dasharray: 5,2;
-@@ -1831,7 +1831,7 @@
-           light/line-color: white;
-           light/line-join: round;
-           [feature = 'railway_rail'] {
--            dark/line-color: #787878;
-+            dark/line-color: @rail-fill;
-             dark/line-width: 3;
-             light/line-width: 1;
-             light/line-dasharray: 8,8;
 --- a/style.mss
 +++ b/style.mss
-@@ -102,6 +102,8 @@
- @tertiary-tunnel-fill: lighten(@tertiary-fill, 5%);
- @residential-tunnel-fill: lighten(@residential-fill, 10%);
+@@ -117,6 +117,8 @@
+ @taxiway-fill: @aeroway-fill;
+ @helipad-fill: @aeroway-fill;
  
 +@rail-fill: #404040;
 +
