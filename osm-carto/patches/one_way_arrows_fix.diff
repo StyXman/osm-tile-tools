@@ -1,0 +1,304 @@
+--- a/project.yaml
++++ b/project.yaml
+@@ -699,7 +699,7 @@
+     advanced: {}
+   - id: "tunnels"
+     name: "tunnels"
+-    class: "tunnels-fill tunnels-casing access directions"
++    class: "tunnels-fill tunnels-casing access"
+     geometry: "linestring"
+     <<: *extents
+     Datasource:
+@@ -711,7 +711,7 @@
+       table: |-
+         (SELECT way, (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature,
+                 horse, foot, bicycle, tracktype, int_surface, access,
+-                service, oneway, link, layernotnull
++                service, link, layernotnull
+           FROM ( -- subselect that contains both roads and rail/aero
+             SELECT
+                 way,
+@@ -735,11 +735,6 @@
+                   ELSE 'INT-normal'::text
+                 END AS service,
+                 CASE
+-                  WHEN oneway IN ('yes', '-1') THEN oneway
+-                  WHEN junction IN ('roundabout') AND (oneway IS NULL OR NOT oneway IN ('no', 'reversible')) THEN 'yes'
+-                  ELSE NULL
+-                END AS oneway,
+-                CASE
+                   WHEN substr(highway, length(highway)-3, 4) = 'link' THEN 'yes'
+                   ELSE 'no'
+                 END AS link,
+@@ -767,7 +762,6 @@
+                   ELSE NULL
+                 END AS access,
+                 CASE WHEN service IN ('parking_aisle', 'drive-through', 'driveway') THEN 'INT-minor'::text ELSE 'INT-normal'::text END AS service,
+-                NULL AS oneway,
+                 'no' AS link,
+                 CASE WHEN layer~E'^-?\\d+$' AND length(layer)<10 THEN layer::integer ELSE 0 END AS layernotnull
+               FROM planet_osm_line
+@@ -991,7 +985,7 @@
+       table: |-
+         (SELECT way, (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature,
+                 horse, foot, bicycle, tracktype, int_surface, access,
+-                service, oneway, link, layernotnull
++                service, link, layernotnull
+           FROM ( -- subselect that contains both roads and rail/aero
+             SELECT
+                 way,
+@@ -1015,11 +1009,6 @@
+                   ELSE 'INT-normal'::text
+                 END AS service,
+                 CASE
+-                  WHEN oneway IN ('yes', '-1') THEN oneway
+-                  WHEN junction IN ('roundabout') AND (oneway IS NULL OR NOT oneway IN ('no', 'reversible')) THEN 'yes'
+-                  ELSE NULL
+-                END AS oneway,
+-                CASE
+                   WHEN substr(highway, length(highway)-3, 4) = 'link' THEN 'yes'
+                   ELSE 'no'
+                 END AS link,
+@@ -1049,7 +1038,6 @@
+                   ELSE NULL
+                 END AS access,
+                 CASE WHEN service IN ('parking_aisle', 'drive-through', 'driveway') THEN 'INT-minor'::text ELSE 'INT-normal'::text END AS service,
+-                NULL AS oneway,
+                 'no' AS link,
+                 CASE WHEN layer~E'^-?\\d+$' AND length(layer)<10 THEN layer::integer ELSE 0 END AS layernotnull
+               FROM planet_osm_line
+@@ -1137,7 +1125,7 @@
+     advanced: {}
+   - id: "roads-fill"
+     name: "roads-fill"
+-    class: "roads-fill access directions"
++    class: "roads-fill access"
+     geometry: "linestring"
+     <<: *extents
+     Datasource:
+@@ -1158,7 +1146,6 @@
+             int_surface,
+             access,
+             service,
+-            oneway,
+             link,
+             layernotnull
+           FROM ( -- begin "features" subselect that contains both roads and rail/aero
+@@ -1184,11 +1171,6 @@
+                   ELSE 'INT-normal'::text
+                 END AS service,
+                 CASE
+-                  WHEN oneway IN ('yes', '-1') THEN oneway
+-                  WHEN junction IN ('roundabout') AND (oneway IS NULL OR NOT oneway IN ('no', 'reversible')) THEN 'yes'
+-                  ELSE NULL
+-                END AS oneway,
+-                CASE
+                   WHEN substr(highway, length(highway)-3, 4) = 'link' THEN 'yes'
+                   ELSE 'no'
+                 END AS link,
+@@ -1218,7 +1200,6 @@
+                   ELSE NULL
+                 END AS access,
+                 CASE WHEN service IN ('parking_aisle', 'drive-through', 'driveway') THEN 'INT-minor'::text ELSE 'INT-normal'::text END AS service,
+-                NULL AS oneway,
+                 'no' AS link,
+                 CASE WHEN layer~E'^-?\\d+$' AND length(layer)<10 THEN layer::integer ELSE 0 END AS layernotnull
+               FROM planet_osm_line
+@@ -1402,7 +1383,7 @@
+     advanced: {}
+   - id: "bridges"
+     name: "bridges"
+-    class: "bridges-fill bridges-casing access directions"
++    class: "bridges-fill bridges-casing access"
+     geometry: "linestring"
+     <<: *extents
+     Datasource:
+@@ -1410,7 +1391,7 @@
+       table: |-
+         (SELECT way, (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature,
+                 horse, foot, bicycle, tracktype, int_surface, access,
+-                service, oneway, link, layernotnull
++                service, link, layernotnull
+           FROM ( -- subselect that contains both roads and rail/aero
+             SELECT
+                 way,
+@@ -1434,11 +1415,6 @@
+                   ELSE 'INT-normal'::text
+                 END AS service,
+                 CASE
+-                  WHEN oneway IN ('yes', '-1') THEN oneway
+-                  WHEN junction IN ('roundabout') AND (oneway IS NULL OR NOT oneway IN ('no', 'reversible')) THEN 'yes'
+-                  ELSE NULL
+-                END AS oneway,
+-                CASE
+                   WHEN substr(highway, length(highway)-3, 4) = 'link' THEN 'yes'
+                   ELSE 'no'
+                 END AS link,
+@@ -1466,7 +1442,6 @@
+                   ELSE NULL
+                 END AS access,
+                 CASE WHEN service IN ('parking_aisle', 'drive-through', 'driveway') THEN 'INT-minor'::text ELSE 'INT-normal'::text END AS service,
+-                NULL AS oneway,
+                 'no' AS link,
+                 CASE WHEN layer~E'^-?\\d+$' AND length(layer)<10 THEN layer::integer ELSE 0 END AS layernotnull
+               FROM planet_osm_line
+@@ -2022,7 +1997,7 @@
+     advanced: {}
+   - id: "roads-text-name"
+     name: "roads-text-name"
+-    class: ""
++    class: "directions"
+     geometry: "linestring"
+     <<: *extents
+     Datasource:
+@@ -2031,6 +2006,11 @@
+         (SELECT way,
+             CASE WHEN substr(highway, length(highway)-3, 4) = 'link' THEN substr(highway, 0, length(highway)-4) ELSE highway END,
+             CASE WHEN (tunnel = 'yes' OR tunnel = 'building_passage' OR covered = 'yes') THEN 'yes' ELSE 'no' END AS tunnel,
++            CASE
++              WHEN oneway IN ('yes', '-1') THEN oneway
++              WHEN junction IN ('roundabout') AND (oneway IS NULL OR NOT oneway IN ('no', 'reversible')) THEN 'yes'
++              ELSE NULL
++            END AS oneway,
+             name
+           FROM planet_osm_line
+           WHERE highway IN ('motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary', 'secondary_link', 'tertiary', 
+--- a/roads.mss
++++ b/roads.mss
+@@ -3002,29 +3002,29 @@
+ .directions::directions {
+   [zoom >= 16] {
+     // intentionally omitting highway_platform, highway_construction
+-    [feature = 'highway_motorway'],
+-    [feature = 'highway_motorway_link'],
+-    [feature = 'highway_trunk'],
+-    [feature = 'highway_trunk_link'],
+-    [feature = 'highway_primary'],
+-    [feature = 'highway_primary_link'],
+-    [feature = 'highway_secondary'],
+-    [feature = 'highway_secondary_link'],
+-    [feature = 'highway_tertiary'],
+-    [feature = 'highway_tertiary_link'],
+-    [feature = 'highway_residential'],
+-    [feature = 'highway_unclassified'],
+-    [feature = 'highway_living_street'],
+-    [feature = 'highway_road'],
+-    [feature = 'highway_service'],
+-    [feature = 'highway_pedestrian'],
+-    [feature = 'highway_raceway'],
+-    [feature = 'highway_cycleway'],
+-    [feature = 'highway_footway'],
+-    [feature = 'highway_path'],
+-    [feature = 'highway_steps'],
+-    [feature = 'highway_track'],
+-    [feature = 'highway_bridleway'] {
++    [highway = 'motorway'],
++    [highway = 'motorway_link'],
++    [highway = 'trunk'],
++    [highway = 'trunk_link'],
++    [highway = 'primary'],
++    [highway = 'primary_link'],
++    [highway = 'secondary'],
++    [highway = 'secondary_link'],
++    [highway = 'tertiary'],
++    [highway = 'tertiary_link'],
++    [highway = 'residential'],
++    [highway = 'unclassified'],
++    [highway = 'living_street'],
++    [highway = 'road'],
++    [highway = 'service'],
++    [highway = 'pedestrian'],
++    [highway = 'raceway'],
++    [highway = 'cycleway'],
++    [highway = 'footway'],
++    [highway = 'path'],
++    [highway = 'steps'],
++    [highway = 'track'],
++    [highway = 'bridleway'] {
+       [oneway = 'yes'],
+       [oneway = '-1'] {
+         marker-placement: line;
+@@ -3036,43 +3036,43 @@
+           marker-file: url('symbols/oneway-reverse.svg');
+         }
+ 
+-        [feature = 'highway_motorway'],
+-        [feature = 'highway_motorway_link'] {
++        [highway = 'motorway'],
++        [highway = 'motorway_link'] {
+           marker-fill: @motorway-oneway-arrow-color;
+         }
+-        [feature = 'highway_trunk'],
+-        [feature = 'highway_trunk_link'] {
++        [highway = 'trunk'],
++        [highway = 'trunk_link'] {
+           marker-fill: @trunk-oneway-arrow-color;
+         }
+-        [feature = 'highway_primary'],
+-        [feature = 'highway_primary_link'] {
++        [highway = 'primary'],
++        [highway = 'primary_link'] {
+           marker-fill: @primary-oneway-arrow-color;
+         }
+-        [feature = 'highway_secondary'],
+-        [feature = 'highway_secondary_link'] {
++        [highway = 'secondary'],
++        [highway = 'secondary_link'] {
+           marker-fill: @secondary-oneway-arrow-color;
+         }
+-        [feature = 'highway_tertiary'],
+-        [feature = 'highway_tertiary_link'] {
++        [highway = 'tertiary'],
++        [highway = 'tertiary_link'] {
+           marker-fill: @tertiary-oneway-arrow-color;
+         }
+-        [feature = 'highway_residential'],
+-        [feature = 'highway_unclassified'],
+-        [feature = 'highway_road'],
+-        [feature = 'highway_service'] {
++        [highway = 'residential'],
++        [highway = 'unclassified'],
++        [highway = 'road'],
++        [highway = 'service'] {
+           marker-fill: @residential-oneway-arrow-color;
+         }
+-        [feature = 'highway_living_street'] {
++        [highway = 'living_street'] {
+           marker-fill: @living-street-oneway-arrow-color;
+         }
+-        [feature = 'highway_pedestrian'] {
++        [highway = 'pedestrian'] {
+           marker-fill: @pedestrian-oneway-arrow-color;
+         }
+-        [feature = 'highway_raceway'] {
++        [highway = 'raceway'] {
+           marker-fill: @raceway-oneway-arrow-color;
+         }
+-        [feature = 'highway_footway'],
+-        [feature = 'highway_path'] {
++        [highway = 'footway'],
++        [highway = 'path'] {
+           marker-fill: @footway-oneway-arrow-color;
+           [horse = 'designated'] {
+             marker-fill: @bridleway-oneway-arrow-color;
+@@ -3081,16 +3081,16 @@
+             marker-fill: @cycleway-oneway-arrow-color;
+           }
+         }
+-        [feature = 'highway_steps'] {
++        [highway = 'steps'] {
+           marker-fill: @steps-oneway-arrow-color;
+         }
+-        [feature = 'highway_cycleway'] {
++        [highway = 'cycleway'] {
+           marker-fill: @cycleway-oneway-arrow-color;
+         }
+-        [feature = 'highway_track'] {
++        [highway = 'track'] {
+           marker-fill: @track-oneway-arrow-color;
+         }
+-        [feature = 'highway_bridleway'] {
++        [highway = 'bridleway'] {
+           marker-fill: @bridleway-oneway-arrow-color;
+         }
+       }
