@@ -20,6 +20,8 @@
 
 @standard-wrap-width: 30;
 @standard-text-size: 10;
+@standard-font: @book-fonts;
+@standard-halo-radius: 1;
 
 /* Note that .points is also used in water-features.mss */
 .points {
@@ -112,6 +114,13 @@
     marker-clip: false;
   }
 
+  [feature = 'tourism_artwork'][zoom >= 17] {
+    marker-file: url('symbols/artwork-14.svg');
+    marker-fill: @amenity-brown;
+    marker-placement: interior;
+    marker-clip: false;
+  }
+
   [feature = 'tourism_camp_site'][zoom >= 16] {
     marker-file: url('symbols/camping.16.svg');
     marker-fill: @transportation-icon;
@@ -198,6 +207,13 @@
         nozzle/marker-clip: false;
       }
     }
+  }
+
+  [feature = 'amenity_charging_station'][zoom >= 17] {
+    marker-file: url('symbols/charging_station.16.svg');
+    marker-fill: @transportation-icon;
+    marker-placement: interior;
+    marker-clip: false;
   }
 
   [feature = 'amenity_fuel'][zoom >= @emergency] {
@@ -528,6 +544,7 @@
     marker-clip: false;
   }
 
+  [feature = 'man_made_obelisk'][zoom >= 16],
   [feature = 'historic_monument'][zoom >= 16] {
     marker-file: url('symbols/monument.16.svg');
     marker-fill: @amenity-brown;
@@ -636,13 +653,11 @@
     marker-clip: false;
   }
 
-  [feature = 'shop_copyshop'] {
-    [zoom >= 17] {
-      marker-file: url('symbols/copyshop-14.svg');
-      marker-placement: interior;
-      marker-clip: false;
-      marker-fill: @shop-icon;
-    }
+  [feature = 'shop_copyshop'][zoom >= 17] {
+    marker-file: url('symbols/copyshop-14.svg');
+    marker-placement: interior;
+    marker-clip: false;
+    marker-fill: @shop-icon;
   }
 
   [feature = 'shop_cosmetics'],
@@ -656,8 +671,10 @@
   }
 
   [feature = 'shop_department_store'][zoom >= 16] {
-    point-file: url('symbols/department_store.p.16.png');
-    point-placement: interior;
+    marker-file: url('symbols/department_store.p.16.svg');
+    marker-placement: interior;
+    marker-clip: false;
+    marker-fill: @shop-icon;
   }
 
   [feature = 'shop_doityourself'],
@@ -916,6 +933,13 @@
     marker-clip: false;
   }
 
+  [feature = 'leisure_dog_park'][zoom >= 17] {
+    marker-file: url('symbols/dog_park.16.svg');
+    marker-placement: interior;
+    marker-fill: darken(@park, 60%);
+    marker-clip: false;
+  }
+
   [feature = 'leisure_playground'][zoom >= 17] {
     marker-file: url('symbols/playground.16.svg');
     marker-fill: @amenity-brown;
@@ -1133,7 +1157,7 @@
     [way_pixels > 12000] { text-size: 12; }
     [way_pixels > 48000] { text-size: 15; }
     text-face-name: @oblique-fonts;
-    text-halo-radius: 1;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
@@ -1153,8 +1177,8 @@
       text-fill: @amenity-brown;
       text-size: @standard-text-size;
       text-dy: 11;
-      text-face-name: @bold-fonts;
-      text-halo-radius: 1;
+      text-face-name: @standard-font;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-wrap-width: @standard-wrap-width;
       text-placement: interior;
@@ -1178,9 +1202,9 @@
       text-size: @standard-text-size;
       text-fill: @amenity-brown;
       text-dy: 13;
-      text-face-name: @bold-fonts;
-      [feature = 'tourism_museum'] { text-face-name: @book-fonts; }
-      text-halo-radius: 1;
+      text-face-name: @standard-font;
+      [feature = 'tourism_museum'] { text-face-name: @standard-font; }
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-wrap-width: @standard-wrap-width;
       text-placement: interior;
@@ -1202,8 +1226,8 @@
     [feature = 'amenity_car_rental']     { text-dy: 10; }
     [feature = 'amenity_bicycle_rental'] { text-dy: 10; }
     [feature = 'leisure_slipway']        { text-dy: 13; }
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
@@ -1216,8 +1240,8 @@
     text-size: @standard-text-size;
     text-fill: @transportation-text;
     text-dy: 9;
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
@@ -1247,8 +1271,8 @@
     [feature = 'amenity_police'] { text-dy: 11; }
     [feature = 'amenity_fire_station'] { text-dy: 11; }
     [feature = 'amenity_post_office'] { text-dy: 11; }
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
@@ -1259,8 +1283,8 @@
     text-size: @standard-text-size;
     text-fill: #000033;
     text-dy: 12;
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
@@ -1276,8 +1300,8 @@
     [feature = 'natural_volcano'] { text-fill: #d40000; }
     text-dy: 7;
     [feature = 'tourism_viewpoint'] { text-dy: 11; }
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
@@ -1300,22 +1324,24 @@
       text-dy: 6;
     }
     [feature = 'man_made_mast'] { text-dy: 10; }
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
   }
 
+  [feature = 'tourism_artwork'][zoom >= 17],
   [feature = 'historic_memorial'][zoom >= 17],
+  [feature = 'man_made_obelisk'][zoom >= 16],
   [feature = 'historic_monument'][zoom >= 16],
   [feature = 'historic_archaeological_site'][zoom >= 17] {
     text-name: "[name]";
     text-size: @standard-text-size;
     text-fill: @amenity-brown;
     text-dy: 11;
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
@@ -1326,8 +1352,8 @@
     text-name: "[name]";
     text-size: @standard-text-size;
     text-fill: darken(@park, 60%);
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-placement: interior;
     text-dy: 13;
@@ -1343,8 +1369,8 @@
       text-size: @standard-text-size;
       text-fill: darken(@park, 60%);
       text-dy: 11;
-      text-face-name: @book-fonts;
-      text-halo-radius: 1;
+      text-face-name: @standard-font;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-wrap-width: @standard-wrap-width;
       text-placement: interior;
@@ -1367,7 +1393,7 @@
       }
       text-fill: @marina-text;
       text-face-name: @landcover-face-name;
-      text-halo-radius: 1;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-placement: interior;
     }
@@ -1382,8 +1408,8 @@
       text-size: @standard-text-size;
       text-dy: 13;
       text-fill: darken(@park, 60%);
-      text-face-name: @book-fonts;
-      text-halo-radius: 1;
+      text-face-name: @standard-font;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-wrap-width: @standard-wrap-width;
       text-placement: interior;
@@ -1412,7 +1438,7 @@
         text-wrap-width: @landcover-wrap-width-size-bigger;
       }
       text-face-name: @landcover-face-name;
-      text-halo-radius: 1;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-placement: interior;
       [feature = 'landuse_military'] {
@@ -1445,7 +1471,7 @@
       }
       text-fill: darken(@danger_area, 40%);
       text-face-name: @bold-fonts;
-      text-halo-radius: 1;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-placement: interior;
     }
@@ -1467,7 +1493,7 @@
       }
       text-fill: darken(@garages, 50%);
       text-face-name: @landcover-face-name;
-      text-halo-radius: 1;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-placement: interior;
     }
@@ -1520,6 +1546,7 @@
   [feature = 'leisure_sports_centre'],
   [feature = 'leisure_stadium'],
   [feature = 'leisure_track'],
+  [feature = 'leisure_dog_park'],
   [feature = 'leisure_pitch'] {
     [zoom >= 10][way_pixels > 3000][is_building = 'no'],
     [zoom >= 17][is_building = 'no'],
@@ -1537,7 +1564,7 @@
         text-wrap-width: @landcover-wrap-width-size-bigger;
       }
       text-face-name: @landcover-face-name;
-      text-halo-radius: 1;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-placement: interior;
       [feature = 'natural_reef'],
@@ -1612,13 +1639,13 @@
       }
       [feature = 'tourism_attraction'] {
         text-fill: #660033;
-        text-face-name: @book-fonts;
+        text-face-name: @standard-font;
       }
       [feature = 'amenity_kindergarten'],
       [feature = 'amenity_school'],
       [feature = 'amenity_college'],
       [feature = 'amenity_university'] {
-        text-fill: darken(@educational_areas_and_hospital, 70%);
+        text-fill: darken(@societal_amenities, 70%);
       }
       [feature = 'natural_heath'] {
         text-fill: darken(@heath, 40%);
@@ -1632,7 +1659,12 @@
       }
       [feature = 'leisure_sports_centre'],
       [feature = 'leisure_stadium'] {
-        text-fill: darken(@stadium, 30%);
+        text-fill: darken(@stadium, 70%);
+      }
+      [feature = 'leisure_dog_park'] {
+        text-fill: darken(@park, 60%);
+        text-halo-radius: 1.5; /* Extra halo needed to stand out from paw pattern. */
+        text-halo-fill: rgba(255,255,255,0.6);
       }
       [feature = 'leisure_track'] {
         text-fill: darken(@track, 40%);
@@ -1648,8 +1680,8 @@
     text-name: "[name]";
     text-size: 10;
     text-fill: @water-text;
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
@@ -1668,11 +1700,11 @@
     [feature = 'amenity_bank'] { text-dy: 9; }
     [feature = 'amenity_atm']  { text-dy: 10; }
     text-fill: @amenity-brown;
-    text-halo-radius: 1;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
-    text-face-name: @book-fonts;
+    text-face-name: @standard-font;
   }
 
   [feature = 'tourism_alpine_hut'][zoom >= 15],
@@ -1687,8 +1719,8 @@
     text-size: @standard-text-size;
     text-fill: #0066ff;
     text-dy: 11;
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
@@ -1705,8 +1737,8 @@
     text-size: @standard-text-size;
     text-fill: #0066ff;
     text-dy: 10;
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
@@ -1717,14 +1749,15 @@
     text-size: @standard-text-size;
     text-fill: #0066ff;
     text-dy: 11;
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
   }
 
   [feature = 'highway_bus_stop'],
+  [feature = 'amenity_charging_station'],
   [feature = 'amenity_fuel'],
   [feature = 'amenity_bus_station'] {
     [zoom >= 17] {
@@ -1732,8 +1765,8 @@
       text-size: @standard-text-size;
       text-fill: @transportation-text;
       text-dy: 11;
-      text-face-name: @book-fonts;
-      text-halo-radius: 1;
+      text-face-name: @standard-font;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-wrap-width: @standard-wrap-width;
       text-placement: interior;
@@ -1759,7 +1792,7 @@
       }
       text-fill: @marina-text;
       text-face-name: @landcover-face-name;
-      text-halo-radius: 1;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-placement: interior;
     }
@@ -1770,8 +1803,8 @@
     text-size: @standard-text-size;
     text-fill: @marina-text;
     text-dy: 4;
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
@@ -1786,8 +1819,8 @@
     text-size: @standard-text-size;
     text-fill: @amenity-brown;
     text-dy: 12;
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
@@ -1799,8 +1832,8 @@
     text-size: @standard-text-size;
     text-fill: @transportation-text;
     text-dy: 16;
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
@@ -1813,8 +1846,8 @@
     text-fill: @amenity-brown;
     text-dy: 12;
     [feature = 'amenity_recycling'] { text-dy: 10; }
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
@@ -1825,8 +1858,8 @@
     text-fill: @health-color;
     text-size: @standard-text-size;
     text-dy: 10;
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
@@ -1843,8 +1876,8 @@
       text-size: @standard-text-size;
       text-dy: 12;
       text-fill: @health-color;
-      text-face-name: @book-fonts;
-      text-halo-radius: 1;
+      text-face-name: @standard-font;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-wrap-width: @standard-wrap-width;
       text-placement: interior;
@@ -1913,8 +1946,8 @@
       text-size: @standard-text-size;
       text-dy: 12;
       text-fill: @shop-text;
-      text-face-name: @book-fonts;
-      text-halo-radius: 1;
+      text-face-name: @standard-font;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255, 255, 255, 0.6);
       text-wrap-width: @standard-wrap-width;
       text-placement: interior;
@@ -1931,8 +1964,8 @@
       text-size: @standard-text-size;
       text-dy: 12;
       text-fill: @shop-text;
-      text-face-name: @book-fonts;
-      text-halo-radius: 1;
+      text-face-name: @standard-font;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255, 255, 255, 0.6);
       text-wrap-width: @standard-wrap-width;
       text-placement: interior;
@@ -1943,8 +1976,8 @@
     text-name: "[ref]";
     text-size: @standard-text-size;
     text-fill: #aa66cc;
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
@@ -1970,7 +2003,7 @@
       }
       text-fill: darken(@power, 40%);
       text-face-name: @landcover-face-name;
-      text-halo-radius: 1;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-placement: interior;
     }
@@ -1994,7 +2027,7 @@
         text-wrap-width: @landcover-wrap-width-size-bigger;
       }
       text-face-name: @landcover-face-name;
-      text-halo-radius: 1;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-placement: interior;
       [feature = 'natural_scree'],
@@ -2024,7 +2057,7 @@
       }
       text-fill: darken(@apron, 60%);
       text-face-name: @landcover-face-name;
-      text-halo-radius: 1;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-placement: interior;
     }
@@ -2047,7 +2080,7 @@
       }
       text-fill: darken(@rest_area, 40%);
       text-face-name: @landcover-face-name;
-      text-halo-radius: 1;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-placement: interior;
     }
@@ -2070,7 +2103,7 @@
       }
       text-fill: mix(darken(@glacier, 40%), darken(@glacier-line, 30%), 50%);
       text-face-name: @landcover-face-name;
-      text-halo-radius: 1;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-placement: interior;
     }
@@ -2081,8 +2114,8 @@
     text-size: @standard-text-size;
     text-fill: @airtransport;
     text-dy: -10;
-    text-face-name: @bold-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-placement: interior;
     text-wrap-width: @standard-wrap-width;
@@ -2094,7 +2127,7 @@
     text-fill: darken(@airtransport, 15%);
     text-dy: -10;
     text-face-name: @oblique-fonts;
-    text-halo-radius: 1;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-placement: interior;
     text-wrap-width: @standard-wrap-width;
@@ -2105,8 +2138,8 @@
     text-size: @standard-text-size;
     text-dy: 11;
     text-fill: @man-made-icon;
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-placement: interior;
     text-wrap-width: @standard-wrap-width;
@@ -2121,8 +2154,8 @@
     [zoom >= 18] { text-dy: 8; }
     [zoom >= 19] { text-dy: 11; }
     [zoom >= 20] { text-dy: 18; }
-    text-face-name: @book-fonts;
-    text-halo-radius: 1;
+    text-face-name: @standard-font;
+    text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.6);
     text-placement: interior;
     text-wrap-width: @standard-wrap-width;

@@ -6,11 +6,7 @@
 .country {
   [admin_level = '2'][zoom >= 3][way_pixels > 1000][way_pixels < 360000] {
     text-name: "[name]";
-    text-size: 9;
-
-    [zoom >= 3] {
-      text-size: 10;
-    }
+    text-size: 10;
     [zoom >= 4] {
       text-size: 11;
     }
@@ -23,7 +19,6 @@
     [zoom >= 10] {
       text-size: 14;
     }
-
     text-fill: @country-labels;
     text-face-name: @book-fonts;
     text-halo-fill: rgba(255,255,255,0.6);
@@ -31,7 +26,6 @@
     text-wrap-width: 35;
     text-placement: interior;
     text-character-spacing: 0.5;
-    text-min-distance: 3;
     text-line-spacing: 1;
   }
 }
@@ -48,7 +42,6 @@
       text-halo-radius: 1.5;
       text-wrap-width: 0;
       text-placement: interior;
-      text-min-distance: 3;
       [zoom >= 5] {
         text-name: "[name]";
         text-wrap-width: 30;
@@ -72,7 +65,6 @@
       text-halo-radius: 1.5;
       text-halo-fill: rgba(255,255,255,0.6);
       text-wrap-width: 30;
-      text-min-distance: 10;
       [zoom >= 5] {
         text-size: 11;
         text-wrap-width: 45;
@@ -108,7 +100,6 @@
       text-halo-radius: 1.5;
       text-halo-fill: rgba(255,255,255,0.6);
       text-wrap-width: 30;
-      text-min-distance: 10;
       [zoom >= 9] {
         text-size: 12;
         text-wrap-width: 60;
@@ -135,7 +126,6 @@
       text-halo-radius: 1.5;
       text-halo-fill: rgba(255,255,255,0.6);
       text-wrap-width: 45;
-      text-min-distance: 10;
       [zoom >= 11] {
         text-size: 11;
         text-wrap-width: 55;
@@ -161,7 +151,6 @@
     text-halo-radius: 1.5;
     text-halo-fill: rgba(255,255,255,0.6);
     text-wrap-width: 55;
-    text-min-distance: 10;
     [zoom >= 14] {
       text-size: 14;
       text-wrap-width: 70;
@@ -185,7 +174,6 @@
       text-halo-radius: 1.5;
       text-halo-fill: rgba(255,255,255,0.6);
       text-wrap-width: 50;
-      text-min-distance: 10;
       [zoom >= 14] {
         text-fill: @placenames-light;
         text-halo-fill: white;
@@ -214,7 +202,6 @@
       text-halo-radius: 1.5;
       text-halo-fill: rgba(255,255,255,0.6);
       text-wrap-width: 45;
-      text-min-distance: 10;
     }
     [zoom >= 16] {
       text-size: 12;

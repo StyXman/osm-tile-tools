@@ -1,10 +1,5 @@
 /* For the main linear features, such as roads and railways. */
 
-//road colors for major roads were generated with scripts/generate_road_colors.py
-@motorway-fill: #e892a2; // Lch(70,35,10), error 0.5
-@trunk-fill: #f9b29c; // Lch(79,33,42), error 0.7
-@primary-fill: #fcd6a4; // Lch(88,31,74), error 1.7
-@secondary-fill: #f7fabf; // Lch(97,29,106), error 1.7
 @tertiary-fill: #ffffff;
 @residential-fill: #ffffff;
 @service-fill: @residential-fill;
@@ -22,16 +17,7 @@
 @taxiway-fill: @aeroway-fill;
 @helipad-fill: @aeroway-fill;
 
-@motorway-low-zoom: #e66e89; // Lch(62,50,10), error 0.7
-@trunk-low-zoom: #fa9476; // Lch(72,50,42), error 0.8
-@primary-low-zoom: #f8c171; // Lch(82,50,74), error 2.1
-@secondary-low-zoom: #e6ef89; // Lch(92,50,106), error 2.2
-
 @default-casing: white;
-@motorway-casing: #dc2a67; // Lch(50,70,10), error 1.1
-@trunk-casing: #c84e2f; // Lch(50,65,42), error 0.7
-@primary-casing: #a06b00; // Lch(50,60,74), error 1.6
-@secondary-casing: #707d05; // Lch(50,55,106), error 1.9
 @tertiary-casing: #8f8f8f;
 @residential-casing: #bbb;
 @road-casing: @residential-casing;
@@ -45,10 +31,7 @@
 @bridleway-casing: @default-casing;
 @track-casing: @default-casing;
 
-@motorway-low-zoom-casing: #c24e6b; // Lch(50,50,10), error 0.8
-@trunk-low-zoom-casing: #cf6649; // Lch(56,55,42), error 0.9
-@primary-low-zoom-casing: #c38a27; // Lch(62,60,74), error 2.1
-@secondary-low-zoom-casing: #9eae23; // Lch(68,65,106), error 2.3
+@tertiary-shield: #3b3b3b;
 
 @unimportant-road: @residential-casing;
 
@@ -284,12 +267,6 @@
 @shield-min-distance: 40;
 @shield-font: @book-fonts;
 @shield-clip: false;
-
-@shield-motorway-fill: #620728; // Lch(20,40,10), error 0.5
-@shield-trunk-fill: #5d1b0b; // Lch(21,40,42), error 0.5
-@shield-primary-fill: #4c2e00; // Lch(22,40,74), error 2.9
-@shield-secondary-fill: #323b00; // Lch(23,40,106), error 3.4
-@shield-tertiary-fill: #3b3b3b; // Lch(25,0,0), error 0.1
 
 .roads-casing, .bridges-casing, .tunnels-casing {
   ::casing {
@@ -2427,21 +2404,15 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
 
   [junction = 'yes'],
   [highway = 'traffic_signals'] {
-    [zoom >= 14] {
+    [zoom >= 15] {
       text-name: "[name]";
-      text-size: 8;
+      text-size: 10;
       text-fill: black;
       text-face-name: @book-fonts;
       text-halo-radius: 1;
       text-halo-fill: rgba(255,255,255,0.6);
       text-wrap-width: 30;
       text-min-distance: 2;
-      [zoom >= 14] {
-        text-size: 9;
-      }
-      [zoom >= 15] {
-        text-size: 10;
-      }
       [zoom >= 17] {
         text-size: 11;
         /* Offset name on traffic_signals on zoomlevels where they are displayed
@@ -2615,22 +2586,22 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
     shield-clip: @shield-clip;
 
     [highway = 'motorway'] {
-      shield-fill: @shield-motorway-fill;
+      shield-fill: @motorway-shield;
       shield-file: url("symbols/shields/motorway_[width]x[height].svg");
     }
 
     [highway = 'trunk'] {
-      shield-fill: @shield-trunk-fill;
+      shield-fill: @trunk-shield;
       shield-file: url("symbols/shields/trunk_[width]x[height].svg");
     }
 
     [highway = 'primary'] {
-      shield-fill: @shield-primary-fill;
+      shield-fill: @primary-shield;
       shield-file: url("symbols/shields/primary_[width]x[height].svg");
     }
 
     [highway = 'secondary'] {
-      shield-fill: @shield-secondary-fill;
+      shield-fill: @secondary-shield;
       shield-file: url("symbols/shields/secondary_[width]x[height].svg");
     }
   }
@@ -2660,7 +2631,7 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
       shield-clip: @shield-clip;
 
       [highway = 'motorway'] {
-        shield-fill: @shield-motorway-fill;
+        shield-fill: @motorway-shield;
         shield-file: url("symbols/shields/motorway_[width]x[height].svg");
 
         [zoom >= 16] {
@@ -2671,7 +2642,7 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
         }
       }
       [highway = 'trunk'] {
-        shield-fill: @shield-trunk-fill;
+        shield-fill: @trunk-shield;
         shield-file: url("symbols/shields/trunk_[width]x[height].svg");
 
         [zoom >= 16] {
@@ -2682,7 +2653,7 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
         }
       }
       [highway = 'primary'] {
-        shield-fill: @shield-primary-fill;
+        shield-fill: @primary-shield;
         shield-file: url("symbols/shields/primary_[width]x[height].svg");
 
         [zoom >= 16] {
@@ -2693,7 +2664,7 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
         }
       }
       [highway = 'secondary'] {
-        shield-fill: @shield-secondary-fill;
+        shield-fill: @secondary-shield;
         shield-file: url("symbols/shields/secondary_[width]x[height].svg");
 
         [zoom >= 16] {
@@ -2704,7 +2675,7 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
         }
       }
       [highway = 'tertiary'] {
-        shield-fill: @shield-tertiary-fill;
+        shield-fill: @tertiary-shield;
         shield-file: url("symbols/shields/tertiary_[width]x[height].svg");
 
         [zoom >= 16] {

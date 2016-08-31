@@ -1,8 +1,8 @@
 --- a/landcover.mss
 +++ b/landcover.mss
-@@ -8,6 +8,18 @@
- @park: #c8facc;         // Lch(94,30,145) also recreation_ground
- @orchard: #aedfa3;
+@@ -53,6 +53,18 @@
+ @military: #f55;
+ @beach: #fff1ba;
  
 +// --- Reliefs
 +@ridge-text:          #7A2F18;
@@ -18,8 +18,8 @@
 +
  // --- sports ---
  
- @stadium: #3c9; // also sports_centre
-@@ -670,7 +682,33 @@
+ @pitch: #80d7b5;
+@@ -684,7 +696,33 @@
    }
  }
  
@@ -54,7 +54,7 @@
    [natural = 'cliff'][zoom >= 13] {
      // line-pattern-file: url('symbols/cliff.png');
      line-pattern-file: url('symbols/cliff_mdione.png');
-@@ -736,18 +774,214 @@
+@@ -750,18 +788,214 @@
    }
  }
  
@@ -274,7 +274,7 @@
  }
 --- a/project.yaml
 +++ b/project.yaml
-@@ -879,8 +879,8 @@
+@@ -880,8 +880,8 @@
      properties:
        minzoom: 14
      advanced: {}
@@ -285,7 +285,7 @@
      class: ""
      geometry: "linestring"
      <<: *extents
-@@ -888,12 +888,12 @@
+@@ -889,12 +889,12 @@
        <<: *osm2pgsql
        table: |-
          (SELECT
@@ -302,16 +302,16 @@
      advanced: {}
    - id: "area-barriers"
      name: "area-barriers"
-@@ -1768,7 +1768,7 @@
+@@ -1770,7 +1770,7 @@
                                              'video_games', 'watches', 'wholesale', 'yes') THEN 'other' ELSE NULL END,
                'leisure_' || CASE WHEN leisure IN ('water_park', 'playground', 'miniature_golf', 'golf_course', 'picnic_table') THEN leisure ELSE NULL END,
-               'man_made_' || CASE WHEN man_made IN ('mast', 'water_tower', 'lighthouse', 'windmill') THEN man_made ELSE NULL END,
+               'man_made_' || CASE WHEN man_made IN ('mast', 'water_tower', 'lighthouse', 'windmill', 'obelisk') THEN man_made ELSE NULL END,
 -              'natural_' || CASE WHEN "natural" IN ('spring') THEN "natural" ELSE NULL END,
 +              'natural_' || CASE WHEN "natural" IN ('spring', 'valley', 'ridge', 'cliff', 'arete', 'dale', 'gorge', 'couloir', 'mountain_range', 'massif') THEN "natural" ELSE NULL END,
                'historic_' || CASE WHEN historic IN ('memorial', 'monument', 'archaeological_site', 'castle', 'fort') THEN historic ELSE NULL END,
                'highway_'|| CASE WHEN highway IN ('bus_stop', 'elevator', 'traffic_signals') THEN highway ELSE NULL END,
                'power_' || CASE WHEN power IN ('generator') THEN power ELSE NULL END,
-@@ -1779,6 +1779,7 @@
+@@ -1781,6 +1781,7 @@
              denomination,
              "generator:source",
              power_source,
@@ -319,16 +319,16 @@
              castle_type,
              way_area/NULLIF(!pixel_width!::real*!pixel_height!::real,0) AS way_pixels
            FROM planet_osm_polygon
-@@ -1797,7 +1798,7 @@
+@@ -1799,7 +1800,7 @@
              OR shop IS NOT NULL -- skip checking a huge list and use a null check
              OR leisure IN ('water_park', 'playground', 'miniature_golf', 'golf_course', 'picnic_table')
-             OR man_made IN ('mast', 'water_tower', 'lighthouse', 'windmill')
+             OR man_made IN ('mast', 'water_tower', 'lighthouse', 'windmill', 'obelisk')
 -            OR "natural" IN ('spring')
 +            OR "natural" IN ('spring', 'valley', 'ridge', 'cliff', 'arete', 'dale', 'gorge', 'couloir', 'mountain_range', 'massif')
              OR historic IN ('memorial', 'monument', 'archaeological_site', 'castle', 'fort')
              OR highway IN ('bus_stop', 'elevator', 'traffic_signals')
              OR (power = 'generator' AND ("generator:source" = 'wind' OR power_source = 'wind'))
-@@ -2199,12 +2200,13 @@
+@@ -2206,12 +2207,13 @@
              name,
              operator,
              ref,
@@ -343,9 +343,9 @@
              AND name IS NOT NULL
          ) AS text_line
      advanced: {}
-@@ -2285,9 +2287,11 @@
+@@ -2293,9 +2295,11 @@
                                                        'military') THEN landuse ELSE NULL END,
-                   'man_made_' || CASE WHEN man_made IN ('lighthouse', 'windmill', 'mast', 'water_tower') THEN man_made ELSE NULL END,
+                   'man_made_' || CASE WHEN man_made IN ('lighthouse', 'windmill', 'mast', 'water_tower', 'obelisk') THEN man_made ELSE NULL END,
                    'natural_' || CASE WHEN "natural" IN ('wood', 'peak', 'volcano', 'saddle', 'cave_entrance', 'water', 'mud', 'wetland', 'marsh', 'bay', 'spring', 
 -                                                        'scree', 'shingle', 'bare_rock', 'sand', 'heath', 'grassland', 'scrub', 'beach', 'glacier', 'tree') 
 +                                                        'scree', 'shingle', 'bare_rock', 'sand', 'heath', 'grassland', 'scrub', 'beach', 'cliff', 'valley',
