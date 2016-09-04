@@ -12,7 +12,7 @@ reapply_water_polygons.diff
 old-land-color.diff
 deeper_closer_center.diff
 terrain.diff
-05-contour.diff
+contours.diff
 06-pistes.diff
 roads_colors.diff
 roads_text_color_size.diff
