@@ -1,0 +1,18 @@
+--- a/project.yaml
++++ b/project.yaml
+@@ -127,6 +127,7 @@
+           ) AS features
+         ) AS landcover_low_zoom
+     properties:
++      minzoom: 7
+       maxzoom: 9
+     advanced: {}
+   - id: "landcover"
+@@ -1331,6 +1332,7 @@
+           ORDER BY admin_level DESC
+         ) AS admin_low_zoom
+     properties:
++      minxoom: 4
+       maxzoom: 10
+     advanced: {}
+   - id: "admin-mid-zoom"
