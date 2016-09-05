@@ -1,6 +1,6 @@
 --- a/project.yaml
 +++ b/project.yaml
-@@ -1268,6 +1268,23 @@
+@@ -1268,6 +1268,25 @@
      properties:
        minzoom: 10
      advanced: {}
@@ -21,6 +21,8 @@
 +          "piste:type" IN ('downhill')
 +        ) AS pistes
 +    advanced: {}
++    properties:
++      minzoom: 14
    - id: "turning-circle-fill"
      name: "turning-circle-fill"
      class: ""
