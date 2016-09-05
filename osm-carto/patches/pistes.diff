@@ -1,6 +1,6 @@
 --- a/project.yaml
 +++ b/project.yaml
-@@ -1239,6 +1239,23 @@
+@@ -1268,6 +1268,23 @@
      properties:
        minzoom: 10
      advanced: {}
@@ -26,7 +26,7 @@
      class: ""
 --- a/style.mss
 +++ b/style.mss
-@@ -153,3 +153,34 @@
+@@ -151,3 +151,34 @@
      text-spacing: 400;
    }
  }
