@@ -1,7 +1,7 @@
 scale: 1
 metatile: 2
-name: "OpenStreetMap Carto"
-description: "A general-purpose OpenStreetMap mapnik style, in CartoCSS"
+name: "Elevation"
+description: "A OSM-carto based map with relief info, contrasting roads and other minor changes."
 bounds: &world
   - -180
   - -85.05112877980659
@@ -127,6 +127,7 @@ Layer:
           ) AS features
         ) AS landcover_low_zoom
     properties:
+      minzoom: 7
       maxzoom: 9
     advanced: {}
   - id: "landcover"
@@ -1331,6 +1332,7 @@ Layer:
           ORDER BY admin_level DESC
         ) AS admin_low_zoom
     properties:
+      minxoom: 4
       maxzoom: 10
     advanced: {}
   - id: "admin-mid-zoom"

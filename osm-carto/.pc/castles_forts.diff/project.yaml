@@ -1,7 +1,7 @@
 scale: 1
 metatile: 2
-name: "OpenStreetMap Carto"
-description: "A general-purpose OpenStreetMap mapnik style, in CartoCSS"
+name: "Elevation"
+description: "A OSM-carto based map with relief info, contrasting roads and other minor changes."
 bounds: &world
   - -180
   - -85.05112877980659
@@ -161,6 +161,7 @@ Layer:
           ) AS features
         ) AS landcover_low_zoom
     properties:
+      minzoom: 7
       maxzoom: 9
     advanced: {}
   - id: "landcover"
@@ -336,6 +337,8 @@ Layer:
          WHERE height::int%100 = 50
         ) as c50
     advanced: {}
+    properties:
+      minzoom: 13
   - id: "contour-100"
     name: "contour-100"
     class: ""
@@ -349,6 +352,8 @@ Layer:
          WHERE height::int%1000 in (100, 200, 300, 400, 600, 700, 800, 900)
         ) as c100
     advanced: {}
+    properties:
+      minzoom: 11
   - id: "contour-250"
     name: "contour-250"
     class: ""
@@ -362,6 +367,8 @@ Layer:
          WHERE height::int%1000 in (250, 750)
         ) as c250
     advanced: {}
+    properties:
+      minzoom: 10
   - id: "contour-500"
     name: "contour-500"
     class: ""
@@ -375,6 +382,8 @@ Layer:
          WHERE height::int%1000 = 500
         ) as c500
     advanced: {}
+    properties:
+      minzoom: 9
   - id: "contour-1000"
     name: "contour-1000"
     class: ""
@@ -388,6 +397,8 @@ Layer:
          WHERE height::int%1000 = 0
         ) as c1000
     advanced: {}
+    properties:
+      minzoom: 8
   - id: "water-lines-casing"
     name: "water-lines-casing"
     class: ""
@@ -1296,6 +1307,8 @@ Layer:
           "piste:type" IN ('downhill')
         ) AS pistes
     advanced: {}
+    properties:
+      minzoom: 14
   - id: "turning-circle-fill"
     name: "turning-circle-fill"
     class: ""
@@ -1559,6 +1572,9 @@ Layer:
             AND osm_id < 0
           ORDER BY admin_level DESC
         ) AS admin_low_zoom
+    properties:
+      minxoom: 4
+      maxzoom: 10
     advanced: {}
   - id: "tourism-boundary"
     name: "tourism-boundary"

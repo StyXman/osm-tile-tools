@@ -1,6 +1,6 @@
 --- a/project.yaml
 +++ b/project.yaml
-@@ -1536,53 +1536,10 @@
+@@ -1568,7 +1568,7 @@
              admin_level
            FROM planet_osm_roads
            WHERE boundary = 'administrative'
@@ -9,9 +9,10 @@
              AND osm_id < 0
            ORDER BY admin_level DESC
          ) AS admin_low_zoom
--    properties:
--      maxzoom: 10
--    advanced: {}
+@@ -1576,47 +1576,6 @@
+       minxoom: 4
+       maxzoom: 10
+     advanced: {}
 -  - id: "admin-mid-zoom"
 -    name: "admin-mid-zoom"
 -    class: ""
@@ -52,12 +53,13 @@
 -        ) AS admin_high_zoom
 -    properties:
 -      minzoom: 13
-     advanced: {}
+-    advanced: {}
    - id: "tourism-boundary"
      name: "tourism-boundary"
+     class: ""
 --- a/admin.mss
 +++ b/admin.mss
-@@ -8,9 +8,9 @@
+@@ -6,9 +6,9 @@
  overlapping borders correctly.
  */
  
@@ -69,7 +71,7 @@
    [admin_level = '2'] {
      [zoom >= 4] {
        background/line-join: bevel;
-@@ -59,6 +59,7 @@
+@@ -57,6 +57,7 @@
      }
    }
  
@@ -77,7 +79,7 @@
    [admin_level = '4'] {
      [zoom >= 4] {
        background/line-join: bevel;
-@@ -95,6 +96,7 @@
+@@ -93,6 +94,7 @@
        line-width: 3;
      }
    }
@@ -85,7 +87,7 @@
    /*
    The following code prevents admin boundaries from being rendered on top of
    each other. Comp-op works on the entire attachment, not on the individual
-@@ -110,6 +112,7 @@
+@@ -108,6 +110,7 @@
    comp-op: darken;
  }
  
@@ -93,7 +95,7 @@
  #admin-mid-zoom[zoom >= 11][zoom < 13],
  #admin-high-zoom[zoom >= 13] {
    [admin_level = '5'][zoom >= 11] {
-@@ -166,6 +169,7 @@
+@@ -164,6 +167,7 @@
    opacity: 0.5;
    comp-op: darken;
  }
