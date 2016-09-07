@@ -9,6 +9,7 @@ import errno
 import threading
 import datetime
 import errno
+import multiprocessing
 
 import map_utils
 
@@ -17,7 +18,6 @@ try:
 except:
     import mapnik
 
-import multiprocessing
 import logging
 from logging import debug
 
@@ -25,6 +25,7 @@ try:
     NUM_CPUS= multiprocessing.cpu_count ()
 except NotImplementedError:
     NUM_CPUS= 1
+
 
 class RenderThread:
     def __init__(self, opts, backend, queue):
@@ -45,6 +46,7 @@ class RenderThread:
         self.prj= mapnik.Projection (self.m.srs)
         # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
         self.tileproj= map_utils.GoogleProjection (opts.max_zoom+1)
+
 
     def render_tile (self, x, y, z):
         # Calculate pixel positions of bottom-left & top-right
@@ -197,6 +199,7 @@ def render_tiles(opts):
 
     finish (opts, queue, renderers)
 
+
 def render_bbox (opts, queue, renderers):
     gprj= map_utils.GoogleProjection (opts.max_zoom+1)
 
@@ -228,6 +231,7 @@ def render_bbox (opts, queue, renderers):
                     finish (opts, queue, renderers)
                     raise SystemExit("Ctrl-c detected, exiting...")
 
+
 def finish (opts, queue, renderers):
     debug ('finishing threads/procs')
     # Signal render threads to exit by sending empty request to queue
@@ -243,6 +247,7 @@ def finish (opts, queue, renderers):
 
     for i in range (opts.threads):
         renderers[i].join ()
+
 
 if __name__ == "__main__":
     parser= ArgumentParser ()
