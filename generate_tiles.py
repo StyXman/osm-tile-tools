@@ -77,6 +77,7 @@ class RenderThread:
             mapnik.render (self.m, im)
         except RuntimeError as e:
             print ("%d:%d:%d: %s" % (z, x, y, e), file=sys.stderr)
+            sys.stderr.flush ()
         else:
             mid= time.perf_counter ()
 
@@ -98,6 +99,8 @@ class RenderThread:
 
             end= time.perf_counter ()
             print ("%d:%d:%d: %f, %f" % (z, x, y, mid-start, end-mid))
+            sys.stdout.flush ()
+
 
     def loop (self):
         debug ('%s looping the loop', self)
