@@ -71,14 +71,14 @@ class RenderThread:
             self.m.buffer_size= 128
 
         # Render image with default Agg renderer
-        start= time.time ()
+        start= time.perf_counter ()
         im = mapnik.Image (self.image_size, self.image_size)
         try:
             mapnik.render (self.m, im)
         except RuntimeError as e:
             print ("%d:%d:%d: %s" % (x, y, z, e))
         else:
-            end= time.time ()
+            end= time.perf_counter ()
 
             # save the image, splitting it in the right amount of tiles
             # we use min() so we can support low zoom levels with less than meta_size tiles
