@@ -254,7 +254,7 @@ if __name__ == "__main__":
     parser.add_argument ('-n', '--min-zoom',      dest='min_zoom',  default=0, type=int)
     parser.add_argument ('-x', '--max-zoom',      dest='max_zoom',  default=18, type=int)
 
-    parser.add_argument (      '--tile',          dest='tiles',     default= None, nargs='+', metavar='Z,X,Y')
+    parser.add_argument (      '--tiles',         dest='tiles',     default= None, nargs='+', metavar='Z,X,Y')
 
     parser.add_argument ('-i', '--input-file',    dest='mapfile',   default='osm.xml')
     parser.add_argument ('-f', '--format',        dest='format',    default='tiles') # also 'mbtiles'
