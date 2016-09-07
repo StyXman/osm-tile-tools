@@ -76,7 +76,7 @@ class RenderThread:
         try:
             mapnik.render (self.m, im)
         except RuntimeError as e:
-            print ("%d:%d:%d: %s" % (x, y, z, e))
+            print ("%d:%d:%d: %s" % (z, x, y, e))
         else:
             mid= time.perf_counter ()
 
