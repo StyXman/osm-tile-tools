@@ -176,8 +176,8 @@ def render_tiles(opts):
         renderers[i]= render_thread
 
     if not os.path.isdir (opts.tile_dir):
-         debug ("creating dir %s", opts.tile_dir)
-         os.mkdir (opts.tile_dir)
+        debug ("creating dir %s", opts.tile_dir)
+        os.makedirs (opts.tile_dir, exist_ok=True)
 
     if opts.tiles is None:
         debug ('rendering bbox %s:%s', opts.bbox_name, opts.bbox)
