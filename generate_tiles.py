@@ -78,7 +78,7 @@ class RenderThread:
         except RuntimeError as e:
             print ("%d:%d:%d: %s" % (x, y, z, e))
         else:
-            end= time.perf_counter ()
+            mid= time.perf_counter ()
 
             # save the image, splitting it in the right amount of tiles
             # we use min() so we can support low zoom levels with less than meta_size tiles
@@ -96,7 +96,8 @@ class RenderThread:
 
                 self.backend.commit ()
 
-            print ("%d:%d:%d: %f" % (x, y, z, end-start))
+            end= time.perf_counter ()
+            print ("%d:%d:%d: %f, %f" % (z, x, y, mid-start, end-mid))
 
     def loop (self):
         debug ('%s looping the loop', self)
