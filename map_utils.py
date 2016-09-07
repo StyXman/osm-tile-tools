@@ -12,6 +12,9 @@ import errno
 import hashlib
 import sqlite3
 
+from logging import debug
+
+
 DEG_TO_RAD = pi/180
 RAD_TO_DEG = 180/pi
 
@@ -75,7 +78,9 @@ class DiskBackend:
     def newer_than (self, z, x, y, date):
         tile_uri= self.tile_uri (z, x, y)
         try:
-            return datetime.datetime.fromtimestamp (os.stat (tile_uri).st_mtime)>date
+            file_date= datetime.datetime.fromtimestamp (os.stat (tile_uri).st_mtime)
+            debug ("%s <-> %s", file_date.isoformat (), date.isoformat ())
+            return file_date > date
         except OSError as e:
             if e.errno==errno.ENOENT:
                 return False

@@ -18,6 +18,8 @@ except:
     import mapnik
 
 import multiprocessing
+import logging
+from logging import debug
 
 try:
     NUM_CPUS= multiprocessing.cpu_count ()
@@ -94,16 +96,20 @@ class RenderThread:
             print ("%d:%d:%d: %f" % (x, y, z, end-start))
 
     def loop (self):
+        debug ('%s looping the loop', self)
         while True:
             # Fetch a tile from the queue and render it
             r= self.q.get ()
             if r is None:
                 # self.q.task_done ()
+                debug ('ending loop')
                 break
             else:
                 (x, y, z)= r
 
             if self.opts.skip_existing or self.opts.skip_newer is not None:
+                debug ('skip test existing:%s, newer:%s',
+                       self.opts.skip_existing, self.opts.skip_newer)
                 skip= True
                 # we use min() so we can support low zoom levels with less than meta_size tiles
                 for tile_x in range (x, x+min (self.meta_size, 2**z)):
@@ -129,7 +135,7 @@ class RenderThread:
 
 
 def render_tiles(opts):
-    print ("render_tiles(",opts,")")
+    debug ("render_tiles(%s)", opts)
 
     backends= dict (
         tiles=   map_utils.DiskBackend,
@@ -142,30 +148,42 @@ def render_tiles(opts):
         raise
 
     # Launch rendering threads
-    if not opts.fork:
-        queue= Queue (32)
-    else:
+    if opts.fork:
+        debug ('forks, using mp.Queue()')
         queue= multiprocessing.Queue (32)
+    else:
+        debug ('threads, using queue.Queue()')
+        queue= Queue (32)
 
     renderers= {}
 
     for i in range (opts.threads):
         renderer= RenderThread (opts, backend, queue)
-        if not opts.fork:
-            render_thread= threading.Thread (target=renderer.loop)
-        else:
+        if opts.fork:
+            debug ('mp.Process()')
             render_thread= multiprocessing.Process (target=renderer.loop)
+        else:
+            debug ('th.Thread()')
+            render_thread= threading.Thread (target=renderer.loop)
 
         render_thread.start ()
-        #print ("Started render thread %s" % render_thread.getName())
+
+        if opts.fork:
+            debug ("Started render thread %s" % render_thread.name)
+        else:
+            debug ("Started render thread %s" % render_thread.getName())
+
         renderers[i]= render_thread
 
     if not os.path.isdir (opts.tile_dir):
+         debug ("creating dir %s", opts.tile_dir)
          os.mkdir (opts.tile_dir)
 
     if opts.tiles is None:
+        debug ('rendering bbox %s:%s', opts.bbox_name, opts.bbox)
         render_bbox (opts, queue, renderers)
     else:
+        debug ('rendering individual tiles')
         for i in opts.tiles:
             z, x, y= map (int, i.split (','))
             queue.put ((x, y, z))
@@ -204,6 +222,7 @@ def render_bbox (opts, queue, renderers):
                     raise SystemExit("Ctrl-c detected, exiting...")
 
 def finish (opts, queue, renderers):
+    debug ('finishing threads/procs')
     # Signal render threads to exit by sending empty request to queue
     for i in range (opts.threads):
         queue.put (None)
@@ -242,7 +261,12 @@ if __name__ == "__main__":
     parser.add_argument ('-N', '--skip-newer',    dest='skip_newer', default=None, type=int, metavar='DAYS')
     # parser.add_argument ('-L', '--skip-symlinks', dest='skip_', default=None, type=int)
     parser.add_argument ('-E', '--empty',         dest='empty',     default='skip', choices=('skip', 'link', 'render'))
+
+    parser.add_argument ('-d', '--debug',         dest='debug',     default=False, action='store_true')
     opts= parser.parse_args ()
+
+    if opts.debug:
+        logging.basicConfig (level=logging.DEBUG)
 
     if opts.format=='tiles' and opts.tile_dir[-1]!='/':
         # we need the trailing /, it's actually a series of BUG s in render_tiles()
