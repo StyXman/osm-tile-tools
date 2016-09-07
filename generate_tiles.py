@@ -34,10 +34,13 @@ class RenderThread:
         self.meta_size= opts.meta_size
         self.tile_size= 256
         self.image_size= self.tile_size*self.meta_size
+        start= time.perf_counter ()
         self.m = mapnik.Map (self.image_size, self.image_size)
         # self.printLock = printLock
         # Load style XML
         mapnik.load_map (self.m, opts.mapfile, True)
+        end= time.perf_counter ()
+        debug ('Map loading took %.6fs', end-start)
         # Obtain <Map> projection
         self.prj= mapnik.Projection (self.m.srs)
         # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
