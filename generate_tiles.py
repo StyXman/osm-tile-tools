@@ -157,32 +157,34 @@ def render_tiles(opts):
         raise
 
     # Launch rendering threads
-    if opts.fork:
+    if opts.parallel=='fork':
         debug ('forks, using mp.Queue()')
         queue= multiprocessing.Queue (32)
     else:
-        debug ('threads, using queue.Queue()')
+        debug ('threads or single, using queue.Queue()')
         queue= Queue (32)
 
     renderers= {}
 
     for i in range (opts.threads):
         renderer= RenderThread (opts, backend, queue)
-        if opts.fork:
-            debug ('mp.Process()')
-            render_thread= multiprocessing.Process (target=renderer.loop)
-        else:
-            debug ('th.Thread()')
-            render_thread= threading.Thread (target=renderer.loop)
 
-        render_thread.start ()
+        if opts.parallel!='single':
+            if opts.parallel=='fork':
+                debug ('mp.Process()')
+                render_thread= multiprocessing.Process (target=renderer.loop)
+            elif opts.parallel=='threads':
+                debug ('th.Thread()')
+                render_thread= threading.Thread (target=renderer.loop)
 
-        if opts.fork:
-            debug ("Started render thread %s" % render_thread.name)
-        else:
-            debug ("Started render thread %s" % render_thread.getName())
+            render_thread.start ()
 
-        renderers[i]= render_thread
+            if opts.fork:
+                debug ("Started render thread %s" % render_thread.name)
+            else:
+                debug ("Started render thread %s" % render_thread.getName())
+
+            renderers[i]= render_thread
 
     if not os.path.isdir (opts.tile_dir):
         debug ("creating dir %s", opts.tile_dir)
@@ -196,6 +198,10 @@ def render_tiles(opts):
         for i in opts.tiles:
             z, x, y= map (int, i.split (','))
             queue.put ((x, y, z))
+
+    if opts.parallel=='single':
+        queue.put (None)
+        renderer.loop ()
 
     finish (opts, queue, renderers)
 
@@ -233,23 +239,24 @@ def render_bbox (opts, queue, renderers):
 
 
 def finish (opts, queue, renderers):
-    debug ('finishing threads/procs')
-    # Signal render threads to exit by sending empty request to queue
-    for i in range (opts.threads):
-        queue.put (None)
+    if opts.parallel!='single':
+        debug ('finishing threads/procs')
+        # Signal render threads to exit by sending empty request to queue
+        for i in range (opts.threads):
+            queue.put (None)
 
-    # wait for pending rendering jobs to complete
-    if not opts.fork:
-        queue.join ()
-    else:
-        queue.close ()
-        queue.join_thread ()
+        # wait for pending rendering jobs to complete
+        if not opts.parallel=='fork':
+            queue.join ()
+        else:
+            queue.close ()
+            queue.join_thread ()
 
-    for i in range (opts.threads):
-        renderers[i].join ()
+        for i in range (opts.threads):
+            renderers[i].join ()
 
 
-if __name__ == "__main__":
+def parse_args ():
     parser= ArgumentParser ()
 
     # g1= parser.add_mutually_exclusive_group ()
@@ -266,8 +273,9 @@ if __name__ == "__main__":
     parser.add_argument ('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
 
     parser.add_argument ('-m', '--metatile-size', dest='meta_size', default=1, type=int)
+
     parser.add_argument ('-t', '--threads',       dest='threads',   default=NUM_CPUS, type=int)
-    parser.add_argument ('-F', '--fork',          dest='fork',      default=False, action='store_true')
+    parser.add_argument ('-p', '--parallel-method', dest='parallel', default='fork', choices=('threads', 'fork', 'single'))
 
     parser.add_argument ('-X', '--skip-existing', dest='skip_existing', default=False, action='store_true')
     parser.add_argument ('-N', '--skip-newer',    dest='skip_newer', default=None, type=int, metavar='DAYS')
@@ -297,4 +305,12 @@ if __name__ == "__main__":
         a= map_utils.Atlas ([ opts.bbox_name ])
         opts.bbox= a.maps[opts.bbox_name].bbox
 
+    if opts.parallel=='single':
+        opts.threads= 1
+
+    return opts
+
+
+if __name__ == "__main__":
+    opts= parse_args()
     render_tiles(opts)
