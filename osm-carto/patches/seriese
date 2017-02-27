@@ -7,10 +7,10 @@ disable_state_names.diff
 disable_construction.diff
 disable_disused_railway.diff
 disable_admin_text.diff
+fix-fonts.diff
 reapply_water_polygons.diff
 deeper_closer_center.diff
 terrain.diff
-later_oceans.diff
 contours.diff
 pistes.diff
 roads_colors.diff
@@ -29,7 +29,5 @@ more_noticeable_railways.diff
 water_casing.diff
 ridges_valleys.diff
 low_zoom_rivers_lakes.diff
+later_oceans.diff
 ocean_sea_names.diff
-small-icons.diff
-dark_paths.diff
-darker_transport.diff

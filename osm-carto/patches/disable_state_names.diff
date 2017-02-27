@@ -1,14 +1,14 @@
 --- a/placenames.mss
 +++ b/placenames.mss
-@@ -16,6 +16,7 @@
+@@ -42,6 +42,7 @@
    }
  }
  
 +/*
  .state {
-   [admin_level = '4'] {
-     [zoom >= 4][zoom < 5][way_pixels > 750],
-@@ -38,6 +39,7 @@
+   [zoom >= 5][way_pixels > 3000][way_pixels < 196000] {
+     text-name: "[name]";
+@@ -126,6 +127,7 @@
      }
    }
  }

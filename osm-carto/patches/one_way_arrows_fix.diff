@@ -1,5 +1,5 @@
---- a/project.yaml
-+++ b/project.yaml
+--- a/project.mml
++++ b/project.mml
 @@ -699,7 +699,7 @@
      advanced: {}
    - id: "tunnels"

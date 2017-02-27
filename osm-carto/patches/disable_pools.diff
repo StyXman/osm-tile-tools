@@ -1,6 +1,6 @@
 --- a/landcover.mss
 +++ b/landcover.mss
-@@ -74,6 +74,7 @@
+@@ -76,6 +76,7 @@
      }
    }
  
@@ -8,7 +8,7 @@
    [feature = 'leisure_swimming_pool'][zoom >= 14] {
      polygon-fill: @water-color;
      line-color: saturate(darken(@water-color, 40%), 30%);
-@@ -81,6 +82,7 @@
+@@ -83,6 +84,7 @@
      [way_pixels >= 4]  { polygon-gamma: 0.75; }
      [way_pixels >= 64] { polygon-gamma: 0.3;  }
    }

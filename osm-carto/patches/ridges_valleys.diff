@@ -1,10 +1,11 @@
 --- a/landcover.mss
 +++ b/landcover.mss
-@@ -53,6 +53,18 @@
+@@ -55,6 +55,19 @@
  @military: #f55;
  @beach: #fff1ba;
  
-+// --- Reliefs
++// --- Reliefs --
++
 +@ridge-text:          #7A2F18;
 +@valley-text:         #305040;
 +@mountain_range-text: #C03A01;
@@ -16,10 +17,10 @@
 +@dale-text:           #008000;
 +@gorge-text:          #800040;
 +
- // --- sports ---
+ // --- Sports ---
  
- @pitch: #80d7b5;
-@@ -684,7 +696,33 @@
+ @pitch: #aae0cb; // also track
+@@ -691,7 +704,33 @@
    }
  }
  
@@ -54,7 +55,7 @@
    [natural = 'cliff'][zoom >= 13] {
      // line-pattern-file: url('symbols/cliff.png');
      line-pattern-file: url('symbols/cliff_mdione.png');
-@@ -750,18 +788,214 @@
+@@ -770,18 +809,214 @@
    }
  }
  
@@ -64,8 +65,8 @@
 +  [feature = 'natural_cliff'][zoom >= 11],
    [feature = 'man_made_embankment'][zoom >= 15] {
      text-name: "[name]";
-     text-halo-radius: 1;
-     text-halo-fill: rgba(255,255,255,0.6);
+     text-halo-radius: @standard-halo-radius;
+     text-halo-fill: @standard-halo-fill;
 -    text-fill: #999;
 +    text-fill: @cliff-text;
      text-size: 10;
@@ -272,20 +273,19 @@
 +    [feature = 'natural_valley'] { text-fill: @valley-text; }
    }
  }
---- a/project.yaml
-+++ b/project.yaml
-@@ -880,8 +880,8 @@
+--- a/project.mml
++++ b/project.mml
+@@ -847,20 +847,20 @@
+         ) AS line_barriers
      properties:
        minzoom: 14
-     advanced: {}
--  - id: "cliffs"
--    name: "cliffs"
-+  - id: "reliefsymbols"
-+    name: "reliefsymbols"
-     class: ""
-     geometry: "linestring"
+-  - id: cliffs
+-    name: cliffs
++  - id: reliefsymbols
++    name: reliefsymbols
+     geometry: linestring
      <<: *extents
-@@ -889,12 +889,12 @@
+     Datasource:
        <<: *osm2pgsql
        table: |-
          (SELECT
@@ -299,11 +299,11 @@
      properties:
 -      minzoom: 13
 +      minzoom: 10
-     advanced: {}
-   - id: "area-barriers"
-     name: "area-barriers"
-@@ -1770,7 +1770,7 @@
-                                             'video_games', 'watches', 'wholesale', 'yes') THEN 'other' ELSE NULL END,
+   - id: area-barriers
+     name: area-barriers
+     class: barriers
+@@ -1747,7 +1747,7 @@
+                               WHEN shop IN ('no', 'vacant', 'closed', 'disused', 'empty') OR shop IS NULL THEN NULL ELSE 'other' END,
                'leisure_' || CASE WHEN leisure IN ('water_park', 'playground', 'miniature_golf', 'golf_course', 'picnic_table') THEN leisure ELSE NULL END,
                'man_made_' || CASE WHEN man_made IN ('mast', 'water_tower', 'lighthouse', 'windmill', 'obelisk') THEN man_made ELSE NULL END,
 -              'natural_' || CASE WHEN "natural" IN ('spring') THEN "natural" ELSE NULL END,
@@ -311,7 +311,7 @@
                'historic_' || CASE WHEN historic IN ('memorial', 'monument', 'archaeological_site', 'castle', 'fort') THEN historic ELSE NULL END,
                'highway_'|| CASE WHEN highway IN ('bus_stop', 'elevator', 'traffic_signals') THEN highway ELSE NULL END,
                'power_' || CASE WHEN power IN ('generator') THEN power ELSE NULL END,
-@@ -1781,6 +1781,7 @@
+@@ -1758,6 +1758,7 @@
              denomination,
              "generator:source",
              power_source,
@@ -319,7 +319,7 @@
              castle_type,
              way_area/NULLIF(!pixel_width!::real*!pixel_height!::real,0) AS way_pixels
            FROM planet_osm_polygon
-@@ -1799,7 +1800,7 @@
+@@ -1776,7 +1777,7 @@
              OR shop IS NOT NULL -- skip checking a huge list and use a null check
              OR leisure IN ('water_park', 'playground', 'miniature_golf', 'golf_course', 'picnic_table')
              OR man_made IN ('mast', 'water_tower', 'lighthouse', 'windmill', 'obelisk')
@@ -328,7 +328,7 @@
              OR historic IN ('memorial', 'monument', 'archaeological_site', 'castle', 'fort')
              OR highway IN ('bus_stop', 'elevator', 'traffic_signals')
              OR (power = 'generator' AND ("generator:source" = 'wind' OR power_source = 'wind'))
-@@ -2206,12 +2207,13 @@
+@@ -2235,12 +2236,13 @@
              name,
              operator,
              ref,
@@ -342,8 +342,8 @@
 +              OR "natural" IN ('cliff', 'ridge', 'valley', 'glacier', 'arete', 'dale', 'gorge', 'couloir', 'mountain_range', 'massif'))
              AND name IS NOT NULL
          ) AS text_line
-     advanced: {}
-@@ -2293,9 +2295,11 @@
+     properties:
+@@ -2308,9 +2310,11 @@
                                                        'military') THEN landuse ELSE NULL END,
                    'man_made_' || CASE WHEN man_made IN ('lighthouse', 'windmill', 'mast', 'water_tower', 'obelisk') THEN man_made ELSE NULL END,
                    'natural_' || CASE WHEN "natural" IN ('wood', 'peak', 'volcano', 'saddle', 'cave_entrance', 'water', 'mud', 'wetland', 'marsh', 'bay', 'spring', 

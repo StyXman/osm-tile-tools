@@ -1,60 +1,56 @@
---- a/project.yaml
-+++ b/project.yaml
-@@ -52,28 +52,6 @@
-   - "admin.mss"
-   - "addressing.mss"
+--- a/project.mml
++++ b/project.mml
+@@ -53,26 +53,6 @@
+   - admin.mss
+   - addressing.mss
  Layer:
--  - id: "ocean-lz"
--    name: "ocean-lz"
--    class: "ocean"
--    geometry: "polygon"
+-  - id: ocean-lz
+-    name: ocean-lz
+-    class: ocean
+-    geometry: polygon
 -    <<: *extents
 -    Datasource:
--      file: "data/simplified-water-polygons-complete-3857/simplified_water_polygons.shp"
--      type: "shape"
--    advanced: {}
+-      file: data/simplified-water-polygons-complete-3857/simplified_water_polygons.shp
+-      type: shape
 -    properties:
 -      maxzoom: 9
--  - id: "ocean"
--    name: "ocean"
--    class: "ocean"
--    geometry: "polygon"
+-  - id: ocean
+-    name: ocean
+-    class: ocean
+-    geometry: polygon
 -    <<: *extents
 -    Datasource:
--      file: "data/water-polygons-split-3857/water_polygons.shp"
--      type: "shape"
+-      file: data/water-polygons-split-3857/water_polygons.shp
+-      type: shape
 -    properties:
 -      minzoom: 10
--    advanced: {}
    - id: "terrain-small"
      name: "terrain-small"
      class: "terrain"
-@@ -420,6 +398,28 @@
+@@ -344,6 +324,26 @@
+     properties:
        minzoom: 8
        maxzoom: 11
-     advanced: {}
-+  - id: "ocean-lz"
-+    name: "ocean-lz"
-+    class: "ocean"
-+    geometry: "polygon"
++  - id: ocean-lz
++    name: ocean-lz
++    class: ocean
++    geometry: polygon
 +    <<: *extents
 +    Datasource:
-+      file: "data/simplified-water-polygons-complete-3857/simplified_water_polygons.shp"
-+      type: "shape"
-+    advanced: {}
++      file: data/simplified-water-polygons-complete-3857/simplified_water_polygons.shp
++      type: shape
 +    properties:
 +      maxzoom: 9
-+  - id: "ocean"
-+    name: "ocean"
-+    class: "ocean"
-+    geometry: "polygon"
++  - id: ocean
++    name: ocean
++    class: ocean
++    geometry: polygon
 +    <<: *extents
 +    Datasource:
-+      file: "data/water-polygons-split-3857/water_polygons.shp"
-+      type: "shape"
++      file: data/water-polygons-split-3857/water_polygons.shp
++      type: shape
 +    properties:
 +      minzoom: 10
-+    advanced: {}
-   - id: "icesheet-poly"
-     name: "icesheet-poly"
-     class: ""
+   - id: icesheet-poly
+     name: icesheet-poly
+     geometry: polygon

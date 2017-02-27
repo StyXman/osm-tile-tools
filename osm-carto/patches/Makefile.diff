@@ -3,5 +3,5 @@
 @@ -0,0 +1,4 @@
 +all: project.mml
 +
-+project.mml: project.yaml
++project.mml: project.mml
 +	python scripts/yaml2mml.py < $< > $@

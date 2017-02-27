@@ -2,6 +2,13 @@
 @glacier: #ddecec;
 @glacier-line: #9cf;
 
+@water-font-size: 10;
+@water-font-size-big: 12;
+@water-font-size-bigger: 15;
+@water-wrap-width-size: 25;
+@water-wrap-width-size-big: 35;
+@water-wrap-width-size-bigger: 45;
+
 #water-areas {
   [natural = 'glacier']::natural {
     [zoom >= 6] {
@@ -187,7 +194,7 @@
 }
 
 #water-lines-text {
-  [lock != 'yes'] {
+  [lock != 'yes'][int_tunnel != 'yes'] {
     [waterway = 'river'][zoom >= 13] {
       text-name: "[name]";
       text-face-name: @oblique-fonts;
@@ -195,8 +202,8 @@
       text-fill: @water-text;
       text-spacing: 400;
       text-size: 10;
-      text-halo-radius: 1;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-radius: @standard-halo-radius;
+      text-halo-fill: @standard-halo-fill;
       [zoom >= 14] { text-size: 12; }
       [int_tunnel = 'yes'] { text-min-distance: 200; }
     }
@@ -204,8 +211,8 @@
     [waterway = 'canal'][zoom >= 13][zoom < 14] {
       text-name: "[name]";
       text-face-name: @oblique-fonts;
-      text-halo-radius: 1;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-radius: @standard-halo-radius;
+      text-halo-fill: @standard-halo-fill;
       text-size: 10;
       text-placement: line;
       text-fill: @water-text;
@@ -216,8 +223,8 @@
       text-size: 10;
       text-face-name: @oblique-fonts;
       text-fill: @water-text;
-      text-halo-radius: 1;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-radius: @standard-halo-radius;
+      text-halo-fill: @standard-halo-fill;
       text-spacing: 600;
       text-placement: line;
       text-vertical-alignment: middle;
@@ -233,8 +240,8 @@
         text-fill: @water-text;
         text-spacing: 600;
         text-placement: line;
-        text-halo-radius: 1;
-        text-halo-fill: rgba(255,255,255,0.6);
+        text-halo-radius: @standard-halo-radius;
+        text-halo-fill: @standard-halo-fill;
       }
     }
 
@@ -244,8 +251,8 @@
       text-fill: @water-text;
       text-placement: line;
       text-face-name: @oblique-fonts;
-      text-halo-radius: 1;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-radius: @standard-halo-radius;
+      text-halo-fill: @standard-halo-fill;
     }
 
     [waterway = 'derelict_canal'][zoom >= 13] {
@@ -255,8 +262,8 @@
       text-face-name: @oblique-fonts;
       text-placement: line;
       text-spacing: 600;
-      text-halo-radius: 1;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-radius: @standard-halo-radius;
+      text-halo-fill: @standard-halo-fill;
       [zoom >= 14] {
         text-size: 12;
       }
@@ -271,12 +278,20 @@
     [zoom >= 10][way_pixels > 3000],
     [zoom >= 17] {
       text-name: "[name]";
-      text-size: 12;
+      text-size: @water-font-size;
+      text-wrap-width: @water-wrap-width-size;
+      [way_pixels > 12000] {
+        text-size: @water-font-size-big;
+        text-wrap-width: @water-wrap-width-size-big;
+      }
+      [way_pixels > 48000] {
+        text-size: @water-font-size-bigger;
+        text-wrap-width: @water-wrap-width-size-bigger;
+      }
       text-fill: @water-text;
       text-face-name: @oblique-fonts;
-      text-halo-radius: 1;
-      text-halo-fill: rgba(255,255,255,0.6);
-      text-wrap-width: @standard-wrap-width;
+      text-halo-radius: @standard-halo-radius;
+      text-halo-fill: @standard-halo-fill;
       text-placement: interior;
     }
   }

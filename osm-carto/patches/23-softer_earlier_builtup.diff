@@ -1,17 +1,17 @@
---- a/project.yaml
-+++ b/project.yaml
-@@ -121,7 +121,7 @@
-       file: "data/world_boundaries/builtup_area.shp"
-       type: "shape"
+--- a/project.mml
++++ b/project.mml
+@@ -97,7 +97,7 @@
+       file: data/world_boundaries/builtup_area.shp
+       type: shape
      properties:
 -      minzoom: 8
 +      minzoom: 6
        maxzoom: 9
-     advanced: {}
-   - id: "necountries"
+   - id: necountries
+     name: necountries
 --- a/shapefiles.mss
 +++ b/shapefiles.mss
-@@ -43,7 +43,8 @@
+@@ -35,7 +35,8 @@
  }
  
  #builtup {

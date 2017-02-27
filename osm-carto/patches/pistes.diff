@@ -1,9 +1,9 @@
---- a/project.yaml
-+++ b/project.yaml
-@@ -1268,6 +1268,25 @@
+--- a/project.mml
++++ b/project.mml
+@@ -1213,6 +1213,25 @@
+         ) AS roads_fill
      properties:
        minzoom: 10
-     advanced: {}
 +  - id: "pistes"
 +    name: "pistes"
 +    class: ""
@@ -23,12 +23,12 @@
 +    advanced: {}
 +    properties:
 +      minzoom: 14
-   - id: "turning-circle-fill"
-     name: "turning-circle-fill"
-     class: ""
+   - id: turning-circle-fill
+     name: turning-circle-fill
+     geometry: point
 --- a/style.mss
 +++ b/style.mss
-@@ -151,3 +151,34 @@
+@@ -411,3 +411,34 @@
      text-spacing: 400;
    }
  }

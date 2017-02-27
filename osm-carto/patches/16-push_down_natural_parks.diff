@@ -1,13 +1,12 @@
---- a/project.yaml
-+++ b/project.yaml
-@@ -567,6 +567,27 @@
+--- a/project.mml
++++ b/project.mml
+@@ -555,6 +555,25 @@
+         ) AS marinas_area
      properties:
        minzoom: 14
-     advanced: {}
-+  - id: "nature-reserve-boundaries"
-+    name: "nature-reserve-boundaries"
-+    class: ""
-+    geometry: "polygon"
++  - id: nature-reserve-boundaries
++    name: nature-reserve-boundaries
++    geometry: polygon
 +    <<: *extents
 +    Datasource:
 +      <<: *osm2pgsql
@@ -24,18 +23,16 @@
 +        ) AS national_park_boundaries
 +    properties:
 +      minzoom: 7
-+    advanced: {}
-   - id: "piers-poly"
-     name: "piers-poly"
-     class: ""
-@@ -1558,27 +1579,6 @@
+   - id: piers-poly
+     name: piers-poly
+     geometry: polygon
+@@ -1527,25 +1546,6 @@
+         ) AS admin_high_zoom
      properties:
        minzoom: 13
-     advanced: {}
--  - id: "nature-reserve-boundaries"
--    name: "nature-reserve-boundaries"
--    class: ""
--    geometry: "polygon"
+-  - id: nature-reserve-boundaries
+-    name: nature-reserve-boundaries
+-    geometry: polygon
 -    <<: *extents
 -    Datasource:
 -      <<: *osm2pgsql
@@ -52,7 +49,6 @@
 -        ) AS national_park_boundaries
 -    properties:
 -      minzoom: 7
--    advanced: {}
-   - id: "tourism-boundary"
-     name: "tourism-boundary"
-     class: ""
+   - id: tourism-boundary
+     name: tourism-boundary
+     geometry: polygon

@@ -1,6 +1,6 @@
---- a/project.yaml
-+++ b/project.yaml
-@@ -399,10 +399,10 @@
+--- a/project.mml
++++ b/project.mml
+@@ -378,10 +378,10 @@
              way, waterway, intermittent,
              CASE WHEN tunnel IN ('yes', 'culvert') THEN 'yes' ELSE 'no' END AS int_tunnel
            FROM planet_osm_line
@@ -10,14 +10,14 @@
      properties:
 -      minzoom: 13
 +      minzoom: 6
-     advanced: {}
-   - id: "water-lines-low-zoom"
-     name: "water-lines-low-zoom"
+   - id: water-lines-low-zoom
+     name: water-lines-low-zoom
+     geometry: linestring
 --- a/water.mss
 +++ b/water.mss
-@@ -2,6 +2,28 @@
- @glacier: #ddecec;
- @glacier-line: #9cf;
+@@ -9,6 +9,28 @@
+ @water-wrap-width-size-big: 35;
+ @water-wrap-width-size-bigger: 45;
  
 +// local
 +#water-areas::border {
@@ -44,7 +44,7 @@
  #water-areas {
    [natural = 'glacier']::natural {
      [zoom >= 6] {
-@@ -24,6 +46,11 @@
+@@ -31,6 +53,11 @@
   * attachments can be used to reduce combinational rules
   */
  
@@ -56,7 +56,7 @@
  #water-areas[waterway = 'dock'][zoom >= 9]::waterway,
  #water-areas[waterway = 'canal'][zoom >= 9]::waterway,
  #water-areas[landuse = 'basin'][zoom >= 7]::landuse,
-@@ -49,7 +76,7 @@
+@@ -56,7 +83,7 @@
      [int_tunnel = 'no'] {
        [zoom >= 13] {
          line-width: 2.5;
@@ -65,7 +65,7 @@
          [waterway = 'stream'][zoom >= 15] {
            line-width: 3.5;
          }
-@@ -62,6 +89,35 @@
+@@ -69,6 +96,35 @@
        }
      }
    }
@@ -101,7 +101,7 @@
  }
  
  #water-lines-low-zoom {
-@@ -72,9 +128,13 @@
+@@ -79,9 +135,13 @@
        line-join: round;
        line-clip: false;
      }

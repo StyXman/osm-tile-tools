@@ -1,6 +1,6 @@
 --- a/admin.mss
 +++ b/admin.mss
-@@ -116,6 +116,7 @@
+@@ -165,6 +165,7 @@
    comp-op: darken;
  }
  
@@ -8,7 +8,7 @@
  #admin-text[zoom >= 16] {
    text-name: "[name]";
    text-face-name: @book-fonts;
-@@ -127,6 +128,7 @@
+@@ -176,6 +177,7 @@
    text-vertical-alignment: middle;
    text-dy: -10;
  }

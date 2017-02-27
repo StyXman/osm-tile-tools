@@ -13,7 +13,7 @@
        text-face-name: @book-fonts;
        [tunnel = 'no'] {
 +        /*
-         text-halo-radius: 1;
+         text-halo-radius: @standard-halo-radius;
          [highway = 'motorway'] { text-halo-fill: @motorway-fill; }
          [highway = 'trunk'] { text-halo-fill: @trunk-fill; }
          [highway = 'primary'] { text-halo-fill: @primary-fill; }
@@ -44,9 +44,8 @@
        text-clip: false;
        text-placement: line;
        text-face-name: @book-fonts;
--      text-halo-radius: 1;
+       text-halo-radius: @standard-halo-radius;
 -      text-halo-fill: @secondary-fill;
-+      text-halo-radius: 1.5;
 +      text-halo-fill: white;
      }
 +    /*
@@ -71,9 +70,8 @@
        text-clip: false;
        text-placement: line;
        text-face-name: @book-fonts;
--      text-halo-radius: 1;
+       text-halo-radius: @standard-halo-radius;
 -      text-halo-fill: @tertiary-fill;
-+      text-halo-radius: 1.5;
 +      text-halo-fill: white;
      }
      [zoom >= 17] {
@@ -88,7 +86,7 @@
        text-spacing: 300;
        text-clip: false;
        text-placement: line;
-       text-halo-radius: 1;
+       text-halo-radius: @standard-halo-radius;
 -      text-halo-fill: @residential-fill;
 +      text-halo-fill: white;
        text-face-name: @book-fonts;

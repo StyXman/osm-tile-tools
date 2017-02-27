@@ -21,7 +21,6 @@
 @standard-wrap-width: 30;
 @standard-text-size: 10;
 @standard-font: @book-fonts;
-@standard-halo-radius: 1;
 
 /* Note that .points is also used in water-features.mss */
 .points {
@@ -30,36 +29,40 @@
     point-placement: interior;
   }
 
+  [feature = 'tourism_wilderness_hut'][zoom >= 13],
   [feature = 'amenity_shelter'][zoom >= 16] {
-    marker-file: url('symbols/shelter-14.svg');
+    marker-file: url('symbols/shelter.svg');
+    [feature = 'tourism_wilderness_hut'] {
+      marker-file: url('symbols/wilderness_hut.svg');
+    }
     marker-fill: @transportation-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_atm'][zoom >= 17] {
-    marker-file: url('symbols/atm.16.svg');
+    marker-file: url('symbols/atm.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_bank'][zoom >= 17] {
-    marker-file: url('symbols/bank.16.svg');
+    marker-file: url('symbols/bank.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_bar'][zoom >= 17] {
-    marker-file: url('symbols/bar.16.svg');
+    marker-file: url('symbols/bar.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_bicycle_rental'][zoom >= 17] {
-    marker-file: url('symbols/rental_bicycle.16.svg');
+    marker-file: url('symbols/rental_bicycle.svg');
     marker-fill: @transportation-icon;
     marker-placement: interior;
     marker-clip: false;
@@ -82,7 +85,7 @@
   [feature = 'highway_elevator'][zoom >= 18] {
     [access = null],
     [access = 'yes'] {
-      marker-file: url('symbols/elevator-12.svg');
+      marker-file: url('symbols/elevator.12.svg');
       marker-fill: @transportation-icon;
       marker-placement: interior;
     }
@@ -94,63 +97,63 @@
   }
 
   [feature = 'amenity_taxi'][zoom >= 17] {
-    marker-file: url('symbols/taxi.16.svg');
+    marker-file: url('symbols/taxi.svg');
     marker-fill: @transportation-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'highway_traffic_signals'][zoom >= 17] {
-    marker-file: url('symbols/traffic_light.svg');
+    marker-file: url('symbols/traffic_light.16.svg');
     marker-fill: #0a0a0a;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_cafe'][zoom >= 17] {
-    marker-file: url('symbols/cafe.16.svg');
+    marker-file: url('symbols/cafe.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'tourism_artwork'][zoom >= 17] {
-    marker-file: url('symbols/artwork-14.svg');
+    marker-file: url('symbols/artwork.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'tourism_camp_site'][zoom >= 16] {
-    marker-file: url('symbols/camping.16.svg');
+    marker-file: url('symbols/camping.svg');
     marker-fill: @transportation-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'highway_ford'][zoom >= 16] {
-    marker-file: url('symbols/ford.16.svg');
+    marker-file: url('symbols/ford.svg');
     marker-fill: @transportation-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'tourism_caravan_site'][zoom >= 16] {
-    marker-file: url('symbols/caravan_park.16.svg');
+    marker-file: url('symbols/caravan_park.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @transportation-icon;
   }
 
   [feature = 'amenity_car_rental'][zoom >= 17] {
-    marker-file: url('symbols/rental_car.16.svg');
+    marker-file: url('symbols/rental_car.svg');
     marker-fill: @transportation-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_car_wash'][zoom >= 17] {
-    marker-file: url('symbols/car_wash-14.svg');
+    marker-file: url('symbols/car_wash.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
@@ -162,21 +165,21 @@
   }
 
   [feature = 'amenity_cinema'][zoom >= 16] {
-    marker-file: url('symbols/cinema.16.svg');
+    marker-file: url('symbols/cinema.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_nightclub'][zoom >= 17] {
-    marker-file: url('symbols/nightclub.14.svg');
+    marker-file: url('symbols/nightclub.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_fire_station'][zoom >= 16] {
-    marker-file: url('symbols/firestation.16.svg');
+    marker-file: url('symbols/firestation.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
@@ -201,7 +204,7 @@
         nozzle/marker-height: 3;
       }
       [zoom >= 18] {
-        nozzle/marker-file: url('symbols/fountain-14.svg');
+        nozzle/marker-file: url('symbols/fountain.svg');
         nozzle/marker-fill: @marina-text;
         nozzle/marker-placement: interior;
         nozzle/marker-clip: false;
@@ -210,14 +213,14 @@
   }
 
   [feature = 'amenity_charging_station'][zoom >= 17] {
-    marker-file: url('symbols/charging_station.16.svg');
+    marker-file: url('symbols/charging_station.svg');
     marker-fill: @transportation-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_fuel'][zoom >= 17] {
-    marker-file: url('symbols/fuel.16.svg');
+    marker-file: url('symbols/fuel.svg');
     marker-fill: @transportation-icon;
     marker-placement: interior;
     marker-clip: false;
@@ -229,35 +232,35 @@
   }
 
   [feature = 'amenity_hospital'][zoom >= 15] {
-    marker-file: url('symbols/hospital.16.svg');
+    marker-file: url('symbols/hospital.svg');
     marker-fill: @health-color;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'tourism_hostel'][zoom >= 17] {
-    marker-file: url('symbols/hostel.16.svg');
+    marker-file: url('symbols/hostel.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @transportation-icon;
   }
 
   [feature = 'tourism_hotel'][zoom >= 17] {
-    marker-file: url('symbols/hotel.16.svg');
+    marker-file: url('symbols/hotel.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @transportation-icon;
   }
 
   [feature = 'tourism_motel'][zoom >= 17] {
-    marker-file: url('symbols/motel.16.svg');
+    marker-file: url('symbols/motel.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @transportation-icon;
   }
 
   [feature = 'amenity_ice_cream'][zoom >= 17] {
-    marker-file: url('symbols/ice-cream-14.svg');
+    marker-file: url('symbols/shop/ice_cream.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
@@ -271,56 +274,56 @@
   }
 
   [feature = 'amenity_embassy'][zoom >= 17] {
-    marker-file: url('symbols/embassy.16.svg');
+    marker-file: url('symbols/embassy.svg');
     marker-fill: @transportation-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_library'][zoom >= 16] {
-    marker-file: url('symbols/library.14.svg');
+    marker-file: url('symbols/library.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_courthouse'][zoom >= 16] {
-    marker-file: url('symbols/courthouse-16.svg');
+    marker-file: url('symbols/courthouse.svg');
     marker-placement: interior;
     marker-fill: @amenity-brown;
     marker-clip: false;
   }
 
   [feature = 'amenity_community_centre'][zoom >= 17] {
-    marker-file: url('symbols/community_centre-14.svg');
+    marker-file: url('symbols/community_centre.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_social_facility'][zoom >= 17] {
-    marker-file: url('symbols/social_facility-14.svg');
+    marker-file: url('symbols/social_facility.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_townhall'][zoom >= 16] {
-    marker-file: url('symbols/town_hall.16.svg');
+    marker-file: url('symbols/town_hall.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'man_made_mast'][zoom >= 17] {
-    marker-file: url('symbols/communications.16.svg');
+    marker-file: url('symbols/communications.svg');
     marker-fill: @man-made-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'tourism_museum'][zoom >= 16] {
-    marker-file: url('symbols/museum.16.svg');
+    marker-file: url('symbols/museum.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
@@ -333,21 +336,21 @@
       marker-file: url('symbols/parking.svg');
     }
     [feature = 'amenity_bicycle_parking'] {
-      marker-file: url('symbols/bicycle_parking.16.svg');
+      marker-file: url('symbols/bicycle_parking.svg');
     }
     [feature = 'amenity_motorcycle_parking'] {
-      marker-file: url('symbols/motorcycle_parking.16.svg');
+      marker-file: url('symbols/motorcycle_parking.svg');
     }
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @transportation-icon;
-    [access != ''][access != 'public'][access != 'yes'] {
+    [access != ''][access != 'permissive'][access != 'yes'] {
       marker-opacity: 0.33;
     }
   }
 
   [feature = 'amenity_pharmacy'][zoom >= 17] {
-    marker-file: url('symbols/pharmacy.16.svg');
+    marker-file: url('symbols/pharmacy.svg');
     marker-fill: @health-color;
     marker-placement: interior;
     marker-clip: false;
@@ -355,57 +358,57 @@
 
   [feature = 'amenity_clinic'][zoom >= 16],
   [feature = 'amenity_doctors'][zoom >= 17] {
-    marker-file: url('symbols/doctors.16.svg');
+    marker-file: url('symbols/doctors.svg');
     marker-fill: @health-color;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_dentist'][zoom >= 17] {
-    marker-file: url('symbols/dentist.16.svg');
+    marker-file: url('symbols/dentist.svg');
     marker-fill: @health-color;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_veterinary'][zoom >= 17] {
-    marker-file: url('symbols/veterinary-14.svg');
+    marker-file: url('symbols/veterinary.svg');
     marker-fill: @health-color;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_place_of_worship'][zoom >= 16] {
-    marker-file: url('symbols/place_of_worship.16.svg');
+    marker-file: url('symbols/place_of_worship.svg');
     marker-fill: #000000;
     marker-placement: interior;
     marker-clip: false;
     [religion = 'christian'] {
-      marker-file: url('symbols/christian.16.svg');
+      marker-file: url('symbols/christian.svg');
       [denomination = 'jehovahs_witness']{
-        marker-file: url('symbols/place_of_worship.16.svg');
+        marker-file: url('symbols/place_of_worship.svg');
       }
     }
     [religion = 'muslim'] {
-      marker-file: url('symbols/muslim.16.svg');
+      marker-file: url('symbols/muslim.svg');
     }
     [religion = 'sikh'] {
-      marker-file: url('symbols/sikhist.16.svg');
+      marker-file: url('symbols/sikhist.svg');
     }
     [religion = 'jewish'] {
-      marker-file: url('symbols/jewish.16.svg');
+      marker-file: url('symbols/jewish.svg');
     }
     [religion = 'hindu'] {
-      marker-file: url('symbols/hinduist.16.svg');
+      marker-file: url('symbols/hinduist.svg');
     }
     [religion = 'buddhist'] {
-      marker-file: url('symbols/buddhist.16.svg');
+      marker-file: url('symbols/buddhist.svg');
     }
     [religion = 'shinto'] {
-      marker-file: url('symbols/shintoist.16.svg');
+      marker-file: url('symbols/shintoist.svg');
     }
     [religion = 'taoist'] {
-      marker-file: url('symbols/taoist.16.svg');
+      marker-file: url('symbols/taoist.svg');
     }
   }
 
@@ -418,123 +421,123 @@
   }
 
   [feature = 'amenity_police'][zoom >= 16] {
-    marker-file: url('symbols/police.16.svg');
+    marker-file: url('symbols/police.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_post_box'][zoom >= 17] {
-    marker-file: url('symbols/post_box-12.svg');
+    marker-file: url('symbols/post_box.12.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_post_office'][zoom >= 17] {
-    marker-file: url('symbols/post_office-14.svg');
+    marker-file: url('symbols/post_office.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_pub'][zoom >= 17] {
-    marker-file: url('symbols/pub.16.svg');
+    marker-file: url('symbols/pub.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_biergarten'][zoom >= 17] {
-    marker-file: url('symbols/biergarten.16.svg');
+    marker-file: url('symbols/biergarten.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_recycling'][zoom >= 17] {
-    marker-file: url('symbols/recycling.16.svg');
+    marker-file: url('symbols/recycling.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
-    [access != ''][access != 'yes'] {
+    [access != ''][access != 'permissive'][access != 'yes'] {
       marker-opacity: 0.33;
     }
   }
 
   [feature = 'amenity_restaurant'][zoom >= 17],
   [feature = 'amenity_food_court'][zoom >= 17] {
-    marker-file: url('symbols/restaurant.16.svg');
+    marker-file: url('symbols/restaurant.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_fast_food'][zoom >= 17] {
-    marker-file: url('symbols/fast_food.16.svg');
+    marker-file: url('symbols/fast_food.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_telephone'][zoom >= 17] {
-    marker-file: url('symbols/telephone.16.svg');
+    marker-file: url('symbols/telephone.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_emergency_phone'][zoom >= 17] {
-    marker-file: url('symbols/emergency_phone.16.svg');
+    marker-file: url('symbols/emergency_phone.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_theatre'][zoom >= 16] {
-    marker-file: url('symbols/theatre.16.svg');
+    marker-file: url('symbols/theatre.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_toilets'][zoom >= 17] {
-    marker-file: url('symbols/toilets.16.svg');
+    marker-file: url('symbols/toilets.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_drinking_water'][zoom >= 17] {
-    marker-file: url('symbols/drinking_water.16.svg');
+    marker-file: url('symbols/drinking_water.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'amenity_prison'][zoom >= 17] {
-    marker-file: url('symbols/prison.16.svg');
+    marker-file: url('symbols/prison.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'tourism_viewpoint'][zoom >= 16] {
-    marker-file: url('symbols/viewpoint.16.svg');
+    marker-file: url('symbols/viewpoint.svg');
     marker-placement: interior;
     marker-fill: @amenity-brown;
     marker-clip: false;
   }
 
   [feature = 'man_made_water_tower'][zoom >= 17] {
-    marker-file: url('symbols/water_tower.16.svg');
+    marker-file: url('symbols/water_tower.svg');
     marker-fill: @man-made-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'historic_memorial'][zoom >= 17] {
-    marker-file: url('symbols/tourist_memorial.16.svg');
+    marker-file: url('symbols/memorial.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
@@ -542,14 +545,14 @@
 
   [feature = 'man_made_obelisk'][zoom >= 16],
   [feature = 'historic_monument'][zoom >= 16] {
-    marker-file: url('symbols/monument.16.svg');
+    marker-file: url('symbols/monument.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'historic_archaeological_site'][zoom >= 16] {
-    marker-file: url('symbols/archaeological_site.16.svg');
+    marker-file: url('symbols/archaeological_site.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
@@ -564,55 +567,62 @@
   }
 
   [feature = 'shop_supermarket'][zoom >= 16] {
-    marker-file: url('symbols/shop_supermarket.svg');
+    marker-file: url('symbols/shop/supermarket.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
 
+  [feature = 'shop_art'][zoom >= 17] {
+    marker-file: url('symbols/shop/art.svg');
+    marker-fill: @shop-icon;
+    marker-placement: interior;
+    marker-clip: false;
+  }
+
   [feature = 'shop_bag'][zoom >= 17] {
-    marker-file: url('symbols/bag-14.svg');
+    marker-file: url('symbols/shop/bag.svg');
     marker-fill: @shop-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'shop_bakery'][zoom >= 17] {
-    marker-file: url('symbols/shop_bakery.16.svg');
+    marker-file: url('symbols/shop/bakery.svg');
     marker-fill: @shop-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'shop_beauty'][zoom >= 17] {
-    marker-file: url('symbols/beauty-14.svg');
+    marker-file: url('symbols/shop/beauty.svg');
     marker-fill: @shop-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'shop_beverages'][zoom >= 17] {
-    marker-file: url('symbols/beverages-14.svg');
+    marker-file: url('symbols/shop/beverages.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
 
   [feature = 'shop_books'][zoom >= 17] {
-    marker-file: url('symbols/library.14.svg');
+    marker-file: url('symbols/library.svg');
     marker-fill: @shop-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'shop_butcher'][zoom >= 17] {
-    marker-file: url('symbols/shop_butcher.png');
+    marker-file: url('symbols/shop/butcher.png');
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'shop_chemist'][zoom >= 17] {
-    marker-file: url('symbols/chemist-14.svg');
+    marker-file: url('symbols/shop/chemist.svg');
     marker-fill: @shop-icon;
     marker-placement: interior;
     marker-clip: false;
@@ -621,36 +631,43 @@
   [feature = 'shop_clothes'],
   [feature = 'shop_fashion'] {
     [zoom >= 17] {
-      marker-file: url('symbols/shop_clothes.16.svg');
+      marker-file: url('symbols/shop/clothes.svg');
       marker-placement: interior;
       marker-clip: false;
       marker-fill: @shop-icon;
     }
   }
 
+  [feature = 'shop_coffee'][zoom >= 17] {
+    marker-file: url('symbols/shop/coffee.svg');
+    marker-placement: interior;
+    marker-clip: false;
+    marker-fill: @shop-icon;
+  }
+
   [feature = 'shop_computer'][zoom >= 17] {
-    marker-file: url('symbols/computer-14.svg');
+    marker-file: url('symbols/shop/computer.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
 
   [feature = 'shop_convenience'][zoom >= 17] {
-    marker-file: url('symbols/shop_convenience.svg');
+    marker-file: url('symbols/shop/convenience.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
 
   [feature = 'shop_confectionery'][zoom >= 17] {
-    marker-file: url('symbols/confectionery-14.svg');
+    marker-file: url('symbols/shop/confectionery.svg');
     marker-fill: @shop-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'shop_copyshop'][zoom >= 17] {
-    marker-file: url('symbols/copyshop-14.svg');
+    marker-file: url('symbols/shop/copyshop.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
@@ -659,7 +676,16 @@
   [feature = 'shop_cosmetics'],
   [feature = 'shop_perfumery'] {
     [zoom >= 17] {
-      marker-file: url('symbols/perfumery-14.svg');
+      marker-file: url('symbols/shop/perfumery.svg');
+      marker-placement: interior;
+      marker-clip: false;
+      marker-fill: @shop-icon;
+    }
+  }
+
+  [feature = 'shop_deli'] {
+    [zoom >= 17] {
+      marker-file: url('symbols/shop/deli.svg');
       marker-placement: interior;
       marker-clip: false;
       marker-fill: @shop-icon;
@@ -667,7 +693,7 @@
   }
 
   [feature = 'shop_department_store'][zoom >= 16] {
-    marker-file: url('symbols/department_store.p.16.svg');
+    marker-file: url('symbols/shop/department_store.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
@@ -676,7 +702,7 @@
   [feature = 'shop_doityourself'],
   [feature = 'shop_hardware'] {
     [zoom >= 17] {
-      marker-file: url('symbols/shop_diy.16.svg');
+      marker-file: url('symbols/shop/diy.svg');
       marker-placement: interior;
       marker-clip: false;
       marker-fill: @shop-icon;
@@ -686,7 +712,7 @@
   [feature = 'shop_dry_cleaning'],
   [feature = 'shop_laundry'] {
     [zoom >= 17] {
-      marker-file: url('symbols/laundry-14.svg');
+      marker-file: url('symbols/shop/laundry.svg');
       marker-placement: interior;
       marker-clip: false;
       marker-fill: @shop-icon;
@@ -696,7 +722,7 @@
   [feature = 'shop_fishmonger'],
   [feature = 'shop_seafood'] {
     [zoom >= 17] {
-      marker-file: url('symbols/seafood-14.svg');
+      marker-file: url('symbols/shop/seafood.svg');
       marker-placement: interior;
       marker-clip: false;
       marker-fill: @shop-icon;
@@ -704,14 +730,14 @@
   }
 
   [feature = 'shop_florist'][zoom >= 17] {
-    marker-file: url('symbols/florist.16.svg');
+    marker-file: url('symbols/shop/florist.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
 
   [feature = 'shop_garden_centre'][zoom >= 17] {
-    marker-file: url('symbols/garden_centre-14.svg');
+    marker-file: url('symbols/shop/garden_centre.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
@@ -720,7 +746,7 @@
   [feature = 'shop_greengrocer'],
   [feature = 'shop_farm'] {
     [zoom >= 17] {
-      marker-file: url('symbols/greengrocer-14.svg');
+      marker-file: url('symbols/shop/greengrocer.svg');
       marker-placement: interior;
       marker-clip: false;
       marker-fill: @shop-icon;
@@ -728,56 +754,56 @@
   }
 
   [feature = 'shop_hairdresser'][zoom >= 17] {
-    marker-file: url('symbols/shop_hairdresser.16.svg');
+    marker-file: url('symbols/shop/hairdresser.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
 
   [feature = 'shop_hifi'][zoom >= 17] {
-    marker-file: url('symbols/hifi-14.svg');
+    marker-file: url('symbols/shop/hifi.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
 
   [feature = 'shop_ice_cream'][zoom >= 17] {
-    marker-file: url('symbols/ice-cream-14.svg');
+    marker-file: url('symbols/shop/ice_cream.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
 
   [feature = 'shop_car'][zoom >= 17] {
-    marker-file: url('symbols/shop_car.svg');
+    marker-file: url('symbols/shop/car.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
 
   [feature = 'shop_car_parts'][zoom >= 17] {
-    marker-file: url('symbols/car_parts-14.svg');
+    marker-file: url('symbols/shop/car_parts.svg');
     marker-fill: @shop-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'shop_car_repair'][zoom >= 17] {
-    marker-file: url('symbols/shopping_car_repair.16.svg');
+    marker-file: url('symbols/shop/car_repair.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @amenity-brown;
   }
 
   [feature = 'shop_bicycle'][zoom >= 17] {
-    marker-file: url('symbols/shop_bicycle.16.svg');
+    marker-file: url('symbols/shop/bicycle.svg');
     marker-fill: @shop-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'shop_pet'][zoom >= 17] {
-    marker-file: url('symbols/shop_pet.16.svg');
+    marker-file: url('symbols/shop/pet.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
@@ -787,7 +813,7 @@
   [feature = 'shop_photo_studio'],
   [feature = 'shop_photography'] {
     [zoom >= 17] {
-      marker-file: url('symbols/photo-14.svg');
+      marker-file: url('symbols/shop/photo.svg');
       marker-placement: interior;
       marker-clip: false;
       marker-fill: @shop-icon;
@@ -795,21 +821,21 @@
   }
 
   [feature = 'shop_shoes'][zoom >= 17] {
-    marker-file: url('symbols/shop_shoes.16.svg');
+    marker-file: url('symbols/shop/shoes.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
 
   [feature = 'shop_gift'][zoom >= 17] {
-    marker-file: url('symbols/shop_gift.16.svg');
+    marker-file: url('symbols/shop/gift.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
   
   [feature = 'shop_electronics'][zoom >= 17] {
-    marker-file: url('symbols/shop_electronics.16.svg');
+    marker-file: url('symbols/shop/electronics.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
@@ -818,7 +844,7 @@
   [feature = 'shop_alcohol'],
   [feature = 'shop_wine'] {
     [zoom >= 17] {
-      marker-file: url('symbols/shop_alcohol.16.svg');
+      marker-file: url('symbols/shop/alcohol.svg');
       marker-placement: interior;
       marker-clip: false;
       marker-fill: @shop-icon;
@@ -826,42 +852,42 @@
   }
   
   [feature = 'shop_optician'][zoom >= 17] {
-    marker-file: url('symbols/shop_optician.16.svg');
+    marker-file: url('symbols/shop/optician.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
   
   [feature = 'shop_outdoor'][zoom >= 17] {
-    marker-file: url('symbols/outdoor-14.svg');
+    marker-file: url('symbols/shop/outdoor.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
   
   [feature = 'shop_furniture'][zoom >= 17] {
-    marker-file: url('symbols/shop_furniture.16.svg');
+    marker-file: url('symbols/shop/furniture.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
   
   [feature = 'shop_mobile_phone'][zoom >= 17] {
-    marker-file: url('symbols/shop_mobile_phone.16.svg');
+    marker-file: url('symbols/shop/mobile_phone.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
 
   [feature = 'shop_motorcycle'][zoom >= 17] {
-    marker-file: url('symbols/motorcycle-14.svg');
+    marker-file: url('symbols/motorcycle.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
 
   [feature = 'shop_musical_instrument'][zoom >= 17] {
-    marker-file: url('symbols/musical_instrument-14.svg');
+    marker-file: url('symbols/shop/musical_instrument.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
@@ -870,7 +896,7 @@
   [feature = 'shop_kiosk'],
   [feature = 'shop_newsagent'] {
     [zoom >= 17] {
-      marker-file: url('symbols/newsagent-14.svg');
+      marker-file: url('symbols/shop/newsagent.svg');
       marker-placement: interior;
       marker-clip: false;
       marker-fill: @shop-icon;
@@ -880,7 +906,7 @@
   [feature = 'shop_jewelry'],
   [feature = 'shop_jewellery'] {
     [zoom >= 17] {
-      marker-file: url('symbols/shop_jewelry.16.svg');
+      marker-file: url('symbols/shop/jewelry.svg');
       marker-placement: interior;
       marker-clip: false;
       marker-fill: @shop-icon;
@@ -888,60 +914,74 @@
   }
 
   [feature = 'shop_toys'][zoom >= 17] {
-    marker-file: url('symbols/toys-14.svg');
+    marker-file: url('symbols/shop/toys.svg');
     marker-fill: @shop-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'shop_travel_agency'][zoom >= 17] {
-    marker-file: url('symbols/travel_agency-14.svg');
+    marker-file: url('symbols/shop/travel_agency.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
 
   [feature = 'shop_sports'][zoom >= 17] {
-    marker-file: url('symbols/sports-14.svg');
+    marker-file: url('symbols/shop/sports.svg');
     marker-fill: @shop-icon;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'shop_stationery'][zoom >= 17] {
-    marker-file: url('symbols/stationery-14.svg');
+    marker-file: url('symbols/shop/stationery.svg');
+    marker-placement: interior;
+    marker-clip: false;
+    marker-fill: @shop-icon;
+  }
+
+  [feature = 'shop_tobacco'][zoom >= 17] {
+    marker-file: url('symbols/shop/tobacco.svg');
+    marker-placement: interior;
+    marker-clip: false;
+    marker-fill: @shop-icon;
+  }
+
+  [feature = 'shop_tea'][zoom >= 17] {
+    marker-file: url('symbols/shop/tea.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
 
   [feature = 'shop_variety_store'][zoom >= 17] {
-    marker-file: url('symbols/variety_store-14.svg');
+    marker-file: url('symbols/shop/variety_store.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @shop-icon;
   }
 
   [feature = 'leisure_water_park'][zoom >= 17] {
-    marker-file: url('symbols/water_park.16.svg');
+    marker-file: url('symbols/water_park.svg');
     marker-placement: interior;
     marker-fill: @amenity-brown;
     marker-clip: false;
   }
 
   [feature = 'leisure_dog_park'][zoom >= 17] {
-    marker-file: url('symbols/dog_park.16.svg');
+    marker-file: url('symbols/shop/pet.svg');
     marker-placement: interior;
-    marker-fill: darken(@park, 60%);
+    marker-fill: @amenity-brown;
     marker-clip: false;
   }
 
   [feature = 'leisure_playground'][zoom >= 17] {
-    marker-file: url('symbols/playground.16.svg');
+    marker-file: url('symbols/playground.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
-    [access != ''][access != 'yes'] {
+    [access != ''][access != 'permissive'][access != 'yes'] {
       marker-opacity: 0.33;
     }
   }
@@ -957,14 +997,14 @@
   }
 
   [feature = 'tourism_picnic_site'][zoom >= 16] {
-    marker-file: url('symbols/picnic.16.svg');
+    marker-file: url('symbols/picnic.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
   }
 
   [feature = 'leisure_picnic_table'][zoom >= 17] {
-    marker-file: url('symbols/picnic.16.svg');
+    marker-file: url('symbols/picnic.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
@@ -976,21 +1016,21 @@
   }
 
   [feature = 'aeroway_helipad'][zoom >= 16] {
-    marker-file: url('symbols/helipad.svg');
+    marker-file: url('symbols/helipad.16.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @airtransport;
   }
 
   [feature = 'aeroway_aerodrome'][zoom >= 10][zoom < 14] {
-    marker-file: url('symbols/aerodrome.svg');
+    marker-file: url('symbols/aerodrome.12.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @airtransport;
   }
 
   [feature = 'man_made_lighthouse'][zoom >= 15] {
-    marker-file: url('symbols/lighthouse.16.svg');
+    marker-file: url('symbols/lighthouse.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @transportation-icon;
@@ -1018,7 +1058,7 @@
   }
 
   [feature = 'natural_cave_entrance'][zoom >= 15] {
-    marker-file: url('symbols/cave.14.svg');
+    marker-file: url('symbols/cave.svg');
     marker-placement: interior;
     marker-clip: false;
   }
@@ -1032,7 +1072,7 @@
   [feature = 'power_generator']['generator:source' = 'wind'],
   [feature = 'power_generator'][power_source = 'wind'] {
     [zoom >= 15] {
-      marker-file: url('symbols/power_wind-16.svg');
+      marker-file: url('symbols/power_wind.svg');
       marker-placement: interior;
       marker-fill: black;
       marker-clip: false;
@@ -1040,14 +1080,14 @@
   }
 
   [feature = 'man_made_windmill'][zoom >= 16] {
-    marker-file: url('symbols/windmill.16.svg');
+    marker-file: url('symbols/windmill.svg');
     marker-placement: interior;
     marker-fill: @amenity-brown;
     marker-clip: false;
   }
 
   [feature = 'amenity_hunting_stand'][zoom >= 16] {
-    marker-file: url('symbols/hunting-stand.16.svg');
+    marker-file: url('symbols/hunting_stand.svg');
     marker-fill: @man-made-icon;
     marker-placement: interior;
     marker-clip: false;
@@ -1070,20 +1110,21 @@
       marker-file: url('symbols/parking.svg');
     }
     [feature = 'amenity_bicycle_parking'] {
-      marker-file: url('symbols/bicycle_parking.16.svg');
+      marker-file: url('symbols/bicycle_parking.svg');
     }
     [feature = 'amenity_motorcycle_parking'] {
-      marker-file: url('symbols/motorcycle_parking.16.svg');
+      marker-file: url('symbols/motorcycle_parking.svg');
     }
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @transportation-icon;
-    [access != ''][access != 'public'][access != 'yes'] {
+    [access != ''][access != 'permissive'][access != 'yes'] {
       marker-opacity: 0.33;
     }
   }
 
-  [feature = 'railway_level_crossing'][zoom >= 14]::railway {
+  [feature = 'railway_level_crossing'][zoom >= 14]::railway,
+  [feature = 'railway_crossing'][zoom >= 15]::railway{
     point-file: url('symbols/level_crossing.svg');
     point-placement: interior;
     [zoom >= 16] {
@@ -1128,7 +1169,7 @@
   }
 
   [feature = 'amenity_bench'][zoom >= 19]::amenity {
-    marker-file: url('symbols/bench.16.svg');
+    marker-file: url('symbols/bench.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
   }
@@ -1154,7 +1195,7 @@
     [way_pixels > 48000] { text-size: 15; }
     text-face-name: @oblique-fonts;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
   }
@@ -1175,7 +1216,7 @@
       text-dy: 11;
       text-face-name: @standard-font;
       text-halo-radius: @standard-halo-radius;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-fill: @standard-halo-fill;
       text-wrap-width: @standard-wrap-width;
       text-placement: interior;
       [feature = 'amenity_bar']{
@@ -1201,7 +1242,7 @@
       text-face-name: @standard-font;
       [feature = 'tourism_museum'] { text-face-name: @standard-font; }
       text-halo-radius: @standard-halo-radius;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-fill: @standard-halo-fill;
       text-wrap-width: @standard-wrap-width;
       text-placement: interior;
       [feature = 'amenity_library'],
@@ -1224,7 +1265,7 @@
     [feature = 'leisure_slipway']        { text-dy: 13; }
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
   }
@@ -1238,10 +1279,10 @@
     text-dy: 9;
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
-    [access != ''][access != 'public'][access != 'yes'] {
+    [access != ''][access != 'permissive'][access != 'yes'] {
       text-fill: #66ccaf;
     }
     [feature = 'amenity_bicycle_parking'],
@@ -1269,7 +1310,7 @@
     [feature = 'amenity_post_office'] { text-dy: 11; }
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
   }
@@ -1281,7 +1322,7 @@
     text-dy: 12;
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
   }
@@ -1298,7 +1339,7 @@
     [feature = 'tourism_viewpoint'] { text-dy: 11; }
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
   }
@@ -1322,7 +1363,7 @@
     [feature = 'man_made_mast'] { text-dy: 10; }
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
   }
@@ -1338,7 +1379,7 @@
     text-dy: 11;
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
   }
@@ -1350,7 +1391,7 @@
     text-fill: darken(@park, 60%);
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-placement: interior;
     text-dy: 13;
     text-wrap-width: 40;
@@ -1367,7 +1408,7 @@
       text-dy: 11;
       text-face-name: @standard-font;
       text-halo-radius: @standard-halo-radius;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-fill: @standard-halo-fill;
       text-wrap-width: @standard-wrap-width;
       text-placement: interior;
     }
@@ -1390,12 +1431,13 @@
       text-fill: @marina-text;
       text-face-name: @landcover-face-name;
       text-halo-radius: @standard-halo-radius;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-fill: @standard-halo-fill;
       text-placement: interior;
     }
   }
 
-  [feature = 'leisure_playground'] {
+  [feature = 'leisure_playground'],
+  [feature = 'leisure_dog_park'] {
     [way_area >= 150000][zoom >= 14],
     [way_area >= 80000][zoom >= 15],
     [way_area >= 20000][zoom >= 16],
@@ -1406,10 +1448,10 @@
       text-fill: darken(@park, 60%);
       text-face-name: @standard-font;
       text-halo-radius: @standard-halo-radius;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-fill: @standard-halo-fill;
       text-wrap-width: @standard-wrap-width;
       text-placement: interior;
-      [access != ''][access != 'yes'] {
+      [access != ''][access != 'permissive'][access != 'yes'] {
         text-fill: darken(@park, 50%);
       }
     }
@@ -1435,7 +1477,7 @@
       }
       text-face-name: @landcover-face-name;
       text-halo-radius: @standard-halo-radius;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-fill: @standard-halo-fill;
       text-placement: interior;
       [feature = 'landuse_military'] {
         text-fill: darken(@military, 40%);
@@ -1468,7 +1510,7 @@
       text-fill: darken(@danger_area, 40%);
       text-face-name: @bold-fonts;
       text-halo-radius: @standard-halo-radius;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-fill: @standard-halo-fill;
       text-placement: interior;
     }
   }
@@ -1490,7 +1532,7 @@
       text-fill: darken(@garages, 50%);
       text-face-name: @landcover-face-name;
       text-halo-radius: @standard-halo-radius;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-fill: @standard-halo-fill;
       text-placement: interior;
     }
   }
@@ -1561,7 +1603,7 @@
       }
       text-face-name: @landcover-face-name;
       text-halo-radius: @standard-halo-radius;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-fill: @standard-halo-fill;
       text-placement: interior;
       [feature = 'natural_reef'],
       [feature = 'natural_wetland'],
@@ -1587,7 +1629,7 @@
       [feature = 'landuse_cemetery'],
       [feature = 'amenity_grave_yard'] {
         text-fill: darken(@cemetery, 50%);
-        text-halo-radius: 1.5; /* extra halo needed to overpower the cemetery polygon pattern */
+        text-halo-radius: @standard-halo-radius * 1.5; /* extra halo needed to overpower the cemetery polygon pattern */
       }
       [feature = 'landuse_residential'] {
         text-fill: darken(@residential, 50%);
@@ -1659,8 +1701,8 @@
       }
       [feature = 'leisure_dog_park'] {
         text-fill: darken(@park, 60%);
-        text-halo-radius: 1.5; /* Extra halo needed to stand out from paw pattern. */
-        text-halo-fill: rgba(255,255,255,0.6);
+        text-halo-radius: @standard-halo-radius * 1.5; /* Extra halo needed to stand out from paw pattern. */
+        text-halo-fill: @standard-halo-fill;
       }
       [feature = 'leisure_track'] {
         text-fill: darken(@track, 40%);
@@ -1678,7 +1720,7 @@
     text-fill: @water-text;
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
     [feature = 'natural_spring'] {
@@ -1697,19 +1739,20 @@
     [feature = 'amenity_atm']  { text-dy: 10; }
     text-fill: @amenity-brown;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
     text-face-name: @standard-font;
   }
 
-  [feature = 'tourism_alpine_hut'][zoom >= 15],
+  [feature = 'tourism_alpine_hut'][zoom >= 14],
   [feature = 'amenity_shelter'][zoom >= 17],
   [feature = 'tourism_hotel'][zoom >= 17],
   [feature = 'tourism_motel'][zoom >= 17],
   [feature = 'tourism_hostel'][zoom >= 17],
   [feature = 'tourism_chalet'][zoom >= 17],
   [feature = 'tourism_guest_house'][zoom >= 17],
+  [feature = 'tourism_wilderness_hut'][zoom >= 14],
   [feature = 'tourism_camp_site'][zoom >= 17] {
     text-name: "[name]";
     text-size: @standard-text-size;
@@ -1717,7 +1760,7 @@
     text-dy: 11;
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
     [feature = 'tourism_motel'] {
@@ -1735,7 +1778,7 @@
     text-dy: 10;
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
   }
@@ -1747,7 +1790,7 @@
     text-dy: 11;
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
   }
@@ -1763,7 +1806,7 @@
       text-dy: 11;
       text-face-name: @standard-font;
       text-halo-radius: @standard-halo-radius;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-fill: @standard-halo-fill;
       text-wrap-width: @standard-wrap-width;
       text-placement: interior;
       [feature = 'highway_bus_stop'] {
@@ -1789,7 +1832,7 @@
       text-fill: @marina-text;
       text-face-name: @landcover-face-name;
       text-halo-radius: @standard-halo-radius;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-fill: @standard-halo-fill;
       text-placement: interior;
     }
   }
@@ -1801,7 +1844,7 @@
     text-dy: 4;
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
     [zoom >= 18] {
@@ -1817,7 +1860,7 @@
     text-dy: 12;
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
   }
@@ -1830,7 +1873,7 @@
     text-dy: 16;
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
   }
@@ -1844,7 +1887,7 @@
     [feature = 'amenity_recycling'] { text-dy: 10; }
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
   }
@@ -1856,7 +1899,7 @@
     text-dy: 10;
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
   }
@@ -1874,23 +1917,26 @@
       text-fill: @health-color;
       text-face-name: @standard-font;
       text-halo-radius: @standard-halo-radius;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-fill: @standard-halo-fill;
       text-wrap-width: @standard-wrap-width;
       text-placement: interior;
     }
   }
 
+  [feature = 'shop_art'],
   [feature = 'shop_bag'],
   [feature = 'shop_bakery'],
   [feature = 'shop_beauty'],
   [feature = 'shop_beverages'],
   [feature = 'shop_books'],
   [feature = 'shop_clothes'],
+  [feature = 'shop_coffee'],
   [feature = 'shop_computer'],
   [feature = 'shop_fashion'],
   [feature = 'shop_convenience'],
   [feature = 'shop_confectionery'],
   [feature = 'shop_copyshop'],
+  [feature = 'shop_deli'],
   [feature = 'shop_doityourself'],
   [feature = 'shop_dry_cleaning'],
   [feature = 'shop_hardware'],
@@ -1934,10 +1980,13 @@
   [feature = 'shop_seafood'],
   [feature = 'shop_sports'],
   [feature = 'shop_stationery'],
+  [feature = 'shop_tobacco'],
+  [feature = 'shop_tea'],
   [feature = 'shop_variety_store'],
   [feature = 'shop_wine'],
   [feature = 'shop_other']{
-    [zoom >= 17] {
+    [way_pixels > 3000][zoom >= 17],
+    [zoom >= 18] {
       text-name: "[name]";
       text-size: @standard-text-size;
       text-dy: 12;
@@ -1974,7 +2023,7 @@
     text-fill: #aa66cc;
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-wrap-width: @standard-wrap-width;
     text-placement: interior;
   }
@@ -2000,7 +2049,7 @@
       text-fill: darken(@power, 40%);
       text-face-name: @landcover-face-name;
       text-halo-radius: @standard-halo-radius;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-fill: @standard-halo-fill;
       text-placement: interior;
     }
   }
@@ -2024,7 +2073,7 @@
       }
       text-face-name: @landcover-face-name;
       text-halo-radius: @standard-halo-radius;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-fill: @standard-halo-fill;
       text-placement: interior;
       [feature = 'natural_scree'],
       [feature = 'natural_shingle'],
@@ -2054,7 +2103,7 @@
       text-fill: darken(@apron, 60%);
       text-face-name: @landcover-face-name;
       text-halo-radius: @standard-halo-radius;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-fill: @standard-halo-fill;
       text-placement: interior;
     }
   }
@@ -2077,7 +2126,7 @@
       text-fill: darken(@rest_area, 40%);
       text-face-name: @landcover-face-name;
       text-halo-radius: @standard-halo-radius;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-fill: @standard-halo-fill;
       text-placement: interior;
     }
   }
@@ -2100,7 +2149,7 @@
       text-fill: mix(darken(@glacier, 40%), darken(@glacier-line, 30%), 50%);
       text-face-name: @landcover-face-name;
       text-halo-radius: @standard-halo-radius;
-      text-halo-fill: rgba(255,255,255,0.6);
+      text-halo-fill: @standard-halo-fill;
       text-placement: interior;
     }
   }
@@ -2112,7 +2161,7 @@
     text-dy: -10;
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-placement: interior;
     text-wrap-width: @standard-wrap-width;
   }
@@ -2124,7 +2173,7 @@
     text-dy: -10;
     text-face-name: @oblique-fonts;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-placement: interior;
     text-wrap-width: @standard-wrap-width;
   }
@@ -2136,7 +2185,7 @@
     text-fill: @man-made-icon;
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-placement: interior;
     text-wrap-width: @standard-wrap-width;
   }
@@ -2152,7 +2201,7 @@
     [zoom >= 20] { text-dy: 18; }
     text-face-name: @standard-font;
     text-halo-radius: @standard-halo-radius;
-    text-halo-fill: rgba(255,255,255,0.6);
+    text-halo-fill: @standard-halo-fill;
     text-placement: interior;
     text-wrap-width: @standard-wrap-width;
   }

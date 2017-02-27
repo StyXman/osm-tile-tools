@@ -1,6 +1,6 @@
---- a/project.yaml
-+++ b/project.yaml
-@@ -2278,7 +2278,7 @@
+--- a/project.mml
++++ b/project.mml
+@@ -2313,7 +2313,7 @@
                                                          'scree', 'shingle', 'bare_rock', 'sand', 'heath', 'grassland', 'scrub', 'beach', 'cliff', 'valley',
                                                          'ridge', 'arete', 'dale', 'gorge', 'couloir', 'mountain_range', 'massif', 'glacier', 'tree')
                                                          THEN "natural" ELSE NULL END,
@@ -11,10 +11,12 @@
                    'historic_' || CASE WHEN historic IN ('memorial', 'monument', 'archaeological_site', 'castle', 'fort') THEN historic ELSE NULL END,
 --- a/water.mss
 +++ b/water.mss
-@@ -325,6 +325,18 @@
+@@ -331,7 +331,19 @@
+   }
  }
  
- .text[zoom >= 10] {
+-.text[zoom >= 10] {
++.text[zoom >= 5] {
 +  [feature = 'place_ocean'],
 +  [feature = 'place_sea'] {
 +    #text-point[zoom >= 5] {

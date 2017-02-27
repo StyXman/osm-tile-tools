@@ -1,6 +1,6 @@
---- a/project.yaml
-+++ b/project.yaml
-@@ -323,6 +323,81 @@
+--- a/project.mml
++++ b/project.mml
+@@ -292,6 +292,81 @@
      advanced: {}
      properties:
        minzoom: 9
@@ -79,12 +79,21 @@
 +    advanced: {}
 +    properties:
 +      minzoom: 8
-   - id: "water-lines-casing"
-     name: "water-lines-casing"
-     class: ""
+   - id: water-lines-casing
+     name: water-lines-casing
+     geometry: linestring
+@@ -386,7 +461,7 @@
+       <<: *osm2pgsql
+       table: |-
+         (SELECT
+-            way, surface, 
++            way, surface,
+             COALESCE(CASE WHEN landuse = 'forest' THEN 'wood' ELSE NULL END, "natural") AS "natural",
+             CASE WHEN "natural" IN ('marsh', 'mud') 
+                 THEN "natural" 
 --- a/style.mss
 +++ b/style.mss
-@@ -61,3 +61,93 @@
+@@ -321,3 +321,93 @@
    [zoom >=  9] { raster-opacity: 0.8; }
    [zoom >= 10] { raster-opacity: 0.9; }
  }

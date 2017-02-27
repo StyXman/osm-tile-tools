@@ -562,6 +562,35 @@
     marker-clip: false;
   }
 
+  // local
+  [feature = 'historic_castle'][zoom >= @nice] {
+    marker-file: url('symbols/castle.24.png');
+    marker-fill: @amenity-brown;
+    marker-placement: interior;
+    marker-clip: false;
+    [castle_type = 'defensive'][zoom >= @nice] {
+      marker-file: url('symbols/castle-defensive-14.svg');
+    }
+    [castle_type = 'fortress'][zoom >= @nice] {
+      marker-file: url('symbols/castle-fortress-14.svg');
+    }
+    [castle_type = 'manor'][zoom >= @nice] {
+      marker-file: url('symbols/castle-manor-14.svg');
+    }
+    [castle_type = 'palace'][zoom >= @nice] {
+      marker-file: url('symbols/castle-palace-14.svg');
+    }
+    [castle_type = 'stately'][zoom >= @nice] {
+      marker-file: url('symbols/castle-stately-14.svg');
+    }
+  }
+
+  // local
+  [feature = 'historic_fort'][zoom >= @nice] {
+    marker-file: url('symbols/fort.24.png');
+    marker-placement: interior;
+  }
+
   [feature = 'shop_other'][zoom >= 17] {
     marker-fill: @shop-icon;
     marker-width: 6;
@@ -1376,7 +1405,9 @@
   [feature = 'historic_memorial'][zoom >= 17],
   [feature = 'man_made_obelisk'][zoom >= 16],
   [feature = 'historic_monument'][zoom >= 16],
-  [feature = 'historic_archaeological_site'][zoom >= 17] {
+  [feature = 'historic_castle'][zoom >= @nice],
+  [feature = 'historic_fort'][zoom >= @nice],
+  [feature = 'historic_archaeological_site'][zoom >= @nice] {
     text-name: "[name]";
     text-size: @standard-text-size;
     text-fill: @amenity-brown;

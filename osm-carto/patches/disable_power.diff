@@ -6,30 +6,21 @@
 +/*
  #power-line {
    [zoom >= 14] {
-     line-width: 0.8;
-@@ -44,3 +45,4 @@
+     line-width: 0.5;
+@@ -53,3 +54,4 @@
      marker-width: 3;
    }
  }
 +*/
---- a/project.yaml
-+++ b/project.yaml
-@@ -42,7 +42,6 @@
-   - "water.mss"
-   - "water-features.mss"
-   - "roads.mss"
--  - "power.mss"
-   - "citywalls.mss"
-   - "placenames.mss"
-   - "buildings.mss"
-@@ -1374,38 +1373,6 @@
+--- a/project.mml
++++ b/project.mml
+@@ -1329,34 +1329,6 @@
+         ) AS admin_high_zoom
      properties:
        minzoom: 13
-     advanced: {}
--  - id: "power-minorline"
--    name: "power-minorline"
--    class: ""
--    geometry: "linestring"
+-  - id: power-minorline
+-    name: power-minorline
+-    geometry: linestring
 -    <<: *extents
 -    Datasource:
 -      <<: *osm2pgsql
@@ -41,11 +32,9 @@
 -        ) AS power_minorline
 -    properties:
 -      minzoom: 16
--    advanced: {}
--  - id: "power-line"
--    name: "power-line"
--    class: ""
--    geometry: "linestring"
+-  - id: power-line
+-    name: power-line
+-    geometry: linestring
 -    <<: *extents
 -    Datasource:
 -      <<: *osm2pgsql
@@ -57,18 +46,16 @@
 -        ) AS power_line
 -    properties:
 -      minzoom: 14
--    advanced: {}
-   - id: "nature-reserve-boundaries"
-     name: "nature-reserve-boundaries"
-     class: ""
-@@ -1760,38 +1727,6 @@
+   - id: nature-reserve-boundaries
+     name: nature-reserve-boundaries
+     geometry: polygon
+@@ -1731,34 +1703,6 @@
+           ) AS amenity_points
      properties:
        minzoom: 10
-     advanced: {}
--  - id: "power-towers"
--    name: "power-towers"
--    class: ""
--    geometry: "point"
+-  - id: power-towers
+-    name: power-towers
+-    geometry: point
 -    <<: *extents
 -    Datasource:
 -      <<: *osm2pgsql
@@ -80,11 +67,9 @@
 -        ) AS power_towers
 -    properties:
 -      minzoom: 14
--    advanced: {}
--  - id: "power-poles"
--    name: "power-poles"
--    class: ""
--    geometry: "point"
+-  - id: power-poles
+-    name: power-poles
+-    geometry: point
 -    <<: *extents
 -    Datasource:
 -      <<: *osm2pgsql
@@ -96,7 +81,6 @@
 -        ) AS power_poles
 -    properties:
 -      minzoom: 16
--    advanced: {}
-   - id: "roads-text-ref-low-zoom"
-     name: "roads-text-ref-low-zoom"
-     class: ""
+   - id: roads-text-ref-low-zoom
+     name: roads-text-ref-low-zoom
+     geometry: linestring

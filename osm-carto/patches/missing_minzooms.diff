@@ -1,5 +1,5 @@
---- a/project.yaml
-+++ b/project.yaml
+--- a/project.mml
++++ b/project.mml
 @@ -127,6 +127,7 @@
            ) AS features
          ) AS landcover_low_zoom

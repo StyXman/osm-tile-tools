@@ -1,6 +1,6 @@
 --- a/admin.mss
 +++ b/admin.mss
-@@ -13,46 +13,62 @@
+@@ -11,46 +11,62 @@
  #admin-high-zoom[zoom >= 13]*/ {
    [admin_level = '2'] {
      [zoom >= 4] {
@@ -63,7 +63,7 @@
        line-width: 4;
        line-dasharray: 4,2;
        line-clip: false;
-@@ -166,8 +182,8 @@
+@@ -164,8 +180,8 @@
        line-clip: false;
      }
    }

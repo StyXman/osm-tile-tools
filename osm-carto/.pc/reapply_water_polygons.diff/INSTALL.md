@@ -21,12 +21,13 @@ psql -d gis -f indexes.sql
 Additionally you need some shapefiles.
 
 ## Scripted download
-
-To download the shapefiles you can run the following script from this directory. No further steps should be needed as the data has been processed and placed in the requisite directories.
+To download the shapefiles you can run the following script. No further steps should be needed as the data has been processed and placed in the requisite directories.
 
 ```
-./get-shapefiles.sh
+scripts/get-shapefiles.py
 ```
+
+This script generates and populates the *data* directory with all needed shapefiles, including indexing them through *shapeindex*.
 
 ## Manual download
 
@@ -42,49 +43,45 @@ The repeated www.naturalearthdata.com in the Natural Earth shapefiles is correct
 Put these shapefiles at `path/to/openstreetmap-carto/data`.
 
 ## Fonts
-The stylesheet depends on a number of openly licensed fonts for support of all the languages found on the map. The package which supplies these fonts on Ubuntu 16.04 or Debian Testing is indicated.
+The stylesheet uses Noto Sans, an openly licensed font from Google with support for multiple scripts. The "UI" version is used where available, with its vertical metrics which fit better with Latin text. Other fonts from the Noto family are used for some other languages.
 
-If a font is missing, it will skip to the next available font which contains those characters. If you are not concerned with a particular script, you do not need its fonts. DejaVu Sans and Unifont are the two required fonts, and included on most systems.
+DejaVu Sans is used as an optional fallback font for systems without Noto Sans. If all the Noto fonts are installed, it should never be used.
 
-Mapnik 3 is required for acceptable rendering of most non-Latin scripts, particularly those with complicated diacritics and tone marks.
+Unifont is used as a last resort fallback, with it's excellent coverage, common presence on machines, and ugly look.
 
-### Global
-* DejaVu Sans, for most languages (`fonts-dejavu-core`)
-* Droid Sans Fallback, as a reasonable fallback (`fonts-droid-fallback`)
-* Unifont, as a last resort fallback (`ttf-unifont`)
-
-### Southeast Asia
-* Arundina, for Thai (`fonts-sipa-arundina`)
-* Padauk, for Burmese (`fonts-sil-padauk`)
-* Khmer OS Metal Chrieng Regular, for Khmer (`fonts-khmeros`)
-
-### South Asia
-
-* Mukti Narrow, for Bangali (`fonts-beng-extra`)
-* Gargi Medium, for Devanagari (`fonts-gargi`)
-* TSCu_Paranar, for Tamil (`fonts-taml-tscu`)
-* Tibetan Machine Uni, for Tibetian (`fonts-tibetan-machine`)
-
-On Ubuntu 16.04 or Debian Testing you can install all the fonts with
+On Ubuntu 16.04 or Debian Testing you can install the required fonts except Noto Emoji Regular with
 
 ```
-sudo apt-get install fonts-dejavu-core fonts-droid-fallback ttf-unifont \
-  fonts-sipa-arundina fonts-sil-padauk fonts-khmeros \
-  fonts-beng-extra fonts-gargi fonts-taml-tscu fonts-tibetan-machine
+sudo apt-get install fonts-noto-cjk fonts-noto-hinted fonts-noto-unhinted ttf-unifont
 ```
 
-On Ubuntu 14.04, replace `fonts-droid-fallback` with `fonts-droid`.
+Noto Emoji Regular can be downloaded [from the Noto Emoji repository](https://github.com/googlei18n/noto-emoji).
+
+It might be useful to have a more recent version of the fonts for [rare non-latin scripts](#non-latin-scripts). This can be installed [from source](https://github.com/googlei18n/noto-fonts/blob/master/FAQ.md#where-are-the-fonts).
+
+DejaVu is packaged as `fonts-dejavu-core`.
+
+### Non-latin scripts
+
+For proper rendering of non-latin scripts, particularly those with complicated diacritics and tone marks the requirements are
+
+* FreeType 2.6.2 or later for CJK characters
+
+* A recent enough version of Noto with coverage for the scripts needed.
 
 ## Dependencies
 
 For development, a style design studio is needed.
-* [Kosmtik](https://github.com/kosmtik/kosmtik) - Kosmtik can be launched with `node index.js serve path/to/openstreetmap-carto/project.yaml`
-* [TileMill](http://mapbox.com/tilemill) - This is a TileMill project you can copy (or symlink) directly into your Mapbox/project directory
+* [Kosmtik](https://github.com/kosmtik/kosmtik) - Kosmtik can be launched with `node index.js serve path/to/openstreetmap-carto/project.mml`
 
-For deployment, `carto` and Mapnik are required.
+[TileMill](http://mapbox.com/tilemill) is not officially supported, but you may be able to use a recent TileMill version by copying or simlinking the project directly into your Mapbox/project directory.
 
-* [carto](https://github.com/mapbox/carto) >= 0.9.5 (we're using instances with cascading rules and min/max zoom properties)
-* [mapnik](https://github.com/mapnik/mapnik/wiki/Mapnik-Installation) >= 2.1.0. Mapnik 3.0 is supported, but not required.
+For deployment, CartoCSS and Mapnik are required.
+
+* [CartoCSS](https://github.com/mapbox/carto) >= 0.16.0 (we're using YAML)
+* [Mapnik](https://github.com/mapnik/mapnik/wiki/Mapnik-Installation) >= 3.0
+
+Remember to run CartoCSS with proper API version to avoid errors (at least 3.0.0: `carto -a "3.0.0"`).
 
 ---
 
@@ -101,5 +98,4 @@ For both development and deployment, a database and some utilities are required
 Some colours, SVGs and other files are generated with helper scripts. Not all users will need these dependencies
 
 * Python and Ruby to run helper scripts
-* [PyYAML](http://pyyaml.org/wiki/PyYAML) if editing the MML (layer definition) file (packaged as `python-yaml` on Ubuntu, or installed with `pip install pyyaml`)
 * [Color Math](https://github.com/gtaylor/python-colormath) and [numpy](http://www.numpy.org/) if running generate_road_colors.py helper script (may be obtained with `pip install colormath numpy`)

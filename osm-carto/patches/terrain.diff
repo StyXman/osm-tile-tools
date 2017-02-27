@@ -1,9 +1,9 @@
---- a/project.yaml
-+++ b/project.yaml
-@@ -76,6 +76,40 @@
+--- a/project.mml
++++ b/project.mml
+@@ -73,6 +73,40 @@
+       type: shape
      properties:
        minzoom: 10
-     advanced: {}
 +  - id: "terrain-small"
 +    name: "terrain-small"
 +    class: "terrain"
@@ -38,11 +38,11 @@
 +    advanced: {}
 +    properties:
 +      minzoom: 8
-   - id: "builtup"
-     name: "builtup"
-     geometry: "polygon"
-@@ -198,6 +232,98 @@
-     advanced: {}
+   - id: builtup
+     name: builtup
+     geometry: polygon
+@@ -186,6 +220,98 @@
+         ) AS landcover_line
      properties:
        minzoom: 14
 +  - id: "shade-small"
@@ -137,15 +137,15 @@
 +    advanced: {}
 +    properties:
 +      minzoom: 9
-   - id: "water-lines-casing"
-     name: "water-lines-casing"
-     class: ""
+   - id: water-lines-casing
+     name: water-lines-casing
+     geometry: linestring
 --- a/style.mss
 +++ b/style.mss
-@@ -19,3 +19,47 @@
+@@ -277,3 +277,47 @@
  
- @water-color: #b5d0d0;
- @land-color: #bfbfbf;
+ @standard-halo-radius: 1;
+ @standard-halo-fill: rgba(255,255,255,0.6);
 +
 +// terrain-small [0-6], terrain-medium [7-8], terrain-big [9-]
 +.terrain {

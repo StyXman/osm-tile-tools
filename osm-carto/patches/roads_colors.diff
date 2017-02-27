@@ -1,12 +1,15 @@
 --- a/style.mss
 +++ b/style.mss
-@@ -16,8 +16,99 @@
-                 "Droid Sans Fallback Regular", "Unifont Medium";
+@@ -273,11 +273,103 @@
+                 "Unifont Medium", "unifont Medium", "Unifont Upper Medium";
  
  @water-color: #b5d0d0;
 +@water-dark: #5A5AA1;
 +@water-text: #5A5AA1;
- @land-color: #bfbfbf;
+ @land-color: #f2efe9;
+ 
+ @standard-halo-radius: 1;
+ @standard-halo-fill: rgba(255,255,255,0.6);
  
 +// admin
 +@admin-boundaries: purple;
@@ -97,12 +100,13 @@
 +@taxiway-fill: @aeroway-fill;
 +@helipad-fill: @aeroway-fill;
 +
++
  // terrain-small [0-6], terrain-medium [7-8], terrain-big [9-]
  .terrain {
    raster-scaling: lanczos;
 --- a/roads.mss
 +++ b/roads.mss
-@@ -1286,11 +1286,11 @@
+@@ -1272,11 +1272,11 @@
  
      [feature = 'highway_secondary'] {
        [zoom >= 9] {
@@ -116,7 +120,7 @@
          line-width: @secondary-width-z10;
        }
        [zoom >= 11] { line-width: @secondary-width-z11; }
-@@ -2065,6 +2065,23 @@
+@@ -2067,6 +2067,23 @@
        }
      }
    }

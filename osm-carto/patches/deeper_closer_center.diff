@@ -1,5 +1,5 @@
---- a/project.yaml
-+++ b/project.yaml
+--- a/project.mml
++++ b/project.mml
 @@ -8,9 +8,9 @@
    - 180
    - 85.05112877980659
@@ -10,6 +10,6 @@
 +  - 5.5
 +  - 43.25
 +  - 12
- format: "png"
+ format: png
  interactivity: false
  minzoom: 0

@@ -1,19 +1,6 @@
---- a/.travis.yml
-+++ b/.travis.yml
-@@ -10,8 +10,8 @@
-   - "0.10"
- install:
-   - npm install carto@0.12.1
--  - mkdir -p data/world_boundaries data/simplified-land-polygons-complete-3857 data/ne_110m_admin_0_boundary_lines_land data/ne_10m_populated_places data/land-polygons-split-3857
--  - touch data/world_boundaries/builtup_area.shp data/simplified-land-polygons-complete-3857/simplified_land_polygons.shp data/ne_110m_admin_0_boundary_lines_land/ne_110m_admin_0_boundary_lines_land.shp data/ne_10m_populated_places/ne_10m_populated_places_fixed.shp data/land-polygons-split-3857/land_polygons.shp
-+  - mkdir -p data/world_boundaries data/simplified-land-polygons-complete-3857 data/simplified-water-polygons-complete-3857 data/ne_110m_admin_0_boundary_lines_land data/ne_10m_populated_places data/water-polygons-split-3857
-+  - touch data/world_boundaries/builtup_area.shp data/simplified-water-polygons-complete-3857/simplified_water_polygons.shp data/ne_110m_admin_0_boundary_lines_land/ne_110m_admin_0_boundary_lines_land.shp data/ne_10m_populated_places/ne_10m_populated_places_fixed.shp data/water-polygons-split-3857/water_polygons.shp
- script:
-   - jsonlint project.mml
-   - ./node_modules/carto/bin/carto project.mml | xmllint - | wc -l
 --- a/INSTALL.md
 +++ b/INSTALL.md
-@@ -33,7 +33,9 @@
+@@ -34,7 +34,9 @@
  You can also download them manually at the following paths:
  
  * [`simplified-land-polygons.shp`](http://data.openstreetmapdata.com/simplified-land-polygons-complete-3857.zip) (updated daily)
@@ -23,118 +10,36 @@
  * [`builtup_area.shp`](http://planet.openstreetmap.org/historical-shapefiles/world_boundaries-spherical.tgz)
  * [`ne_110m_admin_0_boundary_lines_land.shp`](http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_boundary_lines_land.zip)
  
---- a/get-shapefiles.sh
-+++ b/get-shapefiles.sh
-@@ -6,9 +6,9 @@
- # create and populate data dir
- mkdir -p data/
- mkdir -p data/world_boundaries
--mkdir -p data/simplified-land-polygons-complete-3857
-+mkdir -p data/simplified-water-polygons-complete-3857
- mkdir -p data/ne_110m_admin_0_boundary_lines_land
--mkdir -p data/land-polygons-split-3857
-+mkdir -p data/water-polygons-split-3857
- 
- # world_boundaries
- echo "downloading world_boundaries..."
-@@ -16,16 +16,16 @@
- echo "expanding world_boundaries..."
- tar -xzf data/world_boundaries-spherical.tgz -C data/
- 
--# simplified-land-polygons-complete-3857
--echo "downloading simplified-land-polygons-complete-3857..."
--curl -z "data/simplified-land-polygons-complete-3857.zip" -L -o "data/simplified-land-polygons-complete-3857.zip" "http://data.openstreetmapdata.com/simplified-land-polygons-complete-3857.zip"
--echo "simplified-land-polygons-complete-3857..."
--unzip $UNZIP_OPTS data/simplified-land-polygons-complete-3857.zip \
--  simplified-land-polygons-complete-3857/simplified_land_polygons.shp \
--  simplified-land-polygons-complete-3857/simplified_land_polygons.shx \
--  simplified-land-polygons-complete-3857/simplified_land_polygons.prj \
--  simplified-land-polygons-complete-3857/simplified_land_polygons.dbf \
--  simplified-land-polygons-complete-3857/simplified_land_polygons.cpg \
-+# simplified-water-polygons-complete-3857
-+echo "downloading simplified-water-polygons-complete-3857..."
-+curl -z "data/simplified-water-polygons-complete-3857.zip" -L -o "data/simplified-water-polygons-complete-3857.zip" "http://data.openstreetmapdata.com/simplified-water-polygons-complete-3857.zip"
-+echo "simplified-water-polygons-complete-3857..."
-+unzip $UNZIP_OPTS data/simplified-water-polygons-complete-3857.zip \
-+  simplified-water-polygons-complete-3857/simplified_water_polygons.shp \
-+  simplified-water-polygons-complete-3857/simplified_water_polygons.shx \
-+  simplified-water-polygons-complete-3857/simplified_water_polygons.prj \
-+  simplified-water-polygons-complete-3857/simplified_water_polygons.dbf \
-+  simplified-water-polygons-complete-3857/simplified_water_polygons.cpg \
-   -d data/
- 
- # ne_110m_admin_0_boundary_lines_land
-@@ -39,16 +39,16 @@
-   ne_110m_admin_0_boundary_lines_land.dbf \
-   -d data/ne_110m_admin_0_boundary_lines_land/
- 
--# land-polygons-split-3857
--echo "downloading land-polygons-split-3857..."
--curl -z "data/land-polygons-split-3857.zip" -L -o "data/land-polygons-split-3857.zip" "http://data.openstreetmapdata.com/land-polygons-split-3857.zip"
--echo "expanding land-polygons-split-3857..."
--unzip $UNZIP_OPTS data/land-polygons-split-3857.zip \
--  land-polygons-split-3857/land_polygons.shp \
--  land-polygons-split-3857/land_polygons.shx \
--  land-polygons-split-3857/land_polygons.prj \
--  land-polygons-split-3857/land_polygons.dbf \
--  land-polygons-split-3857/land_polygons.cpg \
-+# water-polygons-split-3857
-+echo "downloading water-polygons-split-3857..."
-+curl -z "data/water-polygons-split-3857.zip" -L -o "data/water-polygons-split-3857.zip" "http://data.openstreetmapdata.com/water-polygons-split-3857.zip"
-+echo "expanding water-polygons-split-3857..."
-+unzip $UNZIP_OPTS data/water-polygons-split-3857.zip \
-+  water-polygons-split-3857/water_polygons.shp \
-+  water-polygons-split-3857/water_polygons.shx \
-+  water-polygons-split-3857/water_polygons.prj \
-+  water-polygons-split-3857/water_polygons.dbf \
-+  water-polygons-split-3857/water_polygons.cpg \
-   -d data/
- 
- # antarctica-icesheet-polygons-3857
-@@ -76,8 +76,8 @@
- #index
- echo "indexing shapefiles"
- shapeindex --shape_files \
--data/simplified-land-polygons-complete-3857/simplified_land_polygons.shp \
--data/land-polygons-split-3857/land_polygons.shp \
-+data/simplified-water-polygons-complete-3857/simplified_water_polygons.shp \
-+data/water-polygons-split-3857/water_polygons.shp \
- data/antarctica-icesheet-polygons-3857/icesheet_polygons.shp \
- data/antarctica-icesheet-outlines-3857/icesheet_outlines.shp \
- data/ne_110m_admin_0_boundary_lines_land/ne_110m_admin_0_boundary_lines_land.shp
---- a/project.yaml
-+++ b/project.yaml
-@@ -52,24 +52,24 @@
-   - "admin.mss"
-   - "addressing.mss"
+--- a/project.mml
++++ b/project.mml
+@@ -53,21 +53,23 @@
+   - admin.mss
+   - addressing.mss
  Layer:
--  - id: "world"
--    name: "world"
--    class: ""
-+  - id: "ocean-lz"
-+    name: "ocean-lz"
-+    class: "ocean"
-     geometry: "polygon"
+-  - id: world
+-    name: world
++  - id: ocean-lz
++    name: ocean-lz
++    class: ocean
+     geometry: polygon
      <<: *extents
      Datasource:
--      file: "data/simplified-land-polygons-complete-3857/simplified_land_polygons.shp"
-+      file: "data/simplified-water-polygons-complete-3857/simplified_water_polygons.shp"
-       type: "shape"
-     advanced: {}
+-      file: data/simplified-land-polygons-complete-3857/simplified_land_polygons.shp
++      file: data/simplified-water-polygons-complete-3857/simplified_water_polygons.shp
+       type: shape
      properties:
        maxzoom: 9
--  - id: "coast-poly"
--    name: "coast-poly"
--    class: ""
-+  - id: "ocean"
-+    name: "ocean"
-+    class: "ocean"
-     geometry: "polygon"
+-  - id: coast-poly
+-    name: coast-poly
++  - id: ocean
++    name: ocean
++    class: ocean
+     geometry: polygon
      <<: *extents
      Datasource:
--      file: "data/land-polygons-split-3857/land_polygons.shp"
-+      file: "data/water-polygons-split-3857/water_polygons.shp"
-       type: "shape"
+-      file: data/land-polygons-split-3857/land_polygons.shp
++      file: data/water-polygons-split-3857/water_polygons.shp
+       type: shape
      properties:
        minzoom: 10
 --- a/shapefiles.mss
@@ -166,10 +71,10 @@
 +  background-color: @land-color;
  }
  
- @book-fonts:    "DejaVu Sans Book", "Arundina Regular", "Padauk Regular", "Khmer OS Metal Chrieng Regular",
+ /*
 --- a/water.mss
 +++ b/water.mss
-@@ -17,42 +17,28 @@
+@@ -24,42 +24,28 @@
        }
      }
    }
@@ -231,3 +136,31 @@
    }
  }
  
+--- a/scripts/get-shapefiles.py
++++ b/scripts/get-shapefiles.py
+@@ -82,7 +82,24 @@
+         'type': 'zip',
+         'index': ['icesheet_outlines.shp'],
+         'long_opt': '--icesheet-outlines'
+-    }
++    },
++
++    7: {
++        'directory': 'simplified-water-polygons-complete-3857',
++        'url': 'http://data.openstreetmapdata.com/simplified-water-polygons-complete-3857.zip',  # noqa
++        'type': 'zip',
++        'index': ['simplified_water_polygons.shp'],
++        'long_opt': '--simplified-water'
++    },
++
++
++    8: {
++        'directory': 'water-polygons-split-3857',
++        'url': 'http://data.openstreetmapdata.com/water-polygons-split-3857.zip',  # noqa
++        'type': 'zip',
++        'index': ['water_polygons.shp'],
++        'long_opt': '--water-polygons'
++    },
+ }
+ 
+ u_prompt = True

@@ -1,61 +1,24 @@
 --- a/placenames.mss
 +++ b/placenames.mss
-@@ -63,8 +63,8 @@
-       text-name: "[name]";
-       text-size: 11;
-       text-fill: @placenames;
--      text-face-name: @book-fonts;
--      text-halo-radius: 1.5;
-+      text-face-name: @bold-fonts;
-+      text-halo-radius: 2.5;
-       text-halo-fill: rgba(255,255,255,0.6);
-       text-wrap-width: 30;
-       [zoom >= 5] {
-@@ -98,8 +98,8 @@
-       text-name: "[name]";
-       text-size: 10;
-       text-fill: @placenames;
--      text-face-name: @book-fonts;
--      text-halo-radius: 1.5;
-+      text-face-name: @bold-fonts;
-+      text-halo-radius: 2;
-       text-halo-fill: rgba(255,255,255,0.6);
-       text-wrap-width: 30;
-       [zoom >= 9] {
-@@ -107,12 +107,13 @@
-         text-wrap-width: 60;
-       }
-       [zoom >= 11] {
--        text-size: 14;
-+        text-size: 15;
-         text-wrap-width: 70;
-       }
-       [zoom >= 14] {
--        text-size: 15;
-+        // text-size: 15;
-         text-wrap-width: 75;
-+        text-fill: @placenames-light;
-       }
+@@ -172,7 +172,7 @@
      }
-   }
-@@ -125,7 +126,7 @@
-       text-size: 10;
+     [zoom >= 8][score >= 400000] {
+       text-name: '[name]';
+-      text-face-name: @book-fonts;
++      text-face-name: @bold-fonts;
        text-fill: @placenames;
-       text-face-name: @book-fonts;
--      text-halo-radius: 1.5;
-+      text-halo-radius: 2;
-       text-halo-fill: rgba(255,255,255,0.6);
-       text-wrap-width: 45;
-       [zoom >= 11] {
-@@ -139,6 +140,7 @@
-       [zoom >= 14] {
-         text-size: 15;
-         text-wrap-width: 70;
-+        text-fill: @placenames-light;
-       }
-     }
-   }
-@@ -168,7 +170,7 @@
+       text-size: 13;
+       text-wrap-width: 65; // 5.0 em
+@@ -207,7 +207,7 @@
+       shield-name: "[name]";
+       shield-size: 10;
+       shield-fill: @placenames;
+-      shield-face-name: @book-fonts;
++      shield-face-name: @bold-fonts;
+       shield-halo-fill: @standard-halo-fill;
+       shield-halo-radius: @standard-halo-radius * 1.5;
+       shield-wrap-width: 30; // 3.0 em
+@@ -331,7 +331,7 @@
  
  #placenames-small::village {
    [place = 'village'] {

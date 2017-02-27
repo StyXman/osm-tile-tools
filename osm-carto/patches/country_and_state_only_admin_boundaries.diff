@@ -1,6 +1,6 @@
---- a/project.yaml
-+++ b/project.yaml
-@@ -1568,7 +1568,7 @@
+--- a/project.mml
++++ b/project.mml
+@@ -1502,50 +1502,13 @@
              admin_level
            FROM planet_osm_roads
            WHERE boundary = 'administrative'
@@ -9,14 +9,12 @@
              AND osm_id < 0
            ORDER BY admin_level DESC
          ) AS admin_low_zoom
-@@ -1576,47 +1576,6 @@
-       minxoom: 4
+     properties:
+       minzoom: 4
        maxzoom: 10
-     advanced: {}
--  - id: "admin-mid-zoom"
--    name: "admin-mid-zoom"
--    class: ""
--    geometry: "linestring"
+-  - id: admin-mid-zoom
+-    name: admin-mid-zoom
+-    geometry: linestring
 -    <<: *extents
 -    Datasource:
 -      <<: *osm2pgsql
@@ -33,11 +31,9 @@
 -    properties:
 -      minzoom: 11
 -      maxzoom: 12
--    advanced: {}
--  - id: "admin-high-zoom"
--    name: "admin-high-zoom"
--    class: ""
--    geometry: "linestring"
+-  - id: admin-high-zoom
+-    name: admin-high-zoom
+-    geometry: linestring
 -    <<: *extents
 -    Datasource:
 -      <<: *osm2pgsql
@@ -53,10 +49,9 @@
 -        ) AS admin_high_zoom
 -    properties:
 -      minzoom: 13
--    advanced: {}
-   - id: "tourism-boundary"
-     name: "tourism-boundary"
-     class: ""
+   - id: tourism-boundary
+     name: tourism-boundary
+     geometry: polygon
 --- a/admin.mss
 +++ b/admin.mss
 @@ -6,9 +6,9 @@
