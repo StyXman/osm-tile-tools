@@ -1,0 +1,18 @@
+--- a/admin.mss
++++ b/admin.mss
+@@ -213,12 +213,12 @@
+ 
+ #nature-reserve-boundaries {
+   [way_pixels > 100][zoom >= 7] {
+-    [zoom < 10] {
++    // [zoom < 10] {
+       ::fill {
+-        opacity: 0.05;
++        opacity: 0.1;
+         polygon-fill: green;
+       }
+-    }
++    // }
+     a/line-width: 1;
+     a/line-offset: -0.5;
+     a/line-color: green;
