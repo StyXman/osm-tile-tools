@@ -286,7 +286,7 @@ For a considerable number of labels this style will make no difference to the re
 @land-color: #f2efe9;
 
 @standard-halo-radius: 2;
-@standard-halo-fill: rgba(255,255,255,0.6);
+@standard-halo-fill: rgba(255,255,255,0.7);
 
 // admin
 @admin-boundaries: purple;

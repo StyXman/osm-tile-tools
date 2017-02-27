@@ -616,7 +616,8 @@
 
   // local
   [feature = 'historic_castle'][zoom >= @nice] {
-    marker-file: url('symbols/castle.24.png');
+    marker-file: url('symbols/castle.svg');
+    marker-width: 14;
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-clip: false;
@@ -639,7 +640,8 @@
 
   // local
   [feature = 'historic_fort'][zoom >= @nice] {
-    marker-file: url('symbols/fort.24.png');
+    marker-file: url('symbols/fort.svg');
+    marker-width: 14;
     marker-placement: interior;
   }
 
