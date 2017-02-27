@@ -179,7 +179,7 @@ def render_tiles(opts):
 
             render_thread.start ()
 
-            if opts.fork:
+            if opts.parallel:
                 debug ("Started render thread %s" % render_thread.name)
             else:
                 debug ("Started render thread %s" % render_thread.getName())
