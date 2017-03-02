@@ -261,8 +261,6 @@ def finish(opts, queue, renderers):
 def parse_args():
     parser = ArgumentParser()
 
-    # g1= parser.add_mutually_exclusive_group ()
-    # g2= g1.add_argument_group ()
     parser.add_argument('-b', '--bbox',          dest='bbox',      default=[-180, -85, 180, 85], type=map_utils.bbox)
     parser.add_argument('-B', '--bbox-name',     dest='bbox_name', default=None)
     parser.add_argument('-n', '--min-zoom',      dest='min_zoom',  default=0, type=int)
