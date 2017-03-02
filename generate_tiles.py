@@ -28,9 +28,9 @@ except NotImplementedError:
 
 
 class RenderThread:
-    def __init__(self, opts, backend, queue):
+    def __init__(self, opts, backend, queues):
         self.backend = backend
-        self.q = queue
+        self.queues  = queues
         self.opts = opts
         self.metatile_size = opts.metatile_size
         self.tile_size = 256
@@ -108,7 +108,7 @@ class RenderThread:
         debug('%s looping the loop', self)
         while True:
             # Fetch a tile from the queue and render it
-            r= self.q.get()
+            r = self.queues[0].get()
             if r is None:
                 # self.q.task_done()
                 debug('ending loop')
@@ -159,11 +159,12 @@ def render_tiles(opts):
     # Launch rendering threads
     if opts.parallel == 'fork':
         debug('forks, using mp.Queue()')
-        queue= multiprocessing.Queue (32)
+        queues = (multiprocessing.Queue(opts.threads+1),
+                  multiprocessing.Queue(4*opts.threads+1))
     else:
         debug('threads or single, using queue.Queue()')
         # TODO: this and the warning about mapnik and multithreads
-        queue = Queue(32)
+        queues = (Queue(32), None)
 
     renderers = {}
 
@@ -198,16 +199,16 @@ def render_tiles(opts):
         debug('rendering individual tiles')
         for i in opts.tiles:
             z, x, y = map(int, i.split(','))
-            queue.put((x, y, z))
+            queues[0].put((x, y, z))
 
     if opts.parallel == 'single':
-        queue.put(None)
+        queues[0].put(None)
         renderer.loop()
 
-    finish(opts, queue, renderers)
+    finish(opts, queues, renderers)
 
 
-def render_bbox(opts, queue, renderers):
+def render_bbox(opts, queues, renderers):
     gprj = map_utils.GoogleProjection(opts.max_zoom+1)
 
     bbox  = opts.bbox
@@ -234,25 +235,25 @@ def render_bbox(opts, queue, renderers):
                 # Submit tile to be rendered into the queue
                 t = (x*opts.metatile_size, y*opts.metatile_size, z)
                 try:
-                    queue.put(t)
+                    queues[0].put(t)
                 except KeyboardInterrupt:
-                    finish(opts, queue, renderers)
+                    finish(opts, queues, renderers)
                     raise SystemExit("Ctrl-c detected, exiting...")
 
 
-def finish(opts, queue, renderers):
+def finish(opts, queues, renderers):
     if opts.parallel!='single':
         debug('finishing threads/procs')
         # Signal render threads to exit by sending empty request to queue
         for i in range(opts.threads):
-            queue.put(None)
+            queues[0].put(None)
 
         # wait for pending rendering jobs to complete
         if not opts.parallel == 'fork':
-            queue.join()
+            queues[0].join()
         else:
-            queue.close()
-            queue.join_thread()
+            queues[0].close()
+            queues[0].join_thread()
 
         for i in range(opts.threads):
             renderers[i].join()
