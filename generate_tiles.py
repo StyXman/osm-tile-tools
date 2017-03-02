@@ -32,9 +32,9 @@ class RenderThread:
         self.backend= backend
         self.q = queue
         self.opts= opts
-        self.meta_size= opts.meta_size
+        self.metatile_size= opts.metatile_size
         self.tile_size= 256
-        self.image_size= self.tile_size*self.meta_size
+        self.image_size= self.tile_size*self.metatile_size
         start= time.perf_counter ()
         self.m = mapnik.Map (self.image_size, self.image_size)
         # self.printLock = printLock
@@ -50,8 +50,8 @@ class RenderThread:
 
     def render_tile (self, x, y, z):
         # Calculate pixel positions of bottom-left & top-right
-        p0= (x * self.tile_size, (y + self.meta_size) * self.tile_size)
-        p1= ((x + self.meta_size) * self.tile_size, y * self.tile_size)
+        p0= (x * self.tile_size, (y + self.metatile_size) * self.tile_size)
+        p1= ((x + self.metatile_size) * self.tile_size, y * self.tile_size)
 
         # Convert to LatLong (EPSG:4326)
         l0= self.tileproj.fromPixelToLL (p0, z);
@@ -84,9 +84,9 @@ class RenderThread:
             mid= time.perf_counter ()
 
             # save the image, splitting it in the right amount of tiles
-            # we use min() so we can support low zoom levels with less than meta_size tiles
-            for i in range (min (self.meta_size, 2**z)):
-                for j in range (min (self.meta_size, 2**z)):
+            # we use min() so we can support low zoom levels with less than metatile_size tiles
+            for i in range (min (self.metatile_size, 2**z)):
+                for j in range (min (self.metatile_size, 2**z)):
                     img= im.view (i*self.tile_size, j*self.tile_size, self.tile_size, self.tile_size)
                     data= img.tostring ('png256')
                     if not map_utils.is_empty (data):
@@ -120,9 +120,9 @@ class RenderThread:
                 debug ('skip test existing:%s, newer:%s',
                        self.opts.skip_existing, self.opts.skip_newer)
                 skip= True
-                # we use min() so we can support low zoom levels with less than meta_size tiles
-                for tile_x in range (x, x+min (self.meta_size, 2**z)):
-                    for tile_y in range (y, y+min (self.meta_size, 2**z)):
+                # we use min() so we can support low zoom levels with less than metatile_size tiles
+                for tile_x in range (x, x+min (self.metatile_size, 2**z)):
+                    for tile_y in range (y, y+min (self.metatile_size, 2**z)):
                         if self.opts.skip_existing:
                             skip= skip and self.backend.exists (z, tile_x, tile_y)
                         else:
@@ -213,7 +213,7 @@ def render_bbox (opts, queue, renderers):
     ll0= (bbox[0], bbox[3])
     ll1= (bbox[2], bbox[1])
 
-    image_size= 256.0*opts.meta_size
+    image_size= 256.0*opts.metatile_size
 
     for z in range (opts.min_zoom, opts.max_zoom + 1):
         px0= gprj.fromLLtoPixel (ll0, z)
@@ -221,16 +221,16 @@ def render_bbox (opts, queue, renderers):
 
         for x in range (int (px0[0]/image_size), int (px1[0]/image_size)+1):
             # Validate x co-ordinate
-            if (x < 0) or (x*opts.meta_size >= 2**z):
+            if (x < 0) or (x*opts.metatile_size >= 2**z):
                 continue
 
             for y in range (int (px0[1]/image_size), int (px1[1]/image_size)+1):
                 # Validate x co-ordinate
-                if (y < 0) or (y*opts.meta_size >= 2**z):
+                if (y < 0) or (y*opts.metatile_size >= 2**z):
                     continue
 
                 # Submit tile to be rendered into the queue
-                t= (x*opts.meta_size, y*opts.meta_size, z)
+                t= (x*opts.metatile_size, y*opts.metatile_size, z)
                 try:
                     queue.put (t)
                 except KeyboardInterrupt:
@@ -272,7 +272,7 @@ def parse_args ():
     parser.add_argument ('-f', '--format',        dest='format',    default='tiles') # also 'mbtiles'
     parser.add_argument ('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
 
-    parser.add_argument ('-m', '--metatile-size', dest='meta_size', default=1, type=int)
+    parser.add_argument ('-m', '--metatile-size', dest='metatile_size', default=1, type=int)
 
     parser.add_argument ('-t', '--threads',       dest='threads',   default=NUM_CPUS, type=int)
     parser.add_argument ('-p', '--parallel-method', dest='parallel', default='fork', choices=('threads', 'fork', 'single'))
