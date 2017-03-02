@@ -143,120 +143,128 @@ class RenderThread:
             # self.q.task_done()
 
 
-def render_tiles(opts):
-    debug("render_tiles(%s)", opts)
+class Master:
+    def __init__(self, opts):
+        self.opts = opts
+        # we need at least space for the initial batch
+        self.out_queue_size = max(self.opts.threads*2,
+                                  2**self.opts.min_zoom/self.opts.metatile_size)
+        self.renderers = {}
 
-    backends = dict(
-        tiles=  map_utils.DiskBackend,
-        mbtiles=map_utils.MBTilesBackend,
-        )
+        if self.opts.parallel == 'fork':
+            debug('forks, using mp.Queue()')
 
-    try:
-        backend = backends[opts.format](opts.tile_dir, opts.bbox)
-    except KeyError:
-        raise
-
-    # Launch rendering threads
-    if opts.parallel == 'fork':
-        debug('forks, using mp.Queue()')
-        queues = (multiprocessing.Queue(opts.threads+1),
-                  multiprocessing.Queue(4*opts.threads+1))
-    else:
-        debug('threads or single, using queue.Queue()')
-        # TODO: this and the warning about mapnik and multithreads
-        queues = (Queue(32), None)
-
-    renderers = {}
-
-    for i in range(opts.threads):
-        renderer = RenderThread(opts, backend, queues)
-
-        if opts.parallel!='single':
-            if opts.parallel == 'fork':
-                debug('mp.Process()')
-                render_thread = multiprocessing.Process(target=renderer.loop)
-            elif opts.parallel == 'threads':
-                debug('th.Thread()')
-                render_thread = threading.Thread(target=renderer.loop)
-
-            render_thread.start()
-
-            if opts.parallel:
-                debug("Started render thread %s" % render_thread.name)
-            else:
-                debug("Started render thread %s" % render_thread.getName())
-
-            renderers[i] = render_thread
-
-    if not os.path.isdir(opts.tile_dir):
-        debug("creating dir %s", opts.tile_dir)
-        os.makedirs(opts.tile_dir, exist_ok=True)
-
-    if opts.tiles is None:
-        debug('rendering bbox %s:%s', opts.bbox_name, opts.bbox)
-        render_bbox(opts, queues, renderers)
-    else:
-        debug('rendering individual tiles')
-        for i in opts.tiles:
-            z, x, y = map(int, i.split(','))
-            queues[0].put((x, y, z))
-
-    if opts.parallel == 'single':
-        queues[0].put(None)
-        renderer.loop()
-
-    finish(opts, queues, renderers)
+            self.queues = (multiprocessing.Queue(),
+                    multiprocessing.Queue(4*self.opts.threads+1))
+        else:
+            debug('threads or single, using queue.Queue()')
+            # TODO: this and the warning about mapnik and multithreads
+            self.queues = (Queue(32), None)
 
 
-def render_bbox(opts, queues, renderers):
-    gprj = map_utils.GoogleProjection(opts.max_zoom+1)
+    def render_tiles(self):
+        debug("render_tiles(%s)", self.opts)
 
-    bbox  = opts.bbox
-    ll0=(bbox[0], bbox[3])
-    ll1=(bbox[2], bbox[1])
+        backends = dict(
+            tiles=  map_utils.DiskBackend,
+            mbtiles=map_utils.MBTilesBackend,
+            )
 
-    image_size = 256.0*opts.metatile_size
+        try:
+            backend = backends[self.opts.format](self.opts.tile_dir, self.opts.bbox)
+        except KeyError:
+            raise
+
+        # Launch rendering threads
+        for i in range(self.opts.threads):
+            renderer = RenderThread(self.opts, backend, self.queues)
+
+            if self.opts.parallel!='single':
+                if self.opts.parallel == 'fork':
+                    debug('mp.Process()')
+                    render_thread = multiprocessing.Process(target=renderer.loop)
+                elif self.opts.parallel == 'threads':
+                    debug('th.Thread()')
+                    render_thread = threading.Thread(target=renderer.loop)
+
+                render_thread.start()
+
+                if self.opts.parallel:
+                    debug("Started render thread %s" % render_thread.name)
+                else:
+                    debug("Started render thread %s" % render_thread.getName())
+
+                self.renderers[i] = render_thread
+
+        if not os.path.isdir(self.opts.tile_dir):
+            debug("creating dir %s", self.opts.tile_dir)
+            os.makedirs(self.opts.tile_dir, exist_ok=True)
+
+        if self.opts.tiles is None:
+            debug('rendering bbox %s:%s', self.opts.bbox_name, self.opts.bbox)
+            self.render_bbox()
+        else:
+            # TODO: if possible, order them in depth first/proximity? fashion.
+            debug('rendering individual tiles')
+            for i in self.opts.tiles:
+                z, x, y = map(int, i.split(','))
+                self.queues[0].put((x, y, z))
+
+        if self.opts.parallel == 'single':
+            self.queues[0].put(None)
+            renderer.loop()
+
+        self.finish()
 
 
-    for z in range(opts.min_zoom, opts.max_zoom + 1):
-        px0 = gprj.fromLLtoPixel(ll0, z)
-        px1 = gprj.fromLLtoPixel(ll1, z)
+    def render_bbox(self):
+        gprj = map_utils.GoogleProjection(self.opts.max_zoom+1)
 
-        for x in range(int(px0[0]/image_size), int(px1[0]/image_size)+1):
-            # Validate x co-ordinate
-            if (x < 0) or (x*opts.metatile_size >= 2**z):
-                continue
+        bbox  = self.opts.bbox
+        ll0=(bbox[0], bbox[3])
+        ll1=(bbox[2], bbox[1])
 
-            for y in range(int(px0[1]/image_size), int(px1[1]/image_size)+1):
+        image_size = 256.0*self.opts.metatile_size
+
+        for z in range(opts.min_zoom, opts.max_zoom + 1):
+            px0 = gprj.fromLLtoPixel(ll0, z)
+            px1 = gprj.fromLLtoPixel(ll1, z)
+
+            for x in range(int(px0[0]/image_size), int(px1[0]/image_size)+1):
                 # Validate x co-ordinate
-                if (y < 0) or (y*opts.metatile_size >= 2**z):
+                if(x < 0) or (x*self.opts.metatile_size >= 2**self.opts.min_zoom):
                     continue
 
-                # Submit tile to be rendered into the queue
-                t = (x*opts.metatile_size, y*opts.metatile_size, z)
-                try:
-                    queues[0].put(t)
-                except KeyboardInterrupt:
-                    finish(opts, queues, renderers)
-                    raise SystemExit("Ctrl-c detected, exiting...")
+                for y in range(int(px0[1]/image_size), int(px1[1]/image_size)+1):
+                    # Validate x co-ordinate
+                    if (y < 0) or (y*self.opts.metatile_size >= 2**self.opts.min_zoom):
+                        continue
+
+                    # Submit tile to be rendered into the queue
+                    t = (x*self.opts.metatile_size, y*self.opts.metatile_size, self.opts.min_zoom)
+                    try:
+                        self.queues[0].put(t)
+                    except KeyboardInterrupt:
+                        self.finish()
+                        raise SystemExit("Ctrl-c detected, exiting...")
 
 
-def finish(opts, queues, renderers):
-    if opts.parallel!='single':
-        debug('finishing threads/procs')
-        # Signal render threads to exit by sending empty request to queue
-        for i in range(opts.threads):
-            queues[0].put(None)
+    def finish(self):
+        if self.opts.parallel!='single':
+            debug('finishing threads/procs')
+            # Signal render threads to exit by sending empty request to queue
+            for i in range(self.opts.threads):
+                self.queues[0].put(None)
 
-        # wait for pending rendering jobs to complete
-        if not opts.parallel == 'fork':
-            queues[0].join()
-        else:
-            queues[0].close()
-            queues[0].join_thread()
+            # wait for pending rendering jobs to complete
+            if not self.opts.parallel == 'fork':
+                self.queues[0].join()
+            else:
+                self.queues[0].close()
+                self.queues[0].join_thread()
 
-        for i in range(opts.threads):
-            renderers[i].join()
+            for i in range(self.opts.threads):
+                self.renderers[i].join()
 
 
 def parse_args():
@@ -314,4 +322,6 @@ def parse_args():
 
 if __name__  ==  "__main__":
     opts = parse_args()
-    render_tiles(opts)
+
+    master = Master(opts)
+    master.render_tiles()
