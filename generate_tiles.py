@@ -10,6 +10,7 @@ import threading
 import datetime
 import errno
 import multiprocessing
+import queue
 from random import randint
 
 import map_utils
@@ -27,6 +28,21 @@ try:
     NUM_CPUS = multiprocessing.cpu_count()
 except NotImplementedError:
     NUM_CPUS = 1
+
+
+class Stack:
+    """Boundless stack implemented with a list.
+    Although this is trivially implementable with a list, I prefer the
+    semantic of these methods and the str() representation given by the
+    list being pop from/push into the left."""
+    def __init__(self):
+        self.stack = []
+
+    def push(self, o):
+        self.stack.insert(0, o)
+
+    def pop(self):
+        return self.stack.pop(0)
 
 
 class RenderThread:
@@ -111,12 +127,20 @@ class RenderThread:
             # simulate some work
             time.sleep(randint(0, 150) / 10)
 
+        for r, c in ( (0, 0), (0, 1),
+                      (1, 0), (1, 1) ):
+            # TODO: do not do it blindly
+            t = (z+1, x*2+r, y*2+c)
+            # debug("==> %r" % (t, ))
+            self.queues[1].put(t)
+
 
     def loop(self):
         debug('%s looping the loop', self)
         while True:
             # Fetch a tile from the queue and render it
             r = self.queues[0].get()
+            # debug("<== %r" % (r, ))
             if r is None:
                 # self.q.task_done()
                 debug('ending loop')
@@ -158,6 +182,7 @@ class Master:
         self.out_queue_size = max(self.opts.threads*2,
                                   2**self.opts.min_zoom/self.opts.metatile_size)
         self.renderers = {}
+        self.work_stack = Stack()
 
         if self.opts.parallel == 'fork':
             debug('forks, using mp.Queue()')
@@ -226,6 +251,8 @@ class Master:
 
 
     def render_bbox(self):
+        work_out, work_in = self.queues
+
         gprj = map_utils.GoogleProjection(self.opts.max_zoom+1)
 
         bbox  = self.opts.bbox
@@ -234,28 +261,72 @@ class Master:
 
         image_size = 256.0*self.opts.metatile_size
 
-        for z in range(opts.min_zoom, opts.max_zoom + 1):
-            px0 = gprj.fromLLtoPixel(ll0, z)
-            px1 = gprj.fromLLtoPixel(ll1, z)
+        # we start by adding the min_zoom tiles and let the system handle the rest
+        px0 = gprj.fromLLtoPixel(ll0, self.opts.min_zoom)
+        px1 = gprj.fromLLtoPixel(ll1, self.opts.min_zoom)
 
-            for x in range(int(px0[0]/image_size), int(px1[0]/image_size)+1):
+        for x in range(int(px0[0]/image_size), int(px1[0]/image_size)+1):
+            # Validate x co-ordinate
+            if ((x < 0) or
+                (x*self.opts.metatile_size >= 2**self.opts.min_zoom)):
+
+                continue
+
+            for y in range(int(px0[1]/image_size), int(px1[1]/image_size)+1):
                 # Validate x co-ordinate
-                if(x < 0) or (x*self.opts.metatile_size >= 2**self.opts.min_zoom):
+                if ((y < 0) or
+                    (y*self.opts.metatile_size >= 2**self.opts.min_zoom)):
+
                     continue
 
-                for y in range(int(px0[1]/image_size), int(px1[1]/image_size)+1):
-                    # Validate x co-ordinate
-                    if (y < 0) or (y*self.opts.metatile_size >= 2**self.opts.min_zoom):
-                        continue
+                # Submit tile to be rendered into the queue
+                t = (self.opts.min_zoom, x*self.opts.metatile_size,
+                     y*self.opts.metatile_size)
+                # debug("--> %r" % (t, ))
+                work_out.put(t)
 
-                    # Submit tile to be rendered into the queue
-                    t = (self.opts.min_zoom, x*self.opts.metatile_size,
-                         y*self.opts.metatile_size)
+        # I wish I could get to the underlying pipes so I could select() on them
+        # NOTE: work_out._writer, self.queues[1]._reader
+        # TODO: find/create cut condition
+        while True:
+            try:
+                # we have space to put things,
+                # pop from the reader,
+                while True:
+                    # NOTE: this blocks, we might get into a deadlock
+                    # debug('ge...')
                     try:
-                        self.queues[0].put(t)
-                    except KeyboardInterrupt:
-                        self.finish()
-                        raise SystemExit("Ctrl-c detected, exiting...")
+                        metatile = work_in.get(True, 1)
+                    except queue.Empty:
+                        # debug('timeout!')
+                        break
+                    else:
+                        # debug("<-- %r" % (metatile, ))
+                        if metatile[0] <= self.opts.max_zoom:
+                            # push in the stack,
+                            self.work_stack.push(metatile)
+                    # debug('... t!')
+
+
+                while True:
+                    try:
+                        # pop from there,
+                        debug(self.work_stack.stack)
+                        new_work = self.work_stack.pop()
+                    except IndexError:
+                        break
+                    else:
+                        try:
+                            # push in the writer
+                            # debug("--> %r" % (new_work, ))
+                            work_out.put(new_work, True, 1)
+                        except queue.Full:
+                            break
+            except KeyboardInterrupt:
+                self.finish()
+                raise SystemExit("Ctrl-c detected, exiting...")
+
+        debug('out!')
 
 
     def finish(self):
