@@ -21,6 +21,7 @@ except:
 
 import logging
 from logging import debug
+log_format= "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
 
 try:
     NUM_CPUS = multiprocessing.cpu_count()
@@ -305,7 +306,9 @@ def parse_args():
     opts = parser.parse_args()
 
     if opts.debug:
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG, format=log_format)
+    else:
+        logging.basicConfig(format=log_format)
 
     if opts.format == 'tiles' and opts.tile_dir[-1]!='/':
         # we need the trailing /, it's actually a series of BUG s in render_tiles()
