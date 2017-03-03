@@ -48,7 +48,7 @@ class RenderThread:
         self.tileproj = map_utils.GoogleProjection(opts.max_zoom+1)
 
 
-    def render_tile(self, x, y, z):
+    def render_tile(self, z, x, y):
         # Calculate pixel positions of bottom-left & top-right
         p0 = (x * self.tile_size, (y + self.metatile_size) * self.tile_size)
         p1 = ((x + self.metatile_size) * self.tile_size, y * self.tile_size)
@@ -114,7 +114,7 @@ class RenderThread:
                 debug('ending loop')
                 break
             else:
-                (x, y, z) = r
+                (z, x, y) = r
 
             if self.opts.skip_existing or self.opts.skip_newer is not None:
                 debug('skip test existing:%s, newer:%s',
@@ -133,12 +133,12 @@ class RenderThread:
                 skip= False
 
             if not skip:
-                self.render_tile(x, y, z)
+                self.render_tile(z, x, y)
             else:
                 if self.opts.skip_existing:
-                    print("%d:%d:%d: present, skipping" % (x, y, z))
+                    print("%d:%d:%d: present, skipping" % (z, x, y))
                 else:
-                    print("%d:%d:%d: too new, skipping" % (x, y, z))
+                    print("%d:%d:%d: too new, skipping" % (z, x, y))
 
             # self.q.task_done()
 
@@ -208,7 +208,7 @@ class Master:
             debug('rendering individual tiles')
             for i in self.opts.tiles:
                 z, x, y = map(int, i.split(','))
-                self.queues[0].put((x, y, z))
+                self.queues[0].put((z, x, y))
 
         if self.opts.parallel == 'single':
             self.queues[0].put(None)
@@ -241,7 +241,8 @@ class Master:
                         continue
 
                     # Submit tile to be rendered into the queue
-                    t = (x*self.opts.metatile_size, y*self.opts.metatile_size, self.opts.min_zoom)
+                    t = (self.opts.min_zoom, x*self.opts.metatile_size,
+                         y*self.opts.metatile_size)
                     try:
                         self.queues[0].put(t)
                     except KeyboardInterrupt:
