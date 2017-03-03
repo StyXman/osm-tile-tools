@@ -10,6 +10,7 @@ import threading
 import datetime
 import errno
 import multiprocessing
+from random import randint
 
 import map_utils
 
@@ -39,7 +40,8 @@ class RenderThread:
         self.m  = mapnik.Map(self.image_size, self.image_size)
         # self.printLock  = printLock
         # Load style XML
-        mapnik.load_map(self.m, opts.mapfile, True)
+        if not self.opts.dry_run:
+            mapnik.load_map(self.m, opts.mapfile, True)
         end = time.perf_counter()
         debug('Map loading took %.6fs', end-start)
         # Obtain <Map> projection
@@ -75,33 +77,38 @@ class RenderThread:
         # Render image with default Agg renderer
         start = time.perf_counter()
         im = mapnik.Image(self.image_size, self.image_size)
-        try:
-            mapnik.render(self.m, im)
-        except RuntimeError as e:
-            print("%d:%d:%d: %s" % (z, x, y, e), file=sys.stderr)
-            sys.stderr.flush()
+        if not self.opts.dry_run:
+            try:
+                mapnik.render(self.m, im)
+            except RuntimeError as e:
+                print("%d:%d:%d: %s" % (z, x, y, e), file=sys.stderr)
+                sys.stderr.flush()
+            else:
+                mid= time.perf_counter()
+
+                # save the image, splitting it in the right amount of tiles
+                # we use min() so we can support low zoom levels with less than metatile_size tiles
+                for i in range(min(self.metatile_size, 2**z)):
+                    for j in range(min(self.metatile_size, 2**z)):
+                        img = im.view(i*self.tile_size, j*self.tile_size, self.tile_size, self.tile_size)
+                        data = img.tostring('png256')
+
+                        if not map_utils.is_empty(data):
+                            self.backend.store(z, x+i, y+j, data)
+                        else:
+                            if self.opts.empty == 'skip':
+                                # empty tile, skip
+                                print("%d:%d:%d: empty" % (z, x+i, y+j))
+                                continue
+
+                    self.backend.commit()
+
+                end = time.perf_counter()
+                print("%d:%d:%d: %f, %f" % (z, x, y, mid-start, end-mid))
+                sys.stdout.flush()
         else:
-            mid= time.perf_counter()
-
-            # save the image, splitting it in the right amount of tiles
-            # we use min() so we can support low zoom levels with less than metatile_size tiles
-            for i in range(min(self.metatile_size, 2**z)):
-                for j in range(min(self.metatile_size, 2**z)):
-                    img = im.view(i*self.tile_size, j*self.tile_size, self.tile_size, self.tile_size)
-                    data = img.tostring('png256')
-                    if not map_utils.is_empty(data):
-                        self.backend.store(z, x+i, y+j, data)
-                    else:
-                        if self.opts.empty == 'skip':
-                            # empty tile, skip
-                            print("%d:%d:%d: empty" % (z, x+i, y+j))
-                            continue
-
-                self.backend.commit()
-
-            end = time.perf_counter()
-            print("%d:%d:%d: %f, %f" % (z, x, y, mid-start, end-mid))
-            sys.stdout.flush()
+            # simulate some work
+            time.sleep(randint(0, 150) / 10)
 
 
     def loop(self):
@@ -293,6 +300,8 @@ def parse_args():
     parser.add_argument('-E', '--empty',         dest='empty',     default='skip', choices=('skip', 'link', 'render'))
 
     parser.add_argument('-d', '--debug',         dest='debug',     default=False, action='store_true')
+    parser.add_argument(      '--dry-run',       dest='dry_run',   default=False, action='store_true')
+    # TODO: buffer size (256?)
     opts = parser.parse_args()
 
     if opts.debug:
