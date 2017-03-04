@@ -179,16 +179,14 @@ class Master:
     def __init__(self, opts):
         self.opts = opts
         # we need at least space for the initial batch
-        self.out_queue_size = max(self.opts.threads*2,
-                                  2**self.opts.min_zoom/self.opts.metatile_size)
         self.renderers = {}
         self.work_stack = Stack()
 
         if self.opts.parallel == 'fork':
             debug('forks, using mp.Queue()')
 
-            self.queues = (multiprocessing.Queue(),
-                    multiprocessing.Queue(4*self.opts.threads+1))
+            self.queues = (multiprocessing.Queue(  self.opts.threads + 1),
+                           multiprocessing.Queue(4*self.opts.threads + 1))
         else:
             debug('threads or single, using queue.Queue()')
             # TODO: this and the warning about mapnik and multithreads
