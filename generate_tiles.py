@@ -30,19 +30,40 @@ except NotImplementedError:
     NUM_CPUS = 1
 
 
-class Stack:
-    """Boundless stack implemented with a list.
-    Although this is trivially implementable with a list, I prefer the
-    semantic of these methods and the str() representation given by the
-    list being pop from/push into the left."""
-    def __init__(self):
+class RenderStack:
+    """A render stack implemented with a list.
+    Although this is implemented with a list, I prefer the semantic of these
+    methods and the str() representation given by the list being pop from/push
+    into the left.
+
+    Finally, the stack autofills when we pop an element."""
+    def __init__(self, max_zoom, metatile_size):
         self.stack = []
+        self.max_zoom = max_zoom
+        self.metatile_size = metatile_size
 
     def push(self, o):
         self.stack.insert(0, o)
 
     def pop(self):
-        return self.stack.pop(0)
+        t = self.stack.pop(0)
+        if t[0] < self.max_zoom:
+            z, x, y = t
+
+            for r, c in ( (0, 0),                  (0, self.metatile_size),
+                          (self.metatile_size, 0), (self.metatile_size, self.metatile_size) ):
+                new_work = (z+1, x*2+r, y*2+c)
+                self.push(new_work)
+
+        debug(self.stack)
+        return t
+
+    def size(self):
+        return len(self.stack)
+
+    def veto(self, tile):
+        # TODO
+        pass
 
 
 class RenderThread:
@@ -180,7 +201,7 @@ class Master:
         self.opts = opts
         # we need at least space for the initial batch
         self.renderers = {}
-        self.work_stack = Stack()
+        self.work_stack = RenderStack(opts.max_zoom, opts.metatile_size)
 
         if self.opts.parallel == 'fork':
             debug('forks, using mp.Queue()')
@@ -281,16 +302,15 @@ class Master:
                 t = (self.opts.min_zoom, x*self.opts.metatile_size,
                      y*self.opts.metatile_size)
                 # debug("--> %r" % (t, ))
-                work_out.put(t)
+                self.work_stack.push(t)
 
         # I wish I could get to the underlying pipes so I could select() on them
         # NOTE: work_out._writer, self.queues[1]._reader
-        # TODO: find/create cut condition
-        while True:
+        while self.work_stack.size() > 0:
             try:
                 # we have space to put things,
                 # pop from the reader,
-                while True:
+                while False:
                     # NOTE: this blocks, we might get into a deadlock
                     # debug('ge...')
                     try:
@@ -306,10 +326,10 @@ class Master:
                     # debug('... t!')
 
 
+                debug(self.work_stack.stack)
                 while True:
                     try:
                         # pop from there,
-                        debug(self.work_stack.stack)
                         new_work = self.work_stack.pop()
                     except IndexError:
                         break
