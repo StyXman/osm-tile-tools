@@ -21,7 +21,7 @@ except:
     import mapnik
 
 import logging
-from logging import debug
+from logging import debug, info
 log_format= "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
 
 try:
@@ -142,8 +142,8 @@ class RenderThread:
                     self.backend.commit()
 
                 end = time.perf_counter()
-                print("%d:%d:%d: %f, %f" % (z, x, y, mid-start, end-mid))
-                sys.stdout.flush()
+                info("%d:%d:%d: %f, %f" % (z, x, y, mid-start, end-mid))
+
         else:
             # simulate some work
             time.sleep(randint(0, 150) / 10)
@@ -307,6 +307,7 @@ class Master:
         # I wish I could get to the underlying pipes so I could select() on them
         # NOTE: work_out._writer, self.queues[1]._reader
         while self.work_stack.size() > 0:
+            info(time.time() - start)
             try:
                 # we have space to put things,
                 # pop from the reader,
