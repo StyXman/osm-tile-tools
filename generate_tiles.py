@@ -38,32 +38,46 @@ class RenderStack:
 
     Finally, the stack autofills when we pop an element."""
     def __init__(self, max_zoom, metatile_size):
-        self.stack = []
+        # I don't need order here, it's (probably) better if I validate tiles
+        # as soon as possible
+        self.to_validate = set()
+        self.ready = []
         self.max_zoom = max_zoom
         self.metatile_size = metatile_size
 
+
     def push(self, o):
-        self.stack.insert(0, o)
+        debug(o)
+        self.to_validate.add(o)
+
 
     def pop(self):
-        t = self.stack.pop(0)
-        if t[0] < self.max_zoom:
+        if len(self.ready) > 0:
+            t = self.ready.pop(0)
             z, x, y = t
+            if z < self.max_zoom:
+                for r, c in ( (0, 0),                  (0, self.metatile_size),
+                              (self.metatile_size, 0), (self.metatile_size, self.metatile_size) ):
+                    new_work = (z+1, x*2+r, y*2+c)
+                    self.push(new_work)
+        else:
+            t = None
 
-            for r, c in ( (0, 0),                  (0, self.metatile_size),
-                          (self.metatile_size, 0), (self.metatile_size, self.metatile_size) ):
-                new_work = (z+1, x*2+r, y*2+c)
-                self.push(new_work)
-
-        debug(self.stack)
         return t
 
-    def size(self):
-        return len(self.stack)
 
-    def veto(self, tile):
-        # TODO
-        pass
+    def size(self):
+        debug("%s, %s", self.ready, self.to_validate)
+        return len(self.ready)+len(self.to_validate)
+
+
+    def notify(self, data):
+        tile, render = data
+        if tile[0] <= self.max_zoom:
+            self.to_validate.remove(tile)
+
+            if render:
+                self.ready.insert(0, tile)
 
 
 class RenderThread:
