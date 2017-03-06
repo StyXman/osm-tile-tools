@@ -112,10 +112,11 @@ class RenderThread:
         if self.m.buffer_size < 128:
             self.m.buffer_size = 128
 
-        # Render image with default Agg renderer
-        start = time.perf_counter()
-        im = mapnik.Image(self.image_size, self.image_size)
         if not self.opts.dry_run:
+            # Render image with default Agg renderer
+            start = time.perf_counter()
+            im = mapnik.Image(self.image_size, self.image_size)
+
             try:
                 mapnik.render(self.m, im)
             except RuntimeError as e:
