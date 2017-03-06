@@ -136,7 +136,7 @@ class RenderThread:
                         else:
                             if self.opts.empty == 'skip':
                                 # empty tile, skip
-                                print("%d:%d:%d: empty" % (z, x+i, y+j))
+                                debug("%d:%d:%d: empty" % (z, x+i, y+j))
                                 continue
 
                     self.backend.commit()
