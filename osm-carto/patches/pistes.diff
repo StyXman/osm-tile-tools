@@ -28,7 +28,7 @@
      geometry: point
 --- a/style.mss
 +++ b/style.mss
-@@ -411,3 +411,34 @@
+@@ -405,3 +405,34 @@
      text-spacing: 400;
    }
  }

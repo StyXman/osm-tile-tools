@@ -101,9 +101,9 @@
      marker-clip: false;
 --- a/style.mss
 +++ b/style.mss
-@@ -272,6 +272,14 @@
+@@ -266,6 +266,14 @@
  
-                 "Unifont Medium", "unifont Medium", "Unifont Upper Medium";
+                 "Unifont Medium", "Unifont Upper Medium";
  
 +// nice stuff is things that are not so common and that I like to see from far,
 +// like castles, viewpoints and such

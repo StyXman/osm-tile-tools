@@ -20,7 +20,7 @@
            line-dasharray: 5,2;
 --- a/style.mss
 +++ b/style.mss
-@@ -378,6 +378,8 @@
+@@ -372,6 +372,8 @@
  @helipad-fill: @aeroway-fill;
  
  

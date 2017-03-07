@@ -1,6 +1,6 @@
 --- a/style.mss
 +++ b/style.mss
-@@ -352,9 +352,6 @@
+@@ -346,9 +346,6 @@
  @path-casing: @default-casing;
  @path-fill: black;
  
@@ -10,7 +10,7 @@
  @steps-casing: @default-casing;
  @steps-fill: @footway-fill;
  
-@@ -372,12 +369,14 @@
+@@ -366,12 +363,14 @@
  @track-grade1-fill: #b37700;
  @track-grade2-fill: #a87000;
  

@@ -1,7 +1,7 @@
 --- a/style.mss
 +++ b/style.mss
-@@ -273,11 +273,103 @@
-                 "Unifont Medium", "unifont Medium", "Unifont Upper Medium";
+@@ -267,11 +267,103 @@
+                 "Unifont Medium", "Unifont Upper Medium";
  
  @water-color: #b5d0d0;
 +@water-dark: #5A5AA1;

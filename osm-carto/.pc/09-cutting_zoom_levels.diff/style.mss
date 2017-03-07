@@ -1,5 +1,5 @@
 Map {
-  background-color: @land-color;
+  background-color: @water-color;
 }
 
 /*
@@ -114,11 +114,9 @@ A regular style.
 
                 "Noto Naskh Arabic UI Regular",
 
-                "Noto Emoji Regular",
-
                 "DejaVu Sans Book",
 
-                "Unifont Medium", "unifont Medium", "Unifont Upper Medium";
+                "Unifont Medium", "Unifont Upper Medium";
 
 /*
 A bold style is available for almost all scripts. Bold text is heavier than
@@ -193,11 +191,9 @@ regular text and can be used for emphasis. Fallback is a regular style.
 
                 "Noto Naskh Arabic UI Regular",
 
-                "Noto Emoji Regular",
-
                 "DejaVu Sans Bold", "DejaVu Sans Book",
 
-                "Unifont Medium", "unifont Medium", "Unifont Upper Medium";
+                "Unifont Medium", "Unifont Upper Medium";
 
 /*
 Italics are only available for the base font, not the other scripts.
@@ -266,11 +262,9 @@ For a considerable number of labels this style will make no difference to the re
 
                 "Noto Naskh Arabic UI Regular",
 
-                "Noto Emoji Regular",
-
                 "DejaVu Sans Oblique", "DejaVu Sans Book",
 
-                "Unifont Medium", "unifont Medium", "Unifont Upper Medium";
+                "Unifont Medium", "Unifont Upper Medium";
 
 @water-color: #b5d0d0;
 @water-dark: #5A5AA1;

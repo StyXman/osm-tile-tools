@@ -12,100 +12,80 @@
  
 --- a/project.mml
 +++ b/project.mml
-@@ -53,21 +53,23 @@
+@@ -53,24 +53,6 @@
    - admin.mss
    - addressing.mss
  Layer:
 -  - id: world
 -    name: world
+-    geometry: polygon
+-    <<: *extents
+-    Datasource:
+-      file: data/simplified-land-polygons-complete-3857/simplified_land_polygons.shp
+-      type: shape
+-    properties:
+-      maxzoom: 9
+-  - id: coast-poly
+-    name: coast-poly
+-    geometry: polygon
+-    <<: *extents
+-    Datasource:
+-      file: data/land-polygons-split-3857/land_polygons.shp
+-      type: shape
+-    properties:
+-      minzoom: 10
+   - id: builtup
+     name: builtup
+     geometry: polygon
+@@ -216,6 +198,26 @@
+     properties:
+       minzoom: 8
+       maxzoom: 11
 +  - id: ocean-lz
 +    name: ocean-lz
 +    class: ocean
-     geometry: polygon
-     <<: *extents
-     Datasource:
--      file: data/simplified-land-polygons-complete-3857/simplified_land_polygons.shp
++    geometry: polygon
++    <<: *extents
++    Datasource:
 +      file: data/simplified-water-polygons-complete-3857/simplified_water_polygons.shp
-       type: shape
-     properties:
-       maxzoom: 9
--  - id: coast-poly
--    name: coast-poly
++      type: shape
++    properties:
++      maxzoom: 9
 +  - id: ocean
 +    name: ocean
 +    class: ocean
-     geometry: polygon
-     <<: *extents
-     Datasource:
--      file: data/land-polygons-split-3857/land_polygons.shp
++    geometry: polygon
++    <<: *extents
++    Datasource:
 +      file: data/water-polygons-split-3857/water_polygons.shp
-       type: shape
-     properties:
-       minzoom: 10
---- a/shapefiles.mss
-+++ b/shapefiles.mss
-@@ -11,18 +11,6 @@
-   }
- }
- 
--#world {
--  [zoom >= 0][zoom < 10] {
--    polygon-fill: @land-color;
--  }
--}
--
--#coast-poly {
--  [zoom >= 10] {
--    polygon-fill: @land-color;
--  }
--}
--
- #icesheet-poly {
-   [zoom >= 6] {
-     polygon-fill: @glacier;
---- a/style.mss
-+++ b/style.mss
-@@ -1,5 +1,5 @@
- Map {
--  background-color: @water-color;
-+  background-color: @land-color;
- }
- 
- /*
++      type: shape
++    properties:
++      minzoom: 10
+   - id: icesheet-poly
+     name: icesheet-poly
+     geometry: polygon
 --- a/water.mss
 +++ b/water.mss
-@@ -24,42 +24,28 @@
+@@ -25,6 +25,7 @@
+     }
+   }
+ 
++  /*
+   [waterway = 'dock'],
+   [waterway = 'canal'] {
+     [zoom >= 9]::waterway {
+@@ -61,6 +62,30 @@
        }
      }
    }
++  */
 +}
- 
--  [waterway = 'dock'],
--  [waterway = 'canal'] {
--    [zoom >= 9]::waterway {
--      polygon-fill: @water-color;
--      [way_pixels >= 4] {
--        polygon-gamma: 0.75;
--      }
--      [way_pixels >= 64] {
--        polygon-gamma: 0.6;
--      }
--    }
--  }
++
 +/*
 + * Water areas, of all types. Because they are rendered all the same,
 + * attachments can be used to reduce combinational rules
 + */
- 
--  [landuse = 'basin'][zoom >= 7]::landuse {
--    polygon-fill: @water-color;
--    [way_pixels >= 4] {
--      polygon-gamma: 0.75;
--    }
--    [way_pixels >= 64] {
--      polygon-gamma: 0.6;
--    }
--  }
++
 +#water-areas[waterway = 'dock'][zoom >= 9]::waterway,
 +#water-areas[waterway = 'canal'][zoom >= 9]::waterway,
 +#water-areas[landuse = 'basin'][zoom >= 7]::landuse,
@@ -114,28 +94,17 @@
 +#water-areas[waterway = 'riverbank'][zoom >= 6]::waterway,
 +.ocean {
 +  polygon-fill: @water-color;
- 
--  [natural = 'water']::natural,
--  [landuse = 'reservoir']::landuse,
--  [waterway = 'riverbank']::waterway {
--    [zoom >= 6] {
--      polygon-fill: @water-color;
--      [way_pixels >= 4] {
--        polygon-gamma: 0.75;
--      }
--      [way_pixels >= 64] {
--        polygon-gamma: 0.6;
--      }
--    }
++
 +  // Only the SQL layers have way_pixels
 +  #water-areas[way_pixels >= 4] {
 +    polygon-gamma: 0.75;
 +  }
 +  #water-areas[way_pixels >= 64] {
 +    polygon-gamma: 0.6;
-   }
++  }
  }
  
+ #water-lines-casing {
 --- a/scripts/get-shapefiles.py
 +++ b/scripts/get-shapefiles.py
 @@ -82,7 +82,24 @@

@@ -1,6 +1,6 @@
 --- a/style.mss
 +++ b/style.mss
-@@ -285,8 +285,8 @@
+@@ -279,8 +279,8 @@
  @water-text: #5A5AA1;
  @land-color: #f2efe9;
  

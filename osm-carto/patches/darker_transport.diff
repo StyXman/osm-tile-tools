@@ -19,7 +19,7 @@
  
 --- a/style.mss
 +++ b/style.mss
-@@ -294,6 +294,7 @@
+@@ -288,6 +288,7 @@
  // amenities
  @attraction: #f2caea;
  @barracks: #ff8f8f;

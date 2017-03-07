@@ -46,6 +46,45 @@
       }
     }
   }
+
+  /*
+  [waterway = 'dock'],
+  [waterway = 'canal'] {
+    [zoom >= 9]::waterway {
+      polygon-fill: @water-color;
+      [way_pixels >= 4] {
+        polygon-gamma: 0.75;
+      }
+      [way_pixels >= 64] {
+        polygon-gamma: 0.6;
+      }
+    }
+  }
+
+  [landuse = 'basin'][zoom >= 7]::landuse {
+    polygon-fill: @water-color;
+    [way_pixels >= 4] {
+      polygon-gamma: 0.75;
+    }
+    [way_pixels >= 64] {
+      polygon-gamma: 0.6;
+    }
+  }
+
+  [natural = 'water']::natural,
+  [landuse = 'reservoir']::landuse,
+  [waterway = 'riverbank']::waterway {
+    [zoom >= 6] {
+      polygon-fill: @water-color;
+      [way_pixels >= 4] {
+        polygon-gamma: 0.75;
+      }
+      [way_pixels >= 64] {
+        polygon-gamma: 0.6;
+      }
+    }
+  }
+  */
 }
 
 /*
