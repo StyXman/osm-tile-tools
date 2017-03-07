@@ -1,0 +1,41 @@
+--- a/style.mss
++++ b/style.mss
+@@ -114,11 +114,9 @@
+ 
+                 "Noto Naskh Arabic UI Regular",
+ 
+-                "Noto Emoji Regular",
+-
+                 "DejaVu Sans Book",
+ 
+-                "Unifont Medium", "unifont Medium", "Unifont Upper Medium";
++                "Unifont Medium", "Unifont Upper Medium";
+ 
+ /*
+ A bold style is available for almost all scripts. Bold text is heavier than
+@@ -193,11 +191,9 @@
+ 
+                 "Noto Naskh Arabic UI Regular",
+ 
+-                "Noto Emoji Regular",
+-
+                 "DejaVu Sans Bold", "DejaVu Sans Book",
+ 
+-                "Unifont Medium", "unifont Medium", "Unifont Upper Medium";
++                "Unifont Medium", "Unifont Upper Medium";
+ 
+ /*
+ Italics are only available for the base font, not the other scripts.
+@@ -266,11 +262,9 @@
+ 
+                 "Noto Naskh Arabic UI Regular",
+ 
+-                "Noto Emoji Regular",
+-
+                 "DejaVu Sans Oblique", "DejaVu Sans Book",
+ 
+-                "Unifont Medium", "unifont Medium", "Unifont Upper Medium";
++                "Unifont Medium", "Unifont Upper Medium";
+ 
+ @water-color: #b5d0d0;
+ @land-color: #f2efe9;

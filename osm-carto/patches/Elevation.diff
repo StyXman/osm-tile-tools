@@ -1,0 +1,12 @@
+--- a/project.mml
++++ b/project.mml
+@@ -1,7 +1,7 @@
+ scale: 1
+ metatile: 2
+-name: OpenStreetMap Carto
+-description: A general-purpose OpenStreetMap mapnik style, in CartoCSS
++name: Elevation
++description: A OSM-carto based map with relief info, contrasting roads and other minor changes.
+ bounds: &world
+   - -180
+   - -85.05112877980659
