@@ -11,7 +11,7 @@ import datetime
 import errno
 import multiprocessing
 import queue
-from random import randint
+from random import randint, random
 from os import getpid
 
 import map_utils
@@ -25,10 +25,16 @@ import logging
 from logging import debug, info
 log_format= "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
 
+
 try:
     NUM_CPUS = multiprocessing.cpu_count()
 except NotImplementedError:
     NUM_CPUS = 1
+
+
+def floor(i, base=1):
+    """Round down i to the closest multiple of base."""
+    return base * (i // base)
 
 
 class RenderStack:
@@ -127,6 +133,15 @@ class RenderThread:
         if self.m.buffer_size < 128:
             self.m.buffer_size = 128
 
+        # we must decide wether to render the subtiles/children of this tile
+        # for that we keep this map of children coords to a bool
+        semi_metatile_size = max(self.metatile_size // 2, 1)
+        render_children = {}
+        for i in (0, semi_metatile_size):
+            render_children[i] = {}
+            for j in (0, semi_metatile_size):
+                render_children[i][j] = False
+
         if not self.opts.dry_run:
             # Render image with default Agg renderer
             start = time.perf_counter()
@@ -141,19 +156,31 @@ class RenderThread:
                 mid= time.perf_counter()
 
                 # save the image, splitting it in the right amount of tiles
-                # we use min() so we can support low zoom levels with less than metatile_size tiles
-                for i in range(min(self.metatile_size, 2**z)):
-                    for j in range(min(self.metatile_size, 2**z)):
+                # we use min() so we can support low zoom levels with less than
+                # metatile_size tiles
+                tiles = min(self.metatile_size, 2**z)
+                for i in range(tiles):
+                    for j in range(tiles):
                         img = im.view(i*self.tile_size, j*self.tile_size, self.tile_size, self.tile_size)
                         data = img.tostring('png256')
+                        is_empty = map_utils.is_empty(data)
 
-                        if not map_utils.is_empty(data):
+                        if not is_empty:
                             self.backend.store(z, x+i, y+j, data)
+
+                            child_i = floor(i, tiles // 2)
+                            child_j = floor(j, tiles // 2)
+                            # at least something to render. note that if we're
+                            # rendering only one tile (either metatile_size == 1
+                            # or z == 0), i, j can only be == 0. this matches
+                            # the situation further down
+                            render_children[child_i][child_j] = True
                         else:
                             if self.opts.empty == 'skip':
                                 # empty tile, skip
                                 debug("%d:%d:%d: empty" % (z, x+i, y+j))
                                 continue
+                            # TODO: else?
 
                     self.backend.commit()
 
@@ -162,14 +189,23 @@ class RenderThread:
 
         else:
             # simulate some work
-            time.sleep(randint(0, 150) / 10)
+            time.sleep(randint(0, 30) / 10)
+            for i in (0, semi_metatile_size):
+                for j in (0, semi_metatile_size):
+                    if random() <= 0.75:
+                        render_children[i][j] = True
 
-        for r, c in ( (0, 0), (0, 1),
-                      (1, 0), (1, 1) ):
-            # TODO: do not do it blindly
-            t = (z+1, x*2+r, y*2+c)
-            # debug("==> %r" % (t, ))
-            self.queues[1].put(t)
+        debug(render_children)
+        for i in (0, self.opts.metatile_size):
+            for j in (0, self.opts.metatile_size):
+                # TODO: do not do it blindly
+                t = (z+1, x*2+i, y*2+j)
+                debug("<== [%s] %r" % (getpid(), t, ))
+                # render_children is indexed in semi_metatile_size and i, j
+                # are either 0 or metatile_size, that's why we // 2 here
+                # note that if metatile_size == 1, i, j can only be == 0
+                self.queues[1].put((t, render_children[i // 2][j // 2]))
+                debug("<<< [%s]" % getpid())
 
 
     def loop(self):
@@ -277,6 +313,7 @@ class Master:
             for i in self.opts.tiles:
                 z, x, y = map(int, i.split(','))
                 self.queues[0].put((z, x, y))
+                # TODO: either pop from work_in or add param to not render children
 
         if self.opts.parallel == 'single':
             self.queues[0].put(None)
@@ -286,7 +323,11 @@ class Master:
 
 
     def render_bbox(self):
+        start = time.time()
         work_out, work_in = self.queues
+        # for each tile that was sent to be worked on, 4 should return
+        # this will be important later on
+        went_out, came_back = 0, 0
 
         gprj = map_utils.GoogleProjection(self.opts.max_zoom+1)
 
@@ -319,6 +360,8 @@ class Master:
                      y*self.opts.metatile_size)
                 debug("... %r" % (t, ))
                 self.work_stack.push(t)
+                # make sure they're rendered!
+                self.work_stack.notify((t, True))
 
         # I wish I could get to the underlying pipes so I could select() on them
         # NOTE: work_out._writer, self.queues[1]._reader
@@ -327,21 +370,16 @@ class Master:
             try:
                 # we have space to put things,
                 # pop from the reader,
-                while False:
-                    # NOTE: this blocks, we might get into a deadlock
-                    # debug('ge...')
+                while True:
                     try:
-                        metatile = work_in.get(True, 1)
+                        data = work_in.get(True, 1)
                     except queue.Empty:
                         debug('in: timeout!')
                         break
                     else:
-                        # debug("<-- %r" % (metatile, ))
-                        if metatile[0] <= self.opts.max_zoom:
-                            # push in the stack,
-                            self.work_stack.push(metatile)
-                    # debug('... t!')
-
+                        debug("<-- %r" % (data, ))
+                        self.work_stack.notify(data)
+                        came_back += 1
 
                 while True:
                     try:
@@ -351,17 +389,27 @@ class Master:
                         debug('out: timeout!')
                         break
                     else:
-                        try:
-                            # push in the writer
-                            # debug("--> %r" % (new_work, ))
-                            work_out.put(new_work, True, 1)
-                        except queue.Full:
+                        if new_work is not None:
+                            try:
+                                # push in the writer
+                                debug("--> %r" % (new_work, ))
+                                work_out.put(new_work, True, 1)
+                                went_out += 1
+                            except queue.Full:
+                                break
+                        else:
                             break
 
             except KeyboardInterrupt as e:
                 debug(e)
                 self.finish()
                 raise SystemExit("Ctrl-c detected, exiting...")
+
+        while went_out*4 > came_back:
+            debug("%d <-> %d", went_out*4, came_back)
+            data = work_in.get(True)
+            debug("<-- %r", data)
+            came_back += 1
 
         debug('out!')
 
@@ -399,6 +447,7 @@ def parse_args():
     parser.add_argument('-f', '--format',        dest='format',    default='tiles') # also 'mbtiles'
     parser.add_argument('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
 
+    # TODO: check it's a power of 2
     parser.add_argument('-m', '--metatile-size', dest='metatile_size', default=1, type=int)
 
     parser.add_argument('-t', '--threads',       dest='threads',   default=NUM_CPUS, type=int)
