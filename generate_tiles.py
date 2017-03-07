@@ -12,6 +12,7 @@ import errno
 import multiprocessing
 import queue
 from random import randint
+from os import getpid
 
 import map_utils
 
@@ -176,10 +177,10 @@ class RenderThread:
         while True:
             # Fetch a tile from the queue and render it
             r = self.queues[0].get()
-            # debug("<== %r" % (r, ))
+            debug("[%s] ==> %r" % (getpid(), r, ))
             if r is None:
                 # self.q.task_done()
-                debug('ending loop')
+                debug('[%s] ending loop' % getpid())
                 break
             else:
                 (z, x, y) = r
@@ -316,7 +317,7 @@ class Master:
                 # Submit tile to be rendered into the queue
                 t = (self.opts.min_zoom, x*self.opts.metatile_size,
                      y*self.opts.metatile_size)
-                # debug("--> %r" % (t, ))
+                debug("... %r" % (t, ))
                 self.work_stack.push(t)
 
         # I wish I could get to the underlying pipes so I could select() on them
@@ -332,7 +333,7 @@ class Master:
                     try:
                         metatile = work_in.get(True, 1)
                     except queue.Empty:
-                        # debug('timeout!')
+                        debug('in: timeout!')
                         break
                     else:
                         # debug("<-- %r" % (metatile, ))
@@ -342,12 +343,12 @@ class Master:
                     # debug('... t!')
 
 
-                debug(self.work_stack.stack)
                 while True:
                     try:
                         # pop from there,
                         new_work = self.work_stack.pop()
                     except IndexError:
+                        debug('out: timeout!')
                         break
                     else:
                         try:
@@ -356,7 +357,9 @@ class Master:
                             work_out.put(new_work, True, 1)
                         except queue.Full:
                             break
-            except KeyboardInterrupt:
+
+            except KeyboardInterrupt as e:
+                debug(e)
                 self.finish()
                 raise SystemExit("Ctrl-c detected, exiting...")
 
@@ -368,6 +371,7 @@ class Master:
             debug('finishing threads/procs')
             # Signal render threads to exit by sending empty request to queue
             for i in range(self.opts.threads):
+                debug("--> None")
                 self.queues[0].put(None)
 
             # wait for pending rendering jobs to complete
