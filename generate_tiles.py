@@ -87,10 +87,10 @@ class RenderStack:
 
     def size(self):
         # HACK: int(bool) \belongs (0, 1)
-        debug("%s, %s, %s", self.first, self.ready, self.to_validate)
+        # debug("%s, %s, %s", self.first, self.ready, self.to_validate)
         ans = ( int(self.first is not None) + len(self.ready) +
                 len(self.to_validate) )
-        debug(ans)
+        # debug(ans)
         return ans
 
 
@@ -391,7 +391,7 @@ class Master:
                     try:
                         data = work_in.get(True, .1)
                     except queue.Empty:
-                        debug('in: timeout!')
+                        # debug('in: timeout!')
                         break
                     else:
                         debug("<-- %r" % (data, ))
