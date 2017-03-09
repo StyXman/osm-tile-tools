@@ -409,13 +409,14 @@ class Master:
                         if new_work is not None:
                             try:
                                 # push in the writer
-                                debug("--> %r" % (new_work, ))
                                 work_out.put(new_work, True, .1)
+                            except queue.Full:
+                                # debug('work_out full, not confirm()ing.')
+                                break
+                            else:
                                 self.work_stack.confirm()
                                 went_out += 1
-                            except queue.Full:
-                                debug('work_out full, not confirm()ing.')
-                                break
+                                debug("--> %r" % (new_work, ))
                         else:
                             break
 
