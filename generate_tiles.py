@@ -276,8 +276,8 @@ class Master:
         if self.opts.parallel == 'fork':
             debug('forks, using mp.Queue()')
 
-            self.queues = (multiprocessing.Queue(  self.opts.threads + 1),
-                           multiprocessing.Queue(4*self.opts.threads + 1))
+            self.queues = (multiprocessing.Queue(1),
+                           multiprocessing.Queue(4*self.opts.threads))
         else:
             debug('threads or single, using queue.Queue()')
             # TODO: this and the warning about mapnik and multithreads
