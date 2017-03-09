@@ -43,39 +43,55 @@ class RenderStack:
     methods and the str() representation given by the list being pop from/push
     into the left.
 
-    Finally, the stack autofills when we pop an element."""
+    The stack has a first element, which is the one ready to be pop()'ed.
+    Because this element might need to be returned, there's the confirm()
+    method which actually pops it and replaces it with the next one.
+
+    Finally, the stack autofills with children when we pop an element."""
     def __init__(self, max_zoom, metatile_size):
         # I don't need order here, it's (probably) better if I validate tiles
         # as soon as possible
-        self.to_validate = set()
+        self.first = None
         self.ready = []
+        self.to_validate = set()
         self.max_zoom = max_zoom
         self.metatile_size = metatile_size
 
 
     def push(self, o):
-        debug(o)
         self.to_validate.add(o)
+        debug("%s, %s, %s", self.first, self.ready, self.to_validate)
 
 
     def pop(self):
-        if len(self.ready) > 0:
-            t = self.ready.pop(0)
-            z, x, y = t
+        return self.first
+
+
+    def confirm(self):
+        if self.first is not None:
+            z, x, y = self.first
             if z < self.max_zoom:
                 for r, c in ( (0, 0),                  (0, self.metatile_size),
                               (self.metatile_size, 0), (self.metatile_size, self.metatile_size) ):
                     new_work = (z+1, x*2+r, y*2+c)
                     self.push(new_work)
+
+        if len(self.ready) > 0:
+            t = self.ready.pop(0)
         else:
             t = None
 
-        return t
+        self.first = t
+        debug("%s, %s, %s", self.first, self.ready, self.to_validate)
 
 
     def size(self):
-        debug("%s, %s", self.ready, self.to_validate)
-        return len(self.ready)+len(self.to_validate)
+        # HACK: int(bool) \belongs (0, 1)
+        debug("%s, %s, %s", self.first, self.ready, self.to_validate)
+        ans = ( int(self.first is not None) + len(self.ready) +
+                len(self.to_validate) )
+        debug(ans)
+        return ans
 
 
     def notify(self, data):
@@ -84,7 +100,10 @@ class RenderStack:
             self.to_validate.remove(tile)
 
             if render:
-                self.ready.insert(0, tile)
+                if self.first is not None:
+                    self.ready.insert(0, self.first)
+
+                self.first = tile
 
 
 class RenderThread:
@@ -97,7 +116,6 @@ class RenderThread:
         self.image_size = self.tile_size*self.metatile_size
         start = time.perf_counter()
         self.m  = mapnik.Map(self.image_size, self.image_size)
-        # self.printLock  = printLock
         # Load style XML
         if not self.opts.dry_run:
             mapnik.load_map(self.m, opts.mapfile, True)
@@ -366,13 +384,12 @@ class Master:
         # I wish I could get to the underlying pipes so I could select() on them
         # NOTE: work_out._writer, self.queues[1]._reader
         while self.work_stack.size() > 0:
-            info(time.time() - start)
             try:
                 # we have space to put things,
                 # pop from the reader,
                 while True:
                     try:
-                        data = work_in.get(True, 1)
+                        data = work_in.get(True, .1)
                     except queue.Empty:
                         debug('in: timeout!')
                         break
@@ -393,9 +410,11 @@ class Master:
                             try:
                                 # push in the writer
                                 debug("--> %r" % (new_work, ))
-                                work_out.put(new_work, True, 1)
+                                work_out.put(new_work, True, .1)
+                                self.work_stack.confirm()
                                 went_out += 1
                             except queue.Full:
+                                debug('work_out full, not confirm()ing.')
                                 break
                         else:
                             break
