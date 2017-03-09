@@ -385,19 +385,6 @@ class Master:
         # NOTE: work_out._writer, self.queues[1]._reader
         while self.work_stack.size() > 0:
             try:
-                # we have space to put things,
-                # pop from the reader,
-                while True:
-                    try:
-                        data = work_in.get(True, .1)
-                    except queue.Empty:
-                        # debug('in: timeout!')
-                        break
-                    else:
-                        debug("<-- %r" % (data, ))
-                        self.work_stack.notify(data)
-                        came_back += 1
-
                 while True:
                     try:
                         # pop from there,
@@ -419,6 +406,18 @@ class Master:
                                 debug("--> %r" % (new_work, ))
                         else:
                             break
+
+                # pop from the reader,
+                while True:
+                    try:
+                        data = work_in.get(True, .1)
+                    except queue.Empty:
+                        # debug('in: timeout!')
+                        break
+                    else:
+                        debug("<-- %r" % (data, ))
+                        self.work_stack.notify(data)
+                        came_back += 1
 
             except KeyboardInterrupt as e:
                 debug(e)
