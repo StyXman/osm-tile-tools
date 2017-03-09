@@ -378,8 +378,9 @@ class Master:
                      y*self.opts.metatile_size)
                 debug("... %r" % (t, ))
                 self.work_stack.push(t)
-                # make sure they're rendered!
-                self.work_stack.notify((t, True))
+
+        # make sure we start with only one (the last one)
+        self.work_stack.notify((t, True))
 
         # I wish I could get to the underlying pipes so I could select() on them
         # NOTE: work_out._writer, self.queues[1]._reader
