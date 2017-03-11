@@ -97,7 +97,8 @@ class RenderStack:
 
     def notify(self, data):
         tile, render = data
-        if tile[0] <= self.max_zoom:
+        z, x, y = tile
+        if z <= self.max_zoom:
             self.to_validate.remove(tile)
 
             if render:
@@ -105,6 +106,8 @@ class RenderStack:
                     self.ready.insert(0, self.first)
 
                 self.first = tile
+            else:
+                info("%d:%d:%d: empty, skipping" % (z, x, y))
 
 
 class RenderThread:
