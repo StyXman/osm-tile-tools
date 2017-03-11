@@ -22,8 +22,9 @@ except:
     import mapnik
 
 import logging
-from logging import debug, info
-log_format= "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
+from logging import debug, info, exception
+long_format= "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
+short_format= "%(asctime)s %(message)s"
 
 
 try:
@@ -168,8 +169,7 @@ class RenderThread:
             try:
                 mapnik.render(self.m, im)
             except RuntimeError as e:
-                print("%d:%d:%d: %s" % (z, x, y, e), file=sys.stderr)
-                sys.stderr.flush()
+                exception("%d:%d:%d: %s", z, x, y, e)
             else:
                 mid= time.perf_counter()
 
@@ -259,9 +259,9 @@ class RenderThread:
                 self.render_tile(z, x, y)
             else:
                 if self.opts.skip_existing:
-                    print("%d:%d:%d: present, skipping" % (z, x, y))
+                    info("%d:%d:%d: present, skipping" % (z, x, y))
                 else:
-                    print("%d:%d:%d: too new, skipping" % (z, x, y))
+                    info("%d:%d:%d: too new, skipping" % (z, x, y))
 
             # self.q.task_done()
 
@@ -484,9 +484,9 @@ def parse_args():
     opts = parser.parse_args()
 
     if opts.debug:
-        logging.basicConfig(level=logging.DEBUG, format=log_format)
+        logging.basicConfig(level=logging.DEBUG, format=long_format)
     else:
-        logging.basicConfig(format=log_format)
+        logging.basicConfig(level=logging.INFO, format=short_format)
 
     if opts.format == 'tiles' and opts.tile_dir[-1]!='/':
         # we need the trailing /, it's actually a series of BUG s in render_tiles()
