@@ -57,7 +57,7 @@ Layer:
     name: "terrain-small"
     class: "terrain"
     geometry: "raster"
-    <<: *extents84
+    <<: *extents
     Datasource:
       file: "data/height/mixed-terrain-small.tif"
       type: "gdal"
@@ -68,7 +68,7 @@ Layer:
     name: "terrain-medium"
     class: "terrain"
     geometry: "raster"
-    <<: *extents84
+    <<: *extents
     Datasource:
       file: "data/height/mixed-terrain-medium.tif"
       type: "gdal"
@@ -80,7 +80,7 @@ Layer:
     name: "terrain-big"
     class: "terrain"
     geometry: "raster"
-    <<: *extents84
+    <<: *extents
     Datasource:
       file: "data/height/mixed-terrain.vrt"
       type: "gdal"
@@ -200,68 +200,69 @@ Layer:
         ) AS landcover_line
     properties:
       minzoom: 14
-  - id: "shade-small"
-    name: "shade-small"
-    class: "shade-over"
+  - id: "hillshade-small"
+    name: "hillshade-small"
+    class: "hillshade-over"
     geometry: "raster"
-    <<: *extents84
+    <<: *extents
     Datasource:
       file: "data/height/mixed-hillshade-small.tif"
       type: "gdal"
     advanced: {}
     properties:
       maxzoom: 6
-  - id: "shade-medium-over"
-    name: "shade-medium-over"
-    class: "shade-over"
+  - id: "hillshade-medium-over"
+    name: "hillshade-medium-over"
+    class: "hillshade-over"
     geometry: "raster"
-    <<: *extents84
+    <<: *extents
     Datasource:
       file: "data/height/mixed-hillshade-medium.tif"
       type: "gdal"
     advanced: {}
     properties:
       minzoom: 7
-      maxzoom: 7
-  - id: "shade-medium-overlay"
-    name: "shade-medium-overlay"
-    class: "shade-overlay"
+      maxzoom: 8
+  - id: "hillshade-medium-overlay"
+    name: "hillshade-medium-overlay"
+    class: "hillshade-overlay"
     geometry: "raster"
-    <<: *extents84
+    <<: *extents
     Datasource:
       file: "data/height/mixed-hillshade-medium.tif"
       type: "gdal"
     advanced: {}
     properties:
       minzoom: 8
-      maxzoom: 10
-  - id: "shade-big"
-    name: "shade-big"
-    class: "shade-overlay"
+      maxzoom: 8
+  - id: "hillshade-big"
+    name: "hillshade-big"
+    class: "hillshade-overlay"
     geometry: "raster"
-    <<: *extents84
+    <<: *extents
     Datasource:
       file: "data/height/mixed-hillshade.vrt"
       type: "gdal"
     advanced: {}
     properties:
       minzoom: 9
-  - id: "slope-small"
-    name: "slope-small"
-    class: "slope-over"
+  - id: "slopeshade-small"
+    name: "slopeshade-small"
+    class: "slopeshade-over"
     geometry: "raster"
-    <<: *extents84
+    <<: *extents
     Datasource:
       file: "data/height/mixed-slopeshade-small.tif"
       type: "gdal"
     advanced: {}
     properties:
       maxzoom: 6
-  - id: "slope-medium-over"
-    name: "slope-medium-over"
-    class: "slope-over"
+    # status: off
+  - id: "slopeshade-medium-over"
+    name: "slopeshade-medium-over"
+    class: "slopeshade-over"
     geometry: "raster"
-    <<: *extents84
+    <<: *extents
     Datasource:
       file: "data/height/mixed-slopeshade-medium.tif"
       type: "gdal"
@@ -269,11 +270,12 @@ Layer:
     properties:
       minzoom: 7
       maxzoom: 7
-  - id: "slope-medium-overlay"
-    name: "slope-medium-overlay"
-    class: "slope-overlay"
+    # status: off
+  - id: "slopeshade-medium-overlay"
+    name: "slopeshade-medium-overlay"
+    class: "slopeshade-overlay"
     geometry: "raster"
-    <<: *extents84
+    <<: *extents
     Datasource:
       file: "data/height/mixed-slopeshade-medium.tif"
       type: "gdal"
@@ -281,11 +283,11 @@ Layer:
     properties:
       minzoom: 8
       maxzoom: 8
-  - id: "slope-big"
-    name: "slope-big"
-    class: "slope-overlay"
+  - id: "slopeshade-big"
+    name: "slopeshade-big"
+    class: "slopeshade-overlay"
     geometry: "raster"
-    <<: *extents84
+    <<: *extents
     Datasource:
       file: "data/height/mixed-slopeshade.vrt"
       type: "gdal"
