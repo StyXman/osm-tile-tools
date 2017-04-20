@@ -12,6 +12,8 @@ import errno
 import hashlib
 import sqlite3
 
+from shapely.geometry import Polygon
+
 from logging import debug
 
 
@@ -57,6 +59,7 @@ def is_empty (data):
     # TODO: this is *completely* style dependent!
     return len (data)==103 and data[41:44]==b'\xb5\xd0\xd0'
 
+
 class DiskBackend:
     def __init__ (self, base, *more):
         self.base_dir= base
@@ -79,7 +82,8 @@ class DiskBackend:
         tile_uri= self.tile_uri (z, x, y)
         try:
             file_date= datetime.datetime.fromtimestamp (os.stat (tile_uri).st_mtime)
-            debug ("%s <-> %s", file_date.isoformat (), date.isoformat ())
+            # debug ("%s: %s <-> %s", tile_uri, file_date.isoformat (),
+            #        date.isoformat ())
             return file_date > date
         except OSError as e:
             if e.errno==errno.ENOENT:
@@ -101,11 +105,11 @@ class DiskBackend:
 
 # so what happens with the tiles tables is exactly that:
 # it's implemented as a (read only) view on top of map an images
-# but internally we fill tem separately
+# but internally we fill them separately
 
 class MBTilesBackend:
-    def __init__ (self, base, bounds):
-        self.session= sqlite3.connect ("%s.mbt" % base)
+    def __init__ (self, base, bounds, minzoom=0, maxzoom=18, center=None):
+        self.session= sqlite3.connect ("%s.mbtiles" % base)
         self.session.set_trace_callback (print)
 
         cursor= self.session.cursor ()
@@ -137,10 +141,6 @@ class MBTilesBackend:
                     ON images.tile_id = map.tile_id;''')
         self.session.commit ()
 
-        #bounds|-27,62,-11,67.5
-        #minzoom|5
-        #maxzoom|10
-        #name|Ísland
         #version|1.0.0
         #center|-18.7,65,7
         #attribution|Map data © OpenStreetMap CC-BY-SA; NASA SRTM; GLISM Glacier Database; ETOPO1 Bathymetry
@@ -244,11 +244,180 @@ def bbox (value):
                 d.append ('0')
 
             deg, mn, sec= [ int (x) for x in d ]
-            deg= deg+1/60.0*mn+1/3600.0*sec
+            deg= deg + 1/60.0*mn + 1/3600.0*sec
 
         data[index]= deg
 
     return data
+
+
+class Tile:
+    def __init__(self, z, x, y, meta_tile=None):
+        self.z = z
+        self.x = x
+        self.y = y
+
+        if meta_tile is not None:
+            self.meta_index = (x-meta_tile.x, y-meta_tile.y)
+        else:
+            self.meta_index = None
+
+        self.pixel_pos = (self.x*256, self.y*256)
+        self.image_size = (256, 256)
+
+
+    def __eq__(self, other):
+        return ( self.z == other.z and self.x == other.x and self.y == other.y )
+
+
+    def __repr__(self):
+        return "Tile(%d, %d, %d, %r)" % (self.z, self.x, self.y, self.meta_index)
+
+
+class MetaTile:
+    def __init__(self, z, x, y, wanted_size):
+        self.z = z
+        self.x = x
+        self.y = y
+        self.wanted_size = wanted_size
+        self.size = min(2**z, wanted_size)
+
+        # NOTE: children are not precomputed because it's recursive with no bounds
+        # see children()
+        self._children = None
+
+        self.tiles = [ Tile(self.z, self.x+i, self.y+j, self)
+                       for i in range(self.size) for j in range(self.size) ]
+
+        self.pixel_pos = (self.x*256, self.y*256)
+        self.image_size = (self.size*256, self.size*256)
+
+    def __eq__(self, other):
+        return ( self.z == other.z and self.x == other.x and self.y == other.y
+                 and self.size == other.size )
+
+
+    def __repr__(self):
+        return "MetaTile(%d, %d, %d, %d)" % (self.z, self.x, self.y, self.wanted_size)
+
+
+    def children(self):
+        if self._children is None:
+            if self.size == self.wanted_size:
+                self._children = [ MetaTile(self.z+1,
+                                            2*self.x + i*self.size,
+                                            2*self.y + j*self.size,
+                                            self.wanted_size)
+                                   for i in range(2) for j in range(2) ]
+            else:
+                self._children = [ MetaTile(self.z+1, 2*self.x, 2*self.y,
+                                            self.wanted_size) ]
+
+        return self._children
+
+
+    def __contains__(self, other):
+        if isinstance(other, Tile):
+            if other.z == self.z-1:
+                return ( self.x <= 2*other.x < self.x+self.size and
+                         self.y <= 2*other.y < self.y+self.size )
+            else:
+                return ( self.x <= other.x < self.x+self.size and
+                         self.y <= other.y < self.y+self.size )
+        else:
+            # TODO: more?
+            return False
+
+
+    def child(self, tile):
+        """Returns the child MetaTile were tile fits."""
+        if tile in self:
+            # there's only one
+            return [ child for child in self.children() if tile in child ][0]
+        else:
+            raise ValueError("%r not in %r" % (tile, self))
+
+
+    def __hash__(self):
+        return hash((self.z, self.x, self.y, self.size))
+
+
+class BBox:
+    def __init__(self, bbox, max_z):
+        self.w, self.s, self.e, self.n = bbox
+        self.max_z = max_z
+        self.proj = GoogleProjection(self.max_z+1)  # +1
+
+        self.upper_left = (self.n, self.w)
+        self.lower_left = (self.s, self.w)
+        self.upper_right = (self.n, self.e)
+        self.lower_right = (self.s, self.e)
+
+        self.boundary = Polygon([ self.upper_left, self.lower_left,
+                                  self.lower_right, self.upper_right ])
+
+
+    def __contains__(self, tile):
+        upper_left = tile.pixel_pos
+        lower_right = (tile.pixel_pos[0] + tile.image_size[0] - 1,
+                       tile.pixel_pos[0] + tile.image_size[0] - 1)
+
+        n, w = self.proj.fromPixelToLL(upper_left, tile.z)
+        s, e = self.proj.fromPixelToLL(lower_right, tile.z)
+
+        upper_left = (n, w)
+        lower_left = (s, w)
+        upper_right = (n, e)
+        lower_right = (s, e)
+
+        other = Polygon([ upper_left, lower_left, lower_right, upper_right ])
+
+        debug((self.boundary.wkt, other.wkt))
+        return other.intersects(self.boundary)
+
+
+    def __repr__(self):
+        return "BBox(%f, %f, %f, %f, %d)" % (self.w, self.s, self.e, self.n,
+                                             self.max_z)
+
+
+    # TODO: see if it doesn't make more sense to work everything at pixel level
+
+    def foo(self):
+        gprj = map_utils.GoogleProjection(self.opts.max_zoom+1)
+
+        bbox = map_utils.BBox(self.opts.bbox, self.opts.max_zoom)
+        ll0 = bbox.upper_left
+        ll1 = bbox.lower_right
+
+        image_size = 256.0*self.opts.metatile_size
+
+        # we start by adding the min_zoom tiles and let the system handle the rest
+        px0 = gprj.fromLLtoPixel(ll0, self.opts.min_zoom)
+        px1 = gprj.fromLLtoPixel(ll1, self.opts.min_zoom)
+
+        for x in range(int(px0[0]/image_size), int(px1[0]/image_size)+1):
+            # Validate x co-ordinate
+            if ((x < 0) or
+                (x*self.opts.metatile_size >= 2**self.opts.min_zoom)):
+
+                continue
+
+            for y in range(int(px0[1]/image_size), int(px1[1]/image_size)+1):
+                # Validate y co-ordinate
+                if ((y < 0) or
+                    (y*self.opts.metatile_size >= 2**self.opts.min_zoom)):
+
+                    continue
+
+                # Submit tile to be rendered into the queue
+                t = MetaTile(self.opts.min_zoom, x*self.opts.metatile_size,
+                     y*self.opts.metatile_size)
+                debug("... %r" % (t, ))
+                self.work_stack.push(t)
+                # make sure they're rendered!
+                self.work_stack.notify((t, True))
+
 
 class Map:
     def __init__ (self, bbox, max_z):
@@ -267,6 +436,7 @@ class Map:
             self.levels.append (( (int (px0[0]/256), int (px0[1]/256)),
                                   (int (px1[0]/256), int (px1[1]/256)) ))
         # print self.levels
+
 
     def __contains__ (self, t):
         if len (t)==3:
@@ -287,13 +457,16 @@ class Map:
 
         return ans
 
+
     def iterate_x (self, z):
         px0, px1= self.levels[z]
         return coord_range (px0[0], px1[0], z) # NOTE
 
+
     def iterate_y (self, z):
         px0, px1= self.levels[z]
         return coord_range (px0[1], px1[1], z) # NOTE
+
 
 class Atlas:
     def __init__ (self, sectors):
@@ -313,6 +486,7 @@ class Atlas:
             bb= bbox (c.get ('bboxes', sector))
             self.maps[sector]= Map (bb[:4], self.maxZoom)
 
+
     def __contains__ (self, t):
         w= False
         for m in self.maps.values ():
@@ -320,10 +494,12 @@ class Atlas:
 
         return w
 
+
     def iterate_x (self, z):
         for m in self.maps.values ():
             for x in m.iterate_x (z):
                 yield x
+
 
     def iterate_y (self, z, x):
         for m in self.maps.values ():
