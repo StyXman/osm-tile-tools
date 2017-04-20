@@ -13,6 +13,7 @@ import multiprocessing
 import queue
 from random import randint, random
 from os import getpid
+import math
 
 import map_utils
 
@@ -426,7 +427,7 @@ class Master:
         # the weird - 3* thing is because low ZLs don't have 4 children
         # for metatile sizes > 1
         # for instance, metatile_size==8 -> Zls 1, 2, 3 have only one metatile
-        while went_out*4 - 3*math.log2(self.opst.metatile_size) > came_back:
+        while went_out*4 - 3*math.log2(self.opts.metatile_size) > came_back:
             debug("%d <-> %d", went_out*4, came_back)
             data = work_in.get(True)
             debug("<-- %r", data)
