@@ -67,11 +67,11 @@ class DiskBackend:
     def tile_uri (self, z, x, y):
         return os.path.join (self.base_dir, str (z), str (x), str (y)+'.png')
 
-    def store (self, z, x, y, data):
-        tile_uri= self.tile_uri (z, x, y)
+    def store (self, tile):
+        tile_uri= self.tile_uri (tile.z, tile.x, tile.y)
         makedirs (os.path.dirname (tile_uri), exist_ok=True)
         f= open (tile_uri, 'wb+')
-        f.write (data)
+        f.write (tile.data)
         f.close ()
 
     def exists (self, z, x, y):
@@ -169,20 +169,19 @@ class MBTilesBackend:
         cursor.close ()
 
 
-    def store (self, z, x, y, data):
+    def store (self, tile):
         # create one of these each time because there's no way to reset them
         # and barely takes any time
-        hasher= hashlib.md5 ()
+        hasher = hashlib.md5 ()
         # md5 gives 340282366920938463463374607431768211456 possible values
         # and is *fast*
-        hasher.update (data)
+        hasher.update (tile.data)
         # thanks Pablo Carranza for pointing out possible collisions
         # further deduplicate with file length
         hasher.update (str (len (data)).encode ('ascii'))
         img_id= hasher.hexdigest ()
 
-        print (z, x, y, img_id)
-
+        debug((tile, img_id))
 
         cursor= self.session.cursor ()
         try:
@@ -195,16 +194,15 @@ class MBTilesBackend:
         try:
             cursor.execute ('''INSERT INTO map (zoom_level, tile_column, tile_row, tile_id)
                                 VALUES (?, ?, ?, ?);''',
-                            (z, x, y, img_id))
+                            (tile.z, tile.x, tile.y, img_id))
         except sqlite3.IntegrityError:
             cursor.execute ('''UPDATE map
                                 SET tile_id = ?
                                 WHERE zoom_level = ?
                                   AND tile_column = ?
                                   AND tile_row = ?;''',
-                            (img_id, z, x, y))
+                            (img_id, tile.z, tile.x, tile.y))
         cursor.close ()
-
 
 
     def commit (self):
@@ -231,6 +229,7 @@ def coord_range (mn, mx, zoom):
     image_size=256.0
     return ( coord for coord in range (mn, mx+1)
                    if coord >= 0 and coord < 2**zoom )
+
 
 def bbox (value):
     data= value.split (',')

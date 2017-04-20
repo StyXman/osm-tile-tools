@@ -191,7 +191,7 @@ class RenderThread:
                     is_empty = map_utils.is_empty(tile.data)
 
                     if not is_empty:
-                        self.backend.store(z, x+i, y+j, data)
+                        self.backend.store(tile)
 
                         # at least something to render. note that if we're
                         # rendering only one tile (either metatile_size == 1
