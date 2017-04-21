@@ -191,7 +191,7 @@ class RenderThread:
                     # TODO: move to Tile
                     is_empty = map_utils.is_empty(tile.data)
 
-                    if not is_empty:
+                    if not is_empty or self.opts.empty == 'write':
                         self.backend.store(tile)
 
                         # at least something to render. note that if we're
@@ -478,7 +478,7 @@ def parse_args():
     parser.add_argument('-X', '--skip-existing', dest='skip_existing', default=False, action='store_true')
     parser.add_argument('-N', '--skip-newer',    dest='skip_newer', default=None, type=int, metavar='DAYS')
     # parser.add_argument('-L', '--skip-symlinks', dest='skip_', default=None, type=int)
-    parser.add_argument('-E', '--empty',         dest='empty',     default='skip', choices=('skip', 'link', 'render'))
+    parser.add_argument('-E', '--empty',         dest='empty',     default='skip', choices=('skip', 'link', 'write'))
 
     parser.add_argument('-d', '--debug',         dest='debug',     default=False, action='store_true')
     parser.add_argument(      '--dry-run',       dest='dry_run',   default=False, action='store_true')
