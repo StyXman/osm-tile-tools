@@ -362,8 +362,9 @@ class BBox:
         lower_right = (tile.pixel_pos[0] + tile.image_size[0] - 1,
                        tile.pixel_pos[1] + tile.image_size[1] - 1)
 
-        n, w = self.proj.fromPixelToLL(upper_left, tile.z)
-        s, e = self.proj.fromPixelToLL(lower_right, tile.z)
+        # NOTE: fromPixelToLL() return in LonLat!
+        w, n = self.proj.fromPixelToLL(upper_left, tile.z)
+        e, s = self.proj.fromPixelToLL(lower_right, tile.z)
 
         upper_left = (n, w)
         lower_left = (s, w)
