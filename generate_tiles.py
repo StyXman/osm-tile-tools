@@ -116,19 +116,6 @@ class RenderThread:
         self.tile_size = 256
         self.image_size = self.tile_size*self.metatile_size
 
-        start = time.perf_counter()
-        self.m  = mapnik.Map(self.image_size, self.image_size)
-        # Load style XML
-        if not self.opts.dry_run:
-            mapnik.load_map(self.m, opts.mapfile, True)
-        end = time.perf_counter()
-        debug('Map loading took %.6fs', end-start)
-
-        # Obtain <Map> projection
-        self.prj = mapnik.Projection(self.m.srs)
-        # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
-        self.tileproj = map_utils.GoogleProjection(opts.max_zoom+1)
-
 
     def render_metatile(self, metatile):
         z = metatile.z
@@ -233,6 +220,19 @@ class RenderThread:
 
 
     def loop(self):
+        start = time.perf_counter()
+        self.m  = mapnik.Map(self.image_size, self.image_size)
+        # Load style XML
+        if not self.opts.dry_run:
+            mapnik.load_map(self.m, self.opts.mapfile, True)
+        end = time.perf_counter()
+        debug('Map loading took %.6fs', end-start)
+
+        # Obtain <Map> projection
+        self.prj = mapnik.Projection(self.m.srs)
+        # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
+        self.tileproj = map_utils.GoogleProjection(opts.max_zoom+1)
+
         debug('%s looping the loop', self)
         while True:
             # Fetch a tile from the queue and render it
