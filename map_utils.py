@@ -357,9 +357,10 @@ class BBox:
 
 
     def __contains__(self, tile):
+        # TODO: move this to Tile
         upper_left = tile.pixel_pos
         lower_right = (tile.pixel_pos[0] + tile.image_size[0] - 1,
-                       tile.pixel_pos[0] + tile.image_size[0] - 1)
+                       tile.pixel_pos[1] + tile.image_size[1] - 1)
 
         n, w = self.proj.fromPixelToLL(upper_left, tile.z)
         s, e = self.proj.fromPixelToLL(lower_right, tile.z)
