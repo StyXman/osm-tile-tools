@@ -162,12 +162,6 @@ class RenderThread:
                 mid= time.perf_counter()
 
                 # save the image, splitting it in the right amount of tiles
-                # we use min() so we can support low zoom levels with less than
-                # metatile_size tiles
-                # TODO support metatile == 1 ( tiles // 2 == 0)
-                tiles = min(self.metatile_size, 2**z)
-                debug((self.metatile_size, z, 2**z, tiles))
-
                 for tile in metatile.tiles:
                     i, j = tile.meta_index
 
