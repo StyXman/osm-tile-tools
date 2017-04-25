@@ -373,7 +373,7 @@ class BBox:
 
         other = Polygon([ upper_left, lower_left, lower_right, upper_right ])
 
-        debug((self.boundary.wkt, other.wkt))
+        # debug((self.boundary.wkt, other.wkt))
         return other.intersects(self.boundary)
 
 
