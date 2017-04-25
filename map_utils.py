@@ -507,3 +507,59 @@ class Atlas:
             if (z, x) in m:
                 for y in m.iterate_y (z):
                     yield y
+
+
+def run_tests():
+    # import logging
+    # logging.basicConfig(level=logging.DEBUG)
+
+    # Europe
+    b = BBox((-10, 35, 30, 60), 18)
+
+    def test(bbox, z, expected):
+        # it's a square
+        tiles = len(expected)
+        for x in range(tiles):
+            for y in range(tiles):
+                t = Tile(z, x, y)
+                result = t in bbox
+                # NOTE: if you look at how expected is defined, this is the
+                # right order of 'coords'
+                if result != expected[y][x]:
+                    if expected[x][y]:
+                        raise AssertionError("%r not in %r" % (t, bbox))
+                    else:
+                        raise AssertionError("%r in %r" % (t, bbox))
+
+    # ZL0
+    expected = [ [ True ] ]
+    test(b, 0, expected)
+
+    # ZL1
+    expected = [ [ True,  True  ],
+                 [ False, False ] ]
+    test(b, 1, expected)
+
+    # ZL2
+    expected = [ [ False, False, False, False ],
+                 [ False, True,  True , False ],
+                 [ False, False, False, False ],
+                 [ False, False, False, False ] ]
+    test(b, 2, expected)
+
+    # ZL3
+    expected = [ [ False, False, False, False, False, False, False, False ],
+                 [ False, False, False, False, False, False, False, False ],
+                 [ False, False, False, True,  True , True , False, False ],
+                 [ False, False, False, True,  True , True , False, False ],
+                 [ False, False, False, False, False, False, False, False ],
+                 [ False, False, False, False, False, False, False, False ],
+                 [ False, False, False, False, False, False, False, False ],
+                 [ False, False, False, False, False, False, False, False ] ]
+    test(b, 3, expected)
+
+    print('A-OK')
+
+
+if __name__ == '__main__':
+    run_tests()
