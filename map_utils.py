@@ -252,7 +252,8 @@ def bbox (value):
 
 
 class Tile:
-    def __init__(self, z:int, x:int, y:int, meta_tile:Optional[MetaTile]=None) -> None:
+    # def __init__(self, z:int, x:int, y:int, meta_tile:Optional[MetaTile]=None) -> None:
+    def __init__(self, z:int, x:int, y:int, meta_tile=None) -> None:
         self.z = z
         self.x = x
         self.y = y
@@ -273,7 +274,7 @@ class Tile:
     def __repr__(self):
         return "Tile(%d, %d, %d, %r)" % (self.z, self.x, self.y, self.meta_index)
 
-Children = List[MetaTile]
+# Children = List[MetaTile]
 class MetaTile:
     def __init__(self, z:int, x:int, y:int, wanted_size) -> None:
         self.z = z
@@ -284,7 +285,8 @@ class MetaTile:
 
         # NOTE: children are not precomputed because it's recursive with no bounds
         # see children()
-        self._children:Optional[Children] = None
+        # self._children:Optional[Children] = None
+        self._children = None
 
         self.tiles = [ Tile(self.z, self.x+i, self.y+j, self)
                        for i in range(self.size) for j in range(self.size) ]
@@ -294,7 +296,8 @@ class MetaTile:
 
 
     # see https://github.com/python/mypy/issues/2783#issuecomment-276596902
-    def __eq__(self, other:MetaTile) -> bool:  # type: ignore
+    # def __eq__(self, other:MetaTile) -> bool:  # type: ignore
+    def __eq__(self, other) -> bool:  # type: ignore
         return ( self.z == other.z and self.x == other.x and self.y == other.y
                  and self.size == other.size )
 
@@ -303,7 +306,8 @@ class MetaTile:
         return "MetaTile(%d, %d, %d, %d)" % (self.z, self.x, self.y, self.wanted_size)
 
 
-    def children(self) -> Children:
+    # def children(self) -> Children:
+    def children(self):
         if self._children is None:
             if self.size == self.wanted_size:
                 self._children = [ MetaTile(self.z+1,
@@ -331,7 +335,8 @@ class MetaTile:
             return False
 
 
-    def child(self, tile:Tile) -> MetaTile:
+    # def child(self, tile:Tile) -> MetaTile:
+    def child(self, tile:Tile):
         """Returns the child MetaTile were tile fits."""
         if tile in self:
             # there's only one
