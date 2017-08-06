@@ -26,7 +26,7 @@ import logging
 from logging import debug, info, exception
 long_format = "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
 short_format = "%(asctime)s %(message)s"
-from typying import Optional, List, Set, Dict
+from typing import Optional, List, Set, Dict
 
 try:
     NUM_CPUS = multiprocessing.cpu_count()
