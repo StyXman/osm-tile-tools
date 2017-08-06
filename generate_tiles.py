@@ -41,6 +41,7 @@ def floor(i: int, base: int=1) -> int:
 
 class RenderStack:
     """A render stack implemented with a list.
+
     Although this is implemented with a list, I prefer the semantic of these
     methods and the str() representation given by the list being pop from/push
     into the left.
@@ -49,7 +50,10 @@ class RenderStack:
     Because this element might need to be returned, there's the confirm()
     method which actually pops it and replaces it with the next one.
 
-    Finally, the stack autofills with children when we pop an element."""
+    The stack also autofills with children when we pop an element. Because
+    these children might not be needed to be rendered, they're stored in
+    another list, to_validate. Once we know the tile is not empty or any
+    other reason to skip it, we notify() it."""
     def __init__(self, max_zoom:int) -> None:
         # I don't need order here, it's (probably) better if I validate tiles
         # as soon as possible
@@ -69,9 +73,11 @@ class RenderStack:
 
 
     def confirm(self) -> None:
+        """Mark the top of the stack as sent to render, factually pop()'ing it."""
         if self.first is not None:
             metatile:map_utils.MetaTile = self.first
             if metatile.z < self.max_zoom:
+                # automatically push the children
                 for child in metatile.children(): # type: map_utils.MetaTile
                     self.push(child)
 
@@ -93,6 +99,7 @@ class RenderStack:
 
 
     def notify(self, metatile:map_utils.MetaTile, render:bool) -> None:
+        """The MetaTile needs to be rendered."""
         debug("%s, %s", metatile, render)
         if metatile.z <= self.max_zoom:
             self.to_validate.remove(metatile)
