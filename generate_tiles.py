@@ -272,14 +272,11 @@ class RenderThread:
                     info("%r: too new, skipping" % t)
 
                 # but notify the children, so they get a chance to be rendered
-                semi_metatile_size = max(self.metatile_size // 2, 1)
-                for i in (0, semi_metatile_size):
-                    render_children[i] = {}
-                    for j in (0, semi_metatile_size):
-                        # we have no other info about whether they should be
-                        # rendered or not, so render them just in case. at worst,
-                        # they could either be empty tiles or too new too
-                        render_children[i][j] = True
+                for child in t.children():
+                    # we have no other info about whether they should be
+                    # rendered or not, so render them just in case. at worst,
+                    # they could either be empty tiles or too new too
+                    render_children[child] = True
 
             self.notify_children(render_children)
 
