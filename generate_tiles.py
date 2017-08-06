@@ -284,7 +284,7 @@ class RenderThread:
 
 
 class Master:
-    def __init__(self, opts):
+    def __init__(self, opts) -> None:
         self.opts = opts
         # we need at least space for the initial batch
         self.renderers = {}
@@ -301,10 +301,10 @@ class Master:
             self.queues = (Queue(32), None)
 
 
-    def render_tiles(self):
+    def render_tiles(self) -> None:
         debug("render_tiles(%s)", self.opts)
 
-        backends = dict(
+        backends:Dict[str,Any] = dict(
             tiles=  map_utils.DiskBackend,
             mbtiles=map_utils.MBTilesBackend,
             )
@@ -318,7 +318,7 @@ class Master:
         for i in range(self.opts.threads):
             renderer = RenderThread(self.opts, backend, self.queues)
 
-            if self.opts.parallel!='single':
+            if self.opts.parallel != 'single':
                 if self.opts.parallel == 'fork':
                     debug('mp.Process()')
                     render_thread = multiprocessing.Process(target=renderer.loop)
@@ -357,7 +357,7 @@ class Master:
         self.finish()
 
 
-    def render_bbox(self):
+    def render_bbox(self) -> None:
         start = time.time()
         work_out, work_in = self.queues
         # for each tile that was sent to be worked on, 4 should return
@@ -383,7 +383,7 @@ class Master:
                 while True:
                     try:
                         # pop from there,
-                        new_work = self.work_stack.pop()
+                        new_work = self.work_stack.pop()  # map_utils.MetaTile
                     except IndexError:
                         debug('out: timeout!')
                         break
@@ -405,7 +405,8 @@ class Master:
                 # pop from the reader,
                 while True:
                     try:
-                        tile, render = work_in.get(True, .1)  # 1/10s timeout
+                        # 1/10s timeout
+                        tile, render = work_in.get(True, .1)  # type: map_utils.MetaTile, bool
                     except queue.Empty:
                         # debug('in: timeout!')
                         break
