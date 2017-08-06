@@ -15,24 +15,25 @@ import sqlite3
 from shapely.geometry import Polygon
 
 from logging import debug
+from typing import List, Tuple, Dict, Optional, Any
 
 
-DEG_TO_RAD = pi/180
-RAD_TO_DEG = 180/pi
+DEG_TO_RAD:float = pi/180
+RAD_TO_DEG:float = 180/pi
 
-def minmax (a,b,c):
+def minmax (a:float, b:float, c:float) -> float:
     a = max(a,b)
     a = min(a,c)
     return a
 
 class GoogleProjection:
-    def __init__(self,levels=18):
-        self.Bc = []
-        self.Cc = []
-        self.zc = []
-        self.Ac = []
-        c = 256
-        for d in range(0,levels):
+    def __init__(self,levels:int=18) -> None:
+        self.Bc:List[float] = []
+        self.Cc:List[float] = []
+        self.zc:List[Tuple[float, float]] = []
+        self.Ac:List[float] = []
+        c:int = 256
+        for d in range(0,levels): # type: int
             e = c/2
             self.Bc.append(c/360.0)
             self.Cc.append(c/(2 * pi))
@@ -251,18 +252,18 @@ def bbox (value):
 
 
 class Tile:
-    def __init__(self, z, x, y, meta_tile=None):
+    def __init__(self, z:int, x:int, y:int, meta_tile:Optional[MetaTile]=None) -> None:
         self.z = z
         self.x = x
         self.y = y
 
+        self.meta_index:Optional[Tuple[int, int]] = None
         if meta_tile is not None:
             self.meta_index = (x-meta_tile.x, y-meta_tile.y)
-        else:
-            self.meta_index = None
 
         self.pixel_pos = (self.x*256, self.y*256)
         self.image_size = (256, 256)
+        self.data:Optional[bytes] = None
 
 
     def __eq__(self, other):
@@ -272,9 +273,9 @@ class Tile:
     def __repr__(self):
         return "Tile(%d, %d, %d, %r)" % (self.z, self.x, self.y, self.meta_index)
 
-
+Children = List[MetaTile]
 class MetaTile:
-    def __init__(self, z, x, y, wanted_size):
+    def __init__(self, z:int, x:int, y:int, wanted_size) -> None:
         self.z = z
         self.x = x
         self.y = y
@@ -283,7 +284,7 @@ class MetaTile:
 
         # NOTE: children are not precomputed because it's recursive with no bounds
         # see children()
-        self._children = None
+        self._children:Optional[Children] = None
 
         self.tiles = [ Tile(self.z, self.x+i, self.y+j, self)
                        for i in range(self.size) for j in range(self.size) ]
@@ -291,16 +292,18 @@ class MetaTile:
         self.pixel_pos = (self.x*256, self.y*256)
         self.image_size = (self.size*256, self.size*256)
 
-    def __eq__(self, other):
+
+    # see https://github.com/python/mypy/issues/2783#issuecomment-276596902
+    def __eq__(self, other:MetaTile) -> bool:  # type: ignore
         return ( self.z == other.z and self.x == other.x and self.y == other.y
                  and self.size == other.size )
 
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "MetaTile(%d, %d, %d, %d)" % (self.z, self.x, self.y, self.wanted_size)
 
 
-    def children(self):
+    def children(self) -> Children:
         if self._children is None:
             if self.size == self.wanted_size:
                 self._children = [ MetaTile(self.z+1,
@@ -315,7 +318,7 @@ class MetaTile:
         return self._children
 
 
-    def __contains__(self, other):
+    def __contains__(self, other:Tile) -> bool:
         if isinstance(other, Tile):
             if other.z == self.z-1:
                 return ( self.x <= 2*other.x < self.x+self.size and
@@ -328,7 +331,7 @@ class MetaTile:
             return False
 
 
-    def child(self, tile):
+    def child(self, tile:Tile) -> MetaTile:
         """Returns the child MetaTile were tile fits."""
         if tile in self:
             # there's only one

@@ -24,9 +24,9 @@ except:
 
 import logging
 from logging import debug, info, exception
-long_format= "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
-short_format= "%(asctime)s %(message)s"
-
+long_format = "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
+short_format = "%(asctime)s %(message)s"
+from typying import Optional, List, Set, Dict
 
 try:
     NUM_CPUS = multiprocessing.cpu_count()
@@ -34,7 +34,7 @@ except NotImplementedError:
     NUM_CPUS = 1
 
 
-def floor(i, base=1):
+def floor(i: int, base: int=1) -> int:
     """Round down i to the closest multiple of base."""
     return base * (i // base)
 
@@ -50,51 +50,50 @@ class RenderStack:
     method which actually pops it and replaces it with the next one.
 
     Finally, the stack autofills with children when we pop an element."""
-    def __init__(self, max_zoom):
+    def __init__(self, max_zoom:int) -> None:
         # I don't need order here, it's (probably) better if I validate tiles
         # as soon as possible
-        self.first = None
-        self.ready = []
-        self.to_validate = set()
+        self.first:Optional[map_utils.MetaTile] = None
+        self.ready:List[map_utils.Tile] = []
+        self.to_validate:Set[map_utils.MetaTile] = set()
         self.max_zoom = max_zoom
 
 
-    def push(self, o):
+    def push(self, o:map_utils.MetaTile) -> None:
         self.to_validate.add(o)
         debug("%s, %s, %s", self.first, self.ready, self.to_validate)
 
 
-    def pop(self):
+    def pop(self) -> map_utils.MetaTile:
         return self.first
 
 
-    def confirm(self):
+    def confirm(self) -> None:
         if self.first is not None:
-            metatile = self.first
+            metatile:map_utils.MetaTile = self.first
             if metatile.z < self.max_zoom:
-                for child in metatile.children():
+                for child in metatile.children(): # type: map_utils.MetaTile
                     self.push(child)
 
+        t:Optional[map_utils.Tile] = None
         if len(self.ready) > 0:
             t = self.ready.pop(0)
-        else:
-            t = None
 
         self.first = t
         debug("%s, %s, %s", self.first, self.ready, self.to_validate)
 
 
-    def size(self):
+    def size(self) -> int:
         # HACK: int(bool) \belongs (0, 1)
         # debug("%s, %s, %s", self.first, self.ready, self.to_validate)
-        ans = ( int(self.first is not None) + len(self.ready) +
-                len(self.to_validate) )
+        ans:int = ( int(self.first is not None) + len(self.ready) +
+                    len(self.to_validate) )
         # debug(ans)
         return ans
 
 
-    def notify(self, metatile, render):
-        debug((metatile, render))
+    def notify(self, metatile:map_utils.MetaTile, render:bool) -> None:
+        debug("%s, %s", metatile, render)
         if metatile.z <= self.max_zoom:
             self.to_validate.remove(metatile)
 
@@ -107,17 +106,19 @@ class RenderStack:
                 info("%r: not rendering" % metatile)
 
 
+RenderChildren = Dict[map_utils.Tile, bool]
 class RenderThread:
-    def __init__(self, opts, backend, queues):
+    def __init__(self, opts, backend, queues) -> None:
         self.backend = backend
         self.queues  = queues
         self.opts = opts
-        self.metatile_size = opts.metatile_size
-        self.tile_size = 256
-        self.image_size = self.tile_size*self.metatile_size
+        self.metatile_size:int = opts.metatile_size
+        self.tile_size:int = 256
+        self.image_size:int = self.tile_size*self.metatile_size
 
 
-    def render_metatile(self, metatile):
+    # TODO: generate_tiles.py:119: error: Invalid type "generate_tiles.RenderChildren"
+    def render_metatile(self, metatile:map_utils.MetaTile) -> Dict[map_utils.Tile, bool]:
         z = metatile.z
         x = metatile.x
         y = metatile.y
@@ -147,7 +148,7 @@ class RenderThread:
             self.m.buffer_size = 128
 
         # we must decide wether to render the subtiles/children of this tile
-        render_children = { child: False for child in metatile.children() }
+        render_children:Dict[map_utils.Tile, bool] = { child: False for child in metatile.children() }
 
         if not self.opts.dry_run:
             # Render image with default Agg renderer
@@ -159,7 +160,7 @@ class RenderThread:
             except RuntimeError as e:
                 exception("%r: %s", metatile, e)
             else:
-                mid= time.perf_counter()
+                mid = time.perf_counter()
 
                 # save the image, splitting it in the right amount of tiles
                 for tile in metatile.tiles:
@@ -202,8 +203,8 @@ class RenderThread:
         return render_children
 
 
-    def notify_children(self, render_children):
-        # debug(render_children)
+    def notify_children(self, render_children:Dict[map_utils.Tile, bool]) -> None:
+        debug(render_children)
         for tile, render in render_children.items():
             # debug("<== [%s] %r" % (getpid(), tile, ))
             # render_children is indexed in semi_metatile_size and i, j
@@ -230,29 +231,31 @@ class RenderThread:
         debug('%s looping the loop', self)
         while True:
             # Fetch a tile from the queue and render it
-            t = self.queues[0].get()
+            t:Optional[map_utils.MetaTile] = self.queues[0].get()
             debug("[%s] ==> %r" % (getpid(), t, ))
             if t is None:
                 # self.q.task_done()
                 debug('[%s] ending loop' % getpid())
                 break
 
+            skip:bool
             if self.opts.skip_existing or self.opts.skip_newer is not None:
                 debug('skip test existing:%s, newer:%s',
                        self.opts.skip_existing, self.opts.skip_newer)
-                skip= True
+                skip = True
                 # we use min() so we can support low zoom levels
                 # with less than metatile_size tiles
-                for tile in t.tiles:
+                for tile in t.tiles: # type: map_utils.Tile
                     if self.opts.skip_existing:
-                        skip= skip and self.backend.exists(tile.z, tile.x, tile.y)
+                        skip = skip and self.backend.exists(tile.z, tile.x, tile.y)
                     else:
-                        skip=(skip and
+                        skip= ( skip and
                                 self.backend.newer_than(tile.z, tile.x, tile.y,
                                                         self.opts.skip_newer))
             else:
-                skip= False
+                skip = False
 
+            render_children:Dict[map_utils.Tile, bool] = {}
             if not skip:
                 render_children = self.render_metatile(t)
             else:
@@ -263,7 +266,6 @@ class RenderThread:
 
                 # but notify the children, so they get a chance to be rendered
                 semi_metatile_size = max(self.metatile_size // 2, 1)
-                render_children = {}
                 for i in (0, semi_metatile_size):
                     render_children[i] = {}
                     for j in (0, semi_metatile_size):
