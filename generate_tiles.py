@@ -39,6 +39,10 @@ def floor(i: int, base: int=1) -> int:
     return base * (i // base)
 
 
+def pyramid_tile_count(min_zoom, max_zoom):
+    return sum([ 4**i for i in range(max_zoom - min_zoom + 1) ])
+
+
 class RenderStack:
     """A render stack implemented with a list.
 
@@ -111,7 +115,6 @@ class RenderStack:
                 self.first = metatile
             else:
                 info("%r: not rendering" % metatile)
-
 
 RenderChildren = Dict[map_utils.Tile, bool]
 class RenderThread:
@@ -198,27 +201,35 @@ class RenderThread:
                     self.backend.commit()
 
                 end = time.perf_counter()
-                info("%r: %f, %f" % (metatile, mid-start, end-mid))
+                # info("%r: %f, %f" % (metatile, mid-start, end-mid))
+
+                debug("<== [%s] %r: %s", getpid(), metatile, ('old', mid-start, end-mid))
+                self.queues[1].put(('old', metatile, mid-start, end-mid))
+                debug("<<< [%s]", getpid())
 
         else:
             # simulate some work
+            start = time.perf_counter()
             time.sleep(randint(0, 30) / 10)
+            mid = time.perf_counter()
             for child in metatile.children():
                 if random() <= 0.75 or 2**metatile.z < self.opts.metatile_size:
                     render_children[child] = True
+            end = time.perf_counter()
+
+            debug("<== [%s] %r: %s", getpid(), metatile, ('old', mid-start, end-mid))
+            self.queues[1].put(('old', metatile, mid-start, end-mid))
+            debug("<<< [%s]", getpid())
 
         return render_children
 
 
     def notify_children(self, render_children:Dict[map_utils.Tile, bool]) -> None:
-        debug(render_children)
+        # debug(render_children)
         for tile, render in render_children.items():
-            # debug("<== [%s] %r" % (getpid(), tile, ))
-            # render_children is indexed in semi_metatile_size and i, j
-            # are either 0 or metatile_size, that's why we // 2 here
-            # note that if metatile_size == 1, i, j can only be == 0
-            self.queues[1].put((tile, render))
-            # debug("<<< [%s]" % getpid())
+            debug("<== [%s] %r: %s", getpid(), tile, render)
+            self.queues[1].put(('new', tile, render))
+            debug("<<< [%s]", getpid())
 
 
     def loop(self):
@@ -247,11 +258,10 @@ class RenderThread:
 
             skip:bool
             if self.opts.skip_existing or self.opts.skip_newer is not None:
-                debug('skip test existing:%s, newer:%s',
-                       self.opts.skip_existing, self.opts.skip_newer)
+                debug('[%s] skip test existing:%s, newer:%s',
+                       getpid(), self.opts.skip_existing, self.opts.skip_newer)
                 skip = True
-                # we use min() so we can support low zoom levels
-                # with less than metatile_size tiles
+
                 for tile in t.tiles: # type: map_utils.Tile
                     if self.opts.skip_existing:
                         skip = skip and self.backend.exists(tile.z, tile.x, tile.y)
@@ -267,9 +277,9 @@ class RenderThread:
                 render_children = self.render_metatile(t)
             else:
                 if self.opts.skip_existing:
-                    info("%r: present, skipping" % t)
+                    info("[%s] %r: present, skipping" % (getpid(), t, ))
                 else:
-                    info("%r: too new, skipping" % t)
+                    info("[%s] %r: too new, skipping" % (getpid(), t, ))
 
                 # but notify the children, so they get a chance to be rendered
                 for child in t.children():
@@ -286,8 +296,8 @@ class RenderThread:
 class Master:
     def __init__(self, opts) -> None:
         self.opts = opts
-        # we need at least space for the initial batch
         self.renderers = {}
+        # we need at least space for the initial batch
         self.work_stack = RenderStack(opts.max_zoom)
 
         if self.opts.parallel == 'fork':
@@ -299,6 +309,10 @@ class Master:
             debug('threads or single, using queue.Queue()')
             # TODO: this and the warning about mapnik and multithreads
             self.queues = (Queue(32), None)
+
+
+    def tiles_per_metatile(self, zoom):
+        return min(self.opts.metatile_size, 2**zoom) ** 2
 
 
     def render_tiles(self) -> None:
@@ -358,11 +372,10 @@ class Master:
 
 
     def render_bbox(self) -> None:
-        start = time.time()
         work_out, work_in = self.queues
         # for each tile that was sent to be worked on, 4 should return
         # this will be important later on
-        went_out, came_back = 0, 0
+        went_out, came_back, first_tiles = 0, 0, 0
 
         for x in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
             for y in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
@@ -374,6 +387,10 @@ class Master:
                     self.work_stack.push(t)
                     # make sure they're rendered!
                     self.work_stack.notify(t, True)
+                    first_tiles += 1
+
+        tiles_to_render = first_tiles * pyramid_tile_count(opts.min_zoom, opts.max_zoom)
+        tiles_rendered = tiles_skept = 0
 
         # I wish I could get to the underlying pipes so I could select() on them
         # NOTE: work_out._writer, self.queues[1]._reader
@@ -406,19 +423,36 @@ class Master:
                 while True:
                     try:
                         # 1/10s timeout
-                        tile, render = work_in.get(True, .1)  # type: map_utils.MetaTile, bool
+                        type, *data = work_in.get(True, .1)  # type: str, Any
+                        debug("<-- %s: %r" % (type, data))
                     except queue.Empty:
                         # debug('in: timeout!')
                         break
                     else:
-                        debug("<-- %r: %s" % (tile, render))
-                        if tile.z <= self.opts.max_zoom and tile in self.opts.bbox:
-                            self.work_stack.notify(tile, render)
-                        else:
-                            debug("out of bbox, out of mind")
-                            # do not render tiles out of the bbox
-                            self.work_stack.notify(tile, False)
-                        came_back += 1
+                        if type == 'new':
+                            tile, render = data
+                            if tile.z <= self.opts.max_zoom and tile in self.opts.bbox:
+                                self.work_stack.notify(tile, render)
+                            else:
+                                debug("out of bbox, out of mind")
+                                # do not render tiles out of the bbox
+                                self.work_stack.notify(tile, False)
+                                # we count this one and all it descendents as rendered
+                                tiles_skept += ( pyramid_tile_count(tile.z, opts.max_zoom) *
+                                                 self.tiles_per_metatile(tile.z) )
+                                info("[%d+%d/%d: %6.2f%%]", tiles_rendered,
+                                     tiles_skept, tiles_to_render,
+                                     (tiles_rendered + tiles_skept) / tiles_to_render * 100)
+
+                            came_back += 1
+                        elif type == 'old':
+                            tile, render_time, saving_time = data
+                            tiles_rendered += self.tiles_per_metatile(tile.z)
+
+                            info("[%d+%d/%d: %6.2f%%] %r: %8.3f,  %8.3f",
+                                 tiles_rendered, tiles_skept, tiles_to_render,
+                                 (tiles_rendered + tiles_skept) / tiles_to_render * 100,
+                                 tile, render_time, saving_time)
 
             except KeyboardInterrupt as e:
                 debug(e)
@@ -434,6 +468,9 @@ class Master:
             debug("<-- %r", data)
             came_back += 1
 
+        info("[%d+%d/%d: %6.2f%%]", tiles_rendered,
+             tiles_skept, tiles_to_render,
+             (tiles_rendered + tiles_skept) / tiles_to_render * 100)
         debug('out!')
 
 
