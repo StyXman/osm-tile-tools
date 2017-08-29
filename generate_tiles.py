@@ -274,10 +274,7 @@ class RenderThread:
             if not skip:
                 render_children = self.render_metatile(t)
             else:
-                if self.opts.skip_existing:
-                    info("[%s] %r: present, skipping" % (getpid(), t, ))
-                else:
-                    info("[%s] %r: too new, skipping" % (getpid(), t, ))
+                self.queues[1].put(('skept', t))
 
                 # but notify the children, so they get a chance to be rendered
                 for child in t.children():
@@ -453,6 +450,19 @@ class Master:
                                  (tiles_rendered + tiles_skept) / tiles_to_render * 100,
                                  tile, render_time, saving_time)
 
+                        elif type == 'skept':
+                            tile, = data
+                            tiles_skept += self.tiles_per_metatile(tile.z)
+
+                            if self.opts.skip_existing:
+                                message = "present, skipping"
+                            else:
+                                message = "too new, skipping"
+
+                            info("[%d+%d/%d: %7.3f%%] %r: %s",
+                                 tiles_rendered, tiles_skept, tiles_to_render,
+                                 (tiles_rendered + tiles_skept) / tiles_to_render * 100,
+                                 tile, message)
             except KeyboardInterrupt as e:
                 debug(e)
                 self.finish()
