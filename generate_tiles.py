@@ -391,7 +391,8 @@ class Master:
         tiles_rendered = tiles_skept = 0
 
         # I could get to the pipes used for the Queues, but it's useless, as
-        # they're constantly ready. keep the probing version
+        # they're constantly ready. keep the probing version, so select()ing on
+        # them leads to a tight loop
         while self.work_stack.size() > 0:
             # TODO: move this try outer
             try:
