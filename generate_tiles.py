@@ -318,10 +318,7 @@ class Master:
             mbtiles=map_utils.MBTilesBackend,
             )
 
-        try:
-            backend = backends[self.opts.format](self.opts.tile_dir, self.opts.bbox)
-        except KeyError:
-            raise
+        backend = backends[self.opts.format](self.opts.tile_dir, self.opts.bbox)
 
         # Launch rendering threads
         for i in range(self.opts.threads):
