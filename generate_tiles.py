@@ -113,8 +113,6 @@ class RenderStack:
                     self.ready.insert(0, self.first)
 
                 self.first = metatile
-            else:
-                info("%r: not rendering" % metatile)
 
 RenderChildren = Dict[map_utils.Tile, bool]
 class RenderThread:
