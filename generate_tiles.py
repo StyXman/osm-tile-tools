@@ -393,7 +393,7 @@ class Master:
         # I could get to the pipes used for the Queues, but it's useless, as
         # they're constantly ready. keep the probing version, so select()ing on
         # them leads to a tight loop
-        while self.work_stack.size() > 0:
+        while self.work_stack.size() > 0 or went_out > came_back:
             # TODO: move this try outer
             try:
                 while True:
@@ -446,11 +446,11 @@ class Master:
                                         tiles_skept, tiles_to_render,
                                         (tiles_rendered + tiles_skept) / tiles_to_render * 100)
 
-                            came_back += 1
 
                         elif type == 'old':
                             tile, render_time, saving_time = data
                             tiles_rendered += self.tiles_per_metatile(tile.z)
+                            came_back += 1
 
                             info("[%d+%d/%d: %7.3f%%] %r: %8.3f,  %8.3f",
                                  tiles_rendered, tiles_skept, tiles_to_render,
@@ -460,6 +460,7 @@ class Master:
                         elif type == 'skept':
                             tile, = data
                             tiles_skept += self.tiles_per_metatile(tile.z)
+                            came_back += 1
 
                             if self.opts.skip_existing:
                                 message = "present, skipping"
