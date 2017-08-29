@@ -186,10 +186,7 @@ class RenderThread:
                     elif not is_empty or self.opts.empty == 'write':
                         self.backend.store(tile)
 
-                        # at least something to render. note that if we're
-                        # rendering only one tile (either metatile_size == 1
-                        # or z == 0), i, j can only be == 0. this matches
-                        # the situation further down
+                        # at least something to render
                         render_children[metatile.child(tile)] = True
                     else:
                         if self.opts.empty == 'skip':
@@ -300,6 +297,8 @@ class Master:
         if self.opts.parallel == 'fork':
             debug('forks, using mp.Queue()')
 
+            # work_out queue is size 1, so higher zoom level tiles don't pile up
+            # there if there are lower ZL tiles ready in the work_stack.
             self.queues = (multiprocessing.Queue(1),
                            multiprocessing.Queue(4*self.opts.threads))
         else:
