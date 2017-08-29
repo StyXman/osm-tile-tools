@@ -487,14 +487,14 @@ class Master:
                 tile, render_time, saving_time = data
                 tiles_rendered += self.tiles_per_metatile(tile.z)
 
-                info("[%d+%d/%d: %6.2f%%] %r: %8.3f,  %8.3f",
+                info("[%d+%d/%d: %7.3f%%] %r: %8.3f,  %8.3f",
                         tiles_rendered, tiles_skept, tiles_to_render,
                         (tiles_rendered + tiles_skept) / tiles_to_render * 100,
                         tile, render_time, saving_time)
 
             came_back += 1
 
-        info("[%d+%d/%d: %6.2f%%]", tiles_rendered,
+        info("[%d+%d/%d: %7.3f%%]", tiles_rendered,
              tiles_skept, tiles_to_render,
              (tiles_rendered + tiles_skept) / tiles_to_render * 100)
         debug('out!')
