@@ -181,7 +181,9 @@ class RenderThread:
                     # TODO: move to Tile
                     is_empty = map_utils.is_empty(tile.data)
 
-                    if not is_empty or self.opts.empty == 'write':
+                    if self.opts.tiles is not None:
+                        render_children[metatile.child(tile)] = False
+                    elif not is_empty or self.opts.empty == 'write':
                         self.backend.store(tile)
 
                         # at least something to render. note that if we're
