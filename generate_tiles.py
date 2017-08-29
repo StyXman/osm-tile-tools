@@ -348,43 +348,49 @@ class Master:
             debug("creating dir %s", self.opts.tile_dir)
             os.makedirs(self.opts.tile_dir, exist_ok=True)
 
+        initial_metatiles = []
         if self.opts.tiles is None:
             debug('rendering bbox %s:%s', self.opts.bbox_name, self.opts.bbox)
-            self.render_bbox()
+            for x in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
+                for y in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
+                    t = map_utils.MetaTile(self.opts.min_zoom, x, y,
+                                        self.opts.metatile_size)
+                    if t in self.opts.bbox:
+                        initial_metatiles.append(t)
         else:
             # TODO: if possible, order them in depth first/proximity? fashion.
             debug('rendering individual tiles')
             for i in self.opts.tiles:
                 z, x, y = map(int, i.split(','))
-                self.queues[0].put((z, x, y))
-                # TODO: either pop from work_in or add param to not render children
+                t = map_utils.MetaTile(z, x, y, self.opts.metatile_size)
+                initial_metatiles.append(t)
 
         if self.opts.parallel == 'single':
             self.queues[0].put(None)
             renderer.loop()
 
+        self.loop(initial_metatiles)
         self.finish()
 
 
-    def render_bbox(self) -> None:
+    def loop(self, initial_metatiles) -> None:
         work_out, work_in = self.queues
         # for each tile that was sent to be worked on, 4 should return
-        # this will be important later on
-        went_out, came_back, first_tiles = 0, 0, 0
+        went_out, came_back = 0, 0
 
-        for x in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
-            for y in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
-                t = map_utils.MetaTile(self.opts.min_zoom, x, y,
-                                       self.opts.metatile_size)
+        for t in initial_metatiles:
+            debug("... %r" % (t, ))
+            self.work_stack.push(t)
+            # make sure they're rendered!
+            self.work_stack.notify(t, True)
 
-                if t in self.opts.bbox:
-                    debug("... %r" % (t, ))
-                    self.work_stack.push(t)
-                    # make sure they're rendered!
-                    self.work_stack.notify(t, True)
-                    first_tiles += 1
+        first_tiles = len(initial_metatiles)
 
-        tiles_to_render = first_tiles * pyramid_tile_count(opts.min_zoom, opts.max_zoom)
+        if self.opts.tiles is None:
+            tiles_to_render = first_tiles * pyramid_tile_count(opts.min_zoom, opts.max_zoom)
+        else:
+            tiles_to_render = first_tiles
+
         tiles_rendered = tiles_skept = 0
 
         # I could get to the pipes used for the Queues, but it's useless, as
