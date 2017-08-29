@@ -392,8 +392,8 @@ class Master:
         tiles_to_render = first_tiles * pyramid_tile_count(opts.min_zoom, opts.max_zoom)
         tiles_rendered = tiles_skept = 0
 
-        # I wish I could get to the underlying pipes so I could select() on them
-        # NOTE: work_out._writer, self.queues[1]._reader
+        # I could get to the pipes used for the Queues, but it's useless, as
+        # they're constantly ready. keep the probing version
         while self.work_stack.size() > 0:
             # TODO: move this try outer
             try:
@@ -464,8 +464,18 @@ class Master:
         # for instance, metatile_size==8 -> Zls 1, 2, 3 have only one metatile
         while went_out*4 - 3*math.log2(self.opts.metatile_size) > came_back:
             debug("%d <-> %d", went_out*4, came_back)
-            data = work_in.get(True)
+            type, *data = work_in.get(True)
             debug("<-- %r", data)
+
+            if type == 'old':
+                tile, render_time, saving_time = data
+                tiles_rendered += self.tiles_per_metatile(tile.z)
+
+                info("[%d+%d/%d: %6.2f%%] %r: %8.3f,  %8.3f",
+                        tiles_rendered, tiles_skept, tiles_to_render,
+                        (tiles_rendered + tiles_skept) / tiles_to_render * 100,
+                        tile, render_time, saving_time)
+
             came_back += 1
 
         info("[%d+%d/%d: %6.2f%%]", tiles_rendered,
