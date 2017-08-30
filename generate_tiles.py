@@ -377,7 +377,7 @@ class Master:
     def loop(self, initial_metatiles) -> None:
         work_out, work_in = self.queues
         # for each tile that was sent to be worked on, 4 should return
-        went_out, came_back = 0, 0
+        went_out, came_back, tiles_to_render = 0, 0, 0
 
         for t in initial_metatiles:
             debug("... %r" % (t, ))
@@ -385,12 +385,13 @@ class Master:
             # make sure they're rendered!
             self.work_stack.notify(t, True)
 
-        first_tiles = len(initial_metatiles)
+            if self.opts.tiles is not None:
+                tiles_to_render += self.tiles_per_metatile(t.z)
+                # debug("%r: %d", t, tiles_to_render)
 
         if self.opts.tiles is None:
+            first_tiles = len(initial_metatiles)
             tiles_to_render = first_tiles * pyramid_tile_count(opts.min_zoom, opts.max_zoom)
-        else:
-            tiles_to_render = first_tiles
 
         tiles_rendered = tiles_skept = 0
 
@@ -398,6 +399,8 @@ class Master:
         # they're constantly ready. keep the probing version, so select()ing on
         # them leads to a tight loop
         while self.work_stack.size() > 0 or went_out > came_back:
+            debug("ws.size(): %s; wo > cb: %d > %d", self.work_stack.size(),
+                  went_out, came_back)
             # TODO: move this try outer
             try:
                 while True:
