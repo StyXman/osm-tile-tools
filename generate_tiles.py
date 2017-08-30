@@ -211,9 +211,10 @@ class RenderThread:
             start = time.perf_counter()
             time.sleep(randint(0, 30) / 10)
             mid = time.perf_counter()
-            for child in metatile.children():
-                if random() <= 0.75 or 2**metatile.z < self.opts.metatile_size:
-                    render_children[child] = True
+            if self.opts.tiles is None or tile.z < self.opts.max_zoom:
+                for child in metatile.children():
+                    if random() <= 0.75 or 2**metatile.z < self.opts.metatile_size:
+                        render_children[child] = True
             end = time.perf_counter()
 
             debug("<== [%s] %r: %s", getpid(), metatile, ('old', mid-start, end-mid))
