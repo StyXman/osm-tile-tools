@@ -156,7 +156,7 @@ class RenderThread:
             self.m.buffer_size = 128
 
         # we must decide wether to render the subtiles/children of this tile
-        render_children:Dict[map_utils.Tile, bool] = { child: False for child in metatile.children() }
+        render_children:Dict[map_utils.Tile, bool] = {}
 
         if not self.opts.dry_run:
             # Render image with default Agg renderer
