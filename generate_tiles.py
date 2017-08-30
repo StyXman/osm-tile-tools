@@ -295,7 +295,8 @@ class Master:
         self.opts = opts
         self.renderers = {}
         # we need at least space for the initial batch
-        self.work_stack = RenderStack(opts.max_zoom)
+        # but do not auto push children in tiles mode
+        self.work_stack = RenderStack(opts.max_zoom, self.opts.tiles is None)
 
         if self.opts.parallel == 'fork':
             debug('forks, using mp.Queue()')
