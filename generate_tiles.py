@@ -58,13 +58,14 @@ class RenderStack:
     these children might not be needed to be rendered, they're stored in
     another list, to_validate. Once we know the tile is not empty or any
     other reason to skip it, we notify() it."""
-    def __init__(self, max_zoom:int) -> None:
+    def __init__(self, max_zoom:int, push_children:bool=True) -> None:
         # I don't need order here, it's (probably) better if I validate tiles
         # as soon as possible
         self.first:Optional[map_utils.MetaTile] = None
         self.ready:List[map_utils.Tile] = []
         self.to_validate:Set[map_utils.MetaTile] = set()
         self.max_zoom = max_zoom
+        self.push_children = push_children
 
 
     def push(self, o:map_utils.MetaTile) -> None:
@@ -80,7 +81,7 @@ class RenderStack:
         """Mark the top of the stack as sent to render, factually pop()'ing it."""
         if self.first is not None:
             metatile:map_utils.MetaTile = self.first
-            if metatile.z < self.max_zoom:
+            if metatile.z < self.max_zoom and self.push_children:
                 # automatically push the children
                 for child in metatile.children(): # type: map_utils.MetaTile
                     self.push(child)
