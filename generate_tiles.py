@@ -434,21 +434,20 @@ class Master:
                     else:
                         if type == 'new':
                             tile, render = data
-                            if tile.z <= self.opts.max_zoom:
-                                if tile in self.opts.bbox:
-                                    self.work_stack.notify(tile, render)
-                                    if not render:
-                                        tiles_skept += 1
-                                else:
-                                    # do not render tiles out of the bbox
-                                    debug("out of bbox, out of mind")
-                                    self.work_stack.notify(tile, False)
-                                    # we count this one and all it descendents as rendered
-                                    tiles_skept += ( pyramid_tile_count(tile.z, opts.max_zoom) *
-                                                    self.tiles_per_metatile(tile.z) )
-                                    info("[%d+%d/%d: %7.3f%%]", tiles_rendered,
-                                        tiles_skept, tiles_to_render,
-                                        (tiles_rendered + tiles_skept) / tiles_to_render * 100)
+                            if tile in self.opts.bbox:
+                                self.work_stack.notify(tile, render)
+                                if not render:
+                                    tiles_skept += 1
+                            else:
+                                # do not render tiles out of the bbox
+                                debug("out of bbox, out of mind")
+                                self.work_stack.notify(tile, False)
+                                # we count this one and all it descendents as rendered
+                                tiles_skept += ( pyramid_tile_count(tile.z, opts.max_zoom) *
+                                                 self.tiles_per_metatile(tile.z) )
+                                info("[%d+%d/%d: %7.3f%%]", tiles_rendered,
+                                    tiles_skept, tiles_to_render,
+                                    (tiles_rendered + tiles_skept) / tiles_to_render * 100)
 
 
                         elif type == 'old':
