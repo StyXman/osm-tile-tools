@@ -106,14 +106,13 @@ class RenderStack:
     def notify(self, metatile:map_utils.MetaTile, render:bool) -> None:
         """The MetaTile needs to be rendered."""
         debug("%s, %s", metatile, render)
-        if metatile.z <= self.max_zoom:
-            self.to_validate.remove(metatile)
+        self.to_validate.remove(metatile)
 
-            if render:
-                if self.first is not None:
-                    self.ready.insert(0, self.first)
+        if render:
+            if self.first is not None:
+                self.ready.insert(0, self.first)
 
-                self.first = metatile
+            self.first = metatile
 
 RenderChildren = Dict[map_utils.Tile, bool]
 class RenderThread:
