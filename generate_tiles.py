@@ -415,26 +415,21 @@ class Master:
             # TODO: move this try outer
             try:
                 while True:
-                    try:
-                        # pop from there,
-                        new_work = self.work_stack.pop()  # map_utils.MetaTile
-                    except IndexError:
-                        debug('out: timeout!')
-                        break
-                    else:
-                        if new_work is not None:
-                            try:
-                                # push in the writer
-                                work_out.put(new_work, True, .1)  # 1/10s timeout
-                            except queue.Full:
-                                # debug('work_out full, not confirm()ing.')
-                                break
-                            else:
-                                self.work_stack.confirm()
-                                went_out += 1
-                                debug("--> %r" % (new_work, ))
-                        else:
+                    # pop from there,
+                    new_work = self.work_stack.pop()  # map_utils.MetaTile
+                    if new_work is not None:
+                        try:
+                            # push in the writer
+                            work_out.put(new_work, True, .1)  # 1/10s timeout
+                        except queue.Full:
+                            # debug('work_out full, not confirm()ing.')
                             break
+                        else:
+                            self.work_stack.confirm()
+                            went_out += 1
+                            debug("--> %r" % (new_work, ))
+                    else:
+                        break
 
                 # pop from the reader,
                 while True:
