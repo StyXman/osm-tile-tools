@@ -495,10 +495,7 @@ class Master:
                 self.finish()
                 raise SystemExit("Ctrl-c detected, exiting...")
 
-        # the weird - 3* thing is because low ZLs don't have 4 children
-        # for metatile sizes > 1
-        # for instance, metatile_size==8 -> Zls 1, 2, 3 have only one metatile
-        while went_out*4 - 3*math.log2(self.opts.metatile_size) > came_back:
+        while went_out > came_back:
             debug("%d <-> %d", went_out*4, came_back)
             type, *data = work_in.get(True)
             debug("<-- %r", data)
