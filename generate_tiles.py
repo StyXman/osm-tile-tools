@@ -227,14 +227,6 @@ class RenderThread:
         return render_children
 
 
-    def notify_children(self, render_children:Dict[map_utils.Tile, bool]) -> None:
-        # debug(render_children)
-        for tile, render in render_children.items():
-            debug("<== [%s] %r: %s", getpid(), tile, render)
-            self.queues[1].put(('new', tile, render))
-            debug("<<< [%s]", getpid())
-
-
     def load_map(self):
         start = time.perf_counter()
         self.m  = mapnik.Map(self.image_size, self.image_size)
@@ -298,7 +290,12 @@ class RenderThread:
                 # they could either be empty tiles or too new too
                 render_children[child] = True
 
-        self.notify_children(render_children)
+        # debug(render_children)
+        for tile, render in render_children.items():
+            debug("<== [%s] %r: %s", getpid(), tile, render)
+            self.queues[1].put(('new', tile, render))
+            debug("<<< [%s]", getpid())
+
         # self.q.task_done()
         return True
 
