@@ -124,6 +124,9 @@ class RenderThread:
         self.tile_size:int = 256
         self.image_size:int = self.tile_size*self.metatile_size
 
+        if self.opts.parallel == 'single':
+            self.load_map()
+
 
     # TODO: generate_tiles.py:119: error: Invalid type "generate_tiles.RenderChildren"
     def render_metatile(self, metatile:map_utils.MetaTile) -> Dict[map_utils.Tile, bool]:
@@ -232,7 +235,7 @@ class RenderThread:
             debug("<<< [%s]", getpid())
 
 
-    def loop(self):
+    def load_map(self):
         start = time.perf_counter()
         self.m  = mapnik.Map(self.image_size, self.image_size)
         # Load style XML
@@ -245,6 +248,11 @@ class RenderThread:
         self.prj = mapnik.Projection(self.m.srs)
         # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
         self.tileproj = map_utils.GoogleProjection(opts.max_zoom+1)
+
+
+    def loop(self):
+        if self.opts.parallel != 'single':
+            self.load_map()
 
         debug('%s looping the loop', self)
         while True:
