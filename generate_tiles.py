@@ -255,47 +255,52 @@ class RenderThread:
             self.load_map()
 
         debug('%s looping the loop', self)
-        while True:
-            # Fetch a tile from the queue and render it
-            t:Optional[map_utils.MetaTile] = self.queues[0].get()
-            debug("[%s] ==> %r" % (getpid(), t, ))
-            if t is None:
-                # self.q.task_done()
-                debug('[%s] ending loop' % getpid())
-                break
+        while self.single_step():
+            pass
 
-            skip:bool
-            if self.opts.skip_existing or self.opts.skip_newer is not None:
-                debug('[%s] skip test existing:%s, newer:%s',
-                       getpid(), self.opts.skip_existing, self.opts.skip_newer)
-                skip = True
 
-                for tile in t.tiles: # type: map_utils.Tile
-                    if self.opts.skip_existing:
-                        skip = skip and self.backend.exists(tile.z, tile.x, tile.y)
-                    else:
-                        skip= ( skip and
-                                self.backend.newer_than(tile.z, tile.x, tile.y,
-                                                        self.opts.skip_newer))
-            else:
-                skip = False
-
-            render_children:Dict[map_utils.Tile, bool] = {}
-            if not skip:
-                render_children = self.render_metatile(t)
-            else:
-                self.queues[1].put(('skept', t))
-
-                # but notify the children, so they get a chance to be rendered
-                for child in t.children():
-                    # we have no other info about whether they should be
-                    # rendered or not, so render them just in case. at worst,
-                    # they could either be empty tiles or too new too
-                    render_children[child] = True
-
-            self.notify_children(render_children)
-
+    def single_step(self):
+        # Fetch a tile from the queue and render it
+        t:Optional[map_utils.MetaTile] = self.queues[0].get()
+        debug("[%s] ==> %r" % (getpid(), t, ))
+        if t is None:
             # self.q.task_done()
+            debug('[%s] ending loop' % getpid())
+            return False
+
+        # TODO: move all these checks to another thread/process.
+        skip:bool
+        if self.opts.skip_existing or self.opts.skip_newer is not None:
+            debug('[%s] skip test existing:%s, newer:%s',
+                    getpid(), self.opts.skip_existing, self.opts.skip_newer)
+            skip = True
+
+            for tile in t.tiles: # type: map_utils.Tile
+                if self.opts.skip_existing:
+                    skip = skip and self.backend.exists(tile.z, tile.x, tile.y)
+                else:
+                    skip= ( skip and
+                            self.backend.newer_than(tile.z, tile.x, tile.y,
+                                                    self.opts.skip_newer))
+        else:
+            skip = False
+
+        render_children:Dict[map_utils.Tile, bool] = {}
+        if not skip:
+            render_children = self.render_metatile(t)
+        else:
+            self.queues[1].put(('skept', t))
+
+            # but notify the children, so they get a chance to be rendered
+            for child in t.children():
+                # we have no other info about whether they should be
+                # rendered or not, so render them just in case. at worst,
+                # they could either be empty tiles or too new too
+                render_children[child] = True
+
+        self.notify_children(render_children)
+        # self.q.task_done()
+        return True
 
 
 class Master:
