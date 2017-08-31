@@ -2,7 +2,7 @@
 
 from subprocess import call
 import sys, os, os.path
-from queue import Queue
+import queue
 from argparse import ArgumentParser
 import time
 import errno
@@ -10,7 +10,6 @@ import threading
 import datetime
 import errno
 import multiprocessing
-import queue
 from random import randint, random
 from os import getpid
 import math
@@ -212,6 +211,7 @@ class RenderThread:
         else:
             # simulate some work
             start = time.perf_counter()
+            debug('thumbtumbling')
             time.sleep(randint(0, 30) / 10)
             mid = time.perf_counter()
             if self.opts.tiles is None and metatile.z < self.opts.max_zoom:
@@ -314,11 +314,14 @@ class Master:
             # work_out queue is size 1, so higher zoom level tiles don't pile up
             # there if there are lower ZL tiles ready in the work_stack.
             self.queues = (multiprocessing.Queue(1),
-                           multiprocessing.Queue(4*self.opts.threads))
+                           multiprocessing.Queue(5*self.opts.threads))
+        elif self.opts.parallel == 'threads':
+            debug('threads, using queue.Queue()')
+            # TODO: warning about mapnik and multithreads
+            self.queues = (queue.Queue(32), queue.Queue(32))
         else:
-            debug('threads or single, using queue.Queue()')
-            # TODO: this and the warning about mapnik and multithreads
-            self.queues = (Queue(32), None)
+            debug('single mode, using queue.Queue()')
+            self.queues = (queue.Queue(1), queue.Queue(5))
 
 
     def tiles_per_metatile(self, zoom):
@@ -336,10 +339,10 @@ class Master:
         backend = backends[self.opts.format](self.opts.tile_dir, self.opts.bbox)
 
         # Launch rendering threads
-        for i in range(self.opts.threads):
-            renderer = RenderThread(self.opts, backend, self.queues)
+        if self.opts.parallel != 'single':
+            for i in range(self.opts.threads):
+                renderer = RenderThread(self.opts, backend, self.queues)
 
-            if self.opts.parallel != 'single':
                 if self.opts.parallel == 'fork':
                     debug('mp.Process()')
                     render_thread = multiprocessing.Process(target=renderer.loop)
@@ -355,6 +358,8 @@ class Master:
                     debug("Started render thread %s" % render_thread.getName())
 
                 self.renderers[i] = render_thread
+        else:
+            self.renderer = RenderThread(self.opts, backend, self.queues)
 
         if not os.path.isdir(self.opts.tile_dir):
             debug("creating dir %s", self.opts.tile_dir)
@@ -376,10 +381,6 @@ class Master:
                 z, x, y = map(int, i.split(','))
                 t = map_utils.MetaTile(z, x, y, self.opts.metatile_size)
                 initial_metatiles.append(t)
-
-        if self.opts.parallel == 'single':
-            self.queues[0].put(None)
-            renderer.loop()
 
         self.loop(initial_metatiles)
         self.finish()
@@ -428,6 +429,12 @@ class Master:
                             self.work_stack.confirm()
                             went_out += 1
                             debug("--> %r" % (new_work, ))
+
+                        if self.opts.parallel == 'single':
+                            self.renderer.single_step()
+                            # also, get out of this place, so we can clean up
+                            # in the next loop
+                            break
                     else:
                         break
 
