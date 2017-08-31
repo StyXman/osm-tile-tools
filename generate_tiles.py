@@ -43,7 +43,7 @@ def pyramid_tile_count(min_zoom, max_zoom):
 
 
 class RenderStack:
-    """A render stack implemented with a list.
+    """A render stack implemented with a list... and more.
 
     Although this is implemented with a list, I prefer the semantic of these
     methods and the str() representation given by the list being pop from/push
@@ -112,6 +112,7 @@ class RenderStack:
                 self.ready.insert(0, self.first)
 
             self.first = metatile
+
 
 RenderChildren = Dict[map_utils.Tile, bool]
 class RenderThread:
