@@ -158,72 +158,56 @@ class RenderThread:
         if self.m.buffer_size < 128:
             self.m.buffer_size = 128
 
-        # we must decide wether to render the subtiles/children of this tile
+        # we must decide whether to render the subtiles/children of this tile
         render_children:Dict[map_utils.Tile, bool] = {}
 
+        start = time.perf_counter()
         if not self.opts.dry_run:
             # Render image with default Agg renderer
-            start = time.perf_counter()
             im = mapnik.Image(self.image_size, self.image_size)
-
-            try:
-                mapnik.render(self.m, im)
-            except RuntimeError as e:
-                exception("%r: %s", metatile, e)
-            else:
-                mid = time.perf_counter()
-
-                # save the image, splitting it in the right amount of tiles
-                for tile in metatile.tiles:
-                    i, j = tile.meta_index
-
-                    # TODO: Tile.meta_pixel_coords
-                    img = im.view(i*self.tile_size, j*self.tile_size,
-                                  self.tile_size, self.tile_size)
-                    tile.data = img.tostring('png256')
-                    # TODO: move to Tile
-                    is_empty = map_utils.is_empty(tile.data)
-
-                    if self.opts.tiles is not None or tile.z == self.opts.max_zoom:
-                        # no children to render
-                        debug("%r: no children", tile)
-                        pass
-                    elif not is_empty or self.opts.empty == 'write':
-                        self.backend.store(tile)
-
-                        # at least something to render
-                        render_children[metatile.child(tile)] = True
-                    else:
-                        if self.opts.empty == 'skip':
-                            # empty tile, skip
-                            debug("%r: empty" % tile)
-                            continue
-                        # TODO: else?
-
-                    self.backend.commit()
-
-                end = time.perf_counter()
-                # info("%r: %f, %f" % (metatile, mid-start, end-mid))
-
-                debug("<== [%s] %r: %s", getpid(), metatile, ('old', mid-start, end-mid))
-                self.queues[1].put(('old', metatile, mid-start, end-mid))
-                debug("<<< [%s]", getpid())
-
+            mapnik.render(self.m, im)
+            # TODO: handle exception, send back into queue
         else:
-            # simulate some work
-            start = time.perf_counter()
             debug('thumbtumbling')
             time.sleep(randint(0, 30) / 10)
-            mid = time.perf_counter()
-            if self.opts.tiles is None and metatile.z < self.opts.max_zoom:
-                for child in metatile.children():
-                    if random() <= 0.75 or 2**metatile.z < self.opts.metatile_size:
-                        render_children[child] = True
-            end = time.perf_counter()
+        mid = time.perf_counter()
 
-            debug("<== [%s] %r: %s", getpid(), metatile, ('old', mid-start, end-mid))
-            self.queues[1].put(('old', metatile, mid-start, end-mid))
-            debug("<<< [%s]", getpid())
+        # save the image, splitting it in the right amount of tiles
+        for tile in metatile.tiles:
+            i, j = tile.meta_index
+
+            if not self.opts.dry_run:
+                # TODO: Tile.meta_pixel_coords
+                img = im.view(i*self.tile_size, j*self.tile_size,
+                                self.tile_size, self.tile_size)
+                tile.data = img.tostring('png256')
+                # TODO: move to Tile
+                is_empty = map_utils.is_empty(tile.data)
+
+                if not is_empty or self.opts.empty == 'write':
+                    self.backend.store(tile)
+                elif is_empty and self.opts.empty == 'link':
+                    # TODO
+                    pass
+            else:
+                is_empty = ( random() <= 0.75 or
+                             2**metatile.z < self.opts.metatile_size)
+
+            if not is_empty and ( not self.opts.single_tiles or
+                                  tile.z < self.opts.max_zoom):
+                # at least something to render
+                render_children[metatile.child(tile)] = True
+            # TODO: handle empty and link or write; pyramid stuff
+
+            if not self.opts.dry_run:
+                self.backend.commit()
+
+        end = time.perf_counter()
+        # info("%r: %f, %f" % (metatile, mid-start, end-mid))
+
+        debug("<== [%s] %r: %s", getpid(), metatile, ('old', mid-start, end-mid))
+        self.queues[1].put(('old', metatile, mid-start, end-mid))
+        debug("<<< [%s]", getpid())
 
         return render_children
 
@@ -307,7 +291,7 @@ class Master:
         self.renderers = {}
         # we need at least space for the initial batch
         # but do not auto push children in tiles mode
-        self.work_stack = RenderStack(opts.max_zoom, self.opts.tiles is None)
+        self.work_stack = RenderStack(opts.max_zoom, not self.opts.single_tiles)
 
         if self.opts.parallel == 'fork':
             debug('forks, using mp.Queue()')
@@ -367,7 +351,7 @@ class Master:
             os.makedirs(self.opts.tile_dir, exist_ok=True)
 
         initial_metatiles = []
-        if self.opts.tiles is None:
+        if not self.opts.single_tiles:
             debug('rendering bbox %s:%s', self.opts.bbox_name, self.opts.bbox)
             for x in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
                 for y in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
@@ -398,11 +382,11 @@ class Master:
             # make sure they're rendered!
             self.work_stack.notify(t, True)
 
-            if self.opts.tiles is not None:
+            if self.opts.single_tiles:
                 tiles_to_render += self.tiles_per_metatile(t.z)
                 # debug("%r: %d", t, tiles_to_render)
 
-        if self.opts.tiles is None:
+        if not self.opts.single_tiles:
             first_tiles = len(initial_metatiles)
             tiles_to_render = first_tiles * pyramid_tile_count(opts.min_zoom, opts.max_zoom)
 
@@ -581,7 +565,6 @@ def parse_args():
         opts.skip_newer = datetime.datetime.now()-datetime.timedelta(days=opts.skip_newer)
 
     # so we find any relative resources
-    # os.chdir(os.path.dirname(opts.mapfile))
     opts.mapfile = os.path.basename(opts.mapfile)
 
     # pick bbox from bboxes.ini
@@ -591,8 +574,8 @@ def parse_args():
     else:
         opts.bbox = map_utils.BBox(opts.bbox, opts.max_zoom)
 
-    if opts.parallel == 'single':
-        opts.threads = 1
+    # semantic opts
+    opts.single_tiles = opts.tiles is not None
 
     return opts
 
