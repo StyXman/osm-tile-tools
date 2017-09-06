@@ -438,18 +438,17 @@ class Master:
                             if metatile in self.opts.bbox:
                                 self.work_stack.notify(metatile, render)
                                 if not render:
-                                    tiles_skept += 1
+                                    tiles_skept += len(metatile.tiles)
                             else:
                                 # do not render tiles out of the bbox
                                 debug("out of bbox, out of mind")
                                 self.work_stack.notify(metatile, False)
                                 # we count this one and all it descendents as rendered
-                                tiles_skept += ( pyramid_tile_count(tile.z, opts.max_zoom) *
-                                                 self.tiles_per_metatile(tile.z) )
-                                info("[%d+%d/%d: %7.3f%%]", tiles_rendered,
+                                tiles_skept += pyramid_tile_count(metatile.z, opts.max_zoom)
+                                info("[%d+%d/%d: %7.3f%%] %r: out of bbox", tiles_rendered,
                                     tiles_skept, tiles_to_render,
-                                    (tiles_rendered + tiles_skept) / tiles_to_render * 100)
-
+                                    (tiles_rendered + tiles_skept) / tiles_to_render * 100,
+                                    metatile)
 
                         elif type == 'old':
                             metatile, render_time, saving_time = data
