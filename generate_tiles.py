@@ -474,31 +474,12 @@ class Master:
                             info("[%d+%d/%d: %7.3f%%] %r: %s",
                                  tiles_rendered, tiles_skept, tiles_to_render,
                                  (tiles_rendered + tiles_skept) / tiles_to_render * 100,
-                                 tile, message)
+                                 metatile, message)
             except KeyboardInterrupt as e:
                 debug(e)
                 self.finish()
                 raise SystemExit("Ctrl-c detected, exiting...")
 
-        while went_out > came_back:
-            debug("%d <-> %d", went_out*4, came_back)
-            type, *data = work_in.get(True)
-            debug("<-- %r", data)
-
-            if type == 'old':
-                tile, render_time, saving_time = data
-                tiles_rendered += self.tiles_per_metatile(tile.z)
-
-                info("[%d+%d/%d: %7.3f%%] %r: %8.3f,  %8.3f",
-                        tiles_rendered, tiles_skept, tiles_to_render,
-                        (tiles_rendered + tiles_skept) / tiles_to_render * 100,
-                        tile, render_time, saving_time)
-
-            came_back += 1
-
-        info("[%d+%d/%d: %7.3f%%]", tiles_rendered,
-             tiles_skept, tiles_to_render,
-             (tiles_rendered + tiles_skept) / tiles_to_render * 100)
         debug('out!')
 
 
