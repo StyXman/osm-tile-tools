@@ -69,7 +69,7 @@ class RenderStack:
 
     def push(self, o:map_utils.MetaTile) -> None:
         self.to_validate.add(o)
-        debug("%s, %s, %s", self.first, self.ready, self.to_validate)
+        # debug("%s, %s, %s", self.first, self.ready, self.to_validate)
 
 
     def pop(self) -> map_utils.MetaTile:
@@ -90,7 +90,7 @@ class RenderStack:
             t = self.ready.pop(0)
 
         self.first = t
-        debug("%s, %s, %s", self.first, self.ready, self.to_validate)
+        # debug("%s, %s, %s", self.first, self.ready, self.to_validate)
 
 
     def size(self) -> int:
@@ -396,8 +396,8 @@ class Master:
         # they're constantly ready. keep the probing version, so select()ing on
         # them leads to a tight loop
         while self.work_stack.size() > 0 or went_out > came_back:
-            debug("ws.size(): %s; wo > cb: %d > %d", self.work_stack.size(),
-                  went_out, came_back)
+            # debug("ws.size(): %s; wo > cb: %d > %d", self.work_stack.size(),
+            #       went_out, came_back)
             # TODO: move this try outer
             try:
                 while True:
