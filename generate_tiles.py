@@ -434,15 +434,15 @@ class Master:
                         break
                     else:
                         if type == 'new':
-                            tile, render = data
-                            if tile in self.opts.bbox:
-                                self.work_stack.notify(tile, render)
+                            metatile, render = data
+                            if metatile in self.opts.bbox:
+                                self.work_stack.notify(metatile, render)
                                 if not render:
                                     tiles_skept += 1
                             else:
                                 # do not render tiles out of the bbox
                                 debug("out of bbox, out of mind")
-                                self.work_stack.notify(tile, False)
+                                self.work_stack.notify(metatile, False)
                                 # we count this one and all it descendents as rendered
                                 tiles_skept += ( pyramid_tile_count(tile.z, opts.max_zoom) *
                                                  self.tiles_per_metatile(tile.z) )
@@ -452,18 +452,18 @@ class Master:
 
 
                         elif type == 'old':
-                            tile, render_time, saving_time = data
-                            tiles_rendered += self.tiles_per_metatile(tile.z)
+                            metatile, render_time, saving_time = data
+                            tiles_rendered += len(metatile.tiles)
                             came_back += 1
 
                             info("[%d+%d/%d: %7.3f%%] %r: %8.3f,  %8.3f",
                                  tiles_rendered, tiles_skept, tiles_to_render,
                                  (tiles_rendered + tiles_skept) / tiles_to_render * 100,
-                                 tile, render_time, saving_time)
+                                 metatile, render_time, saving_time)
 
                         elif type == 'skept':
-                            tile, = data
-                            tiles_skept += self.tiles_per_metatile(tile.z)
+                            metatile, = data
+                            tiles_skept += self.tiles_per_metatile(metatile.z)
                             came_back += 1
 
                             if self.opts.skip_existing:
