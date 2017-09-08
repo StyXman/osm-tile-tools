@@ -400,20 +400,19 @@ class Master:
             #       went_out, came_back)
             # TODO: move this try outer
             try:
-                while True:
+                # the doc says this is unrealiable, but we don't care
+                # full() can be inconsistent only if when we test is false
+                # and when we put() is true, but only the master is writing
+                # so this cannot happen
+                while not work_out.full():
                     # pop from there,
                     new_work = self.work_stack.pop()  # map_utils.MetaTile
                     if new_work is not None:
-                        try:
-                            # push in the writer
-                            work_out.put(new_work, True, .1)  # 1/10s timeout
-                        except queue.Full:
-                            # debug('work_out full, not confirm()ing.')
-                            break
-                        else:
-                            self.work_stack.confirm()
-                            went_out += 1
-                            debug("--> %r" % (new_work, ))
+                        # push in the writer
+                        work_out.put(new_work, True, .1)  # 1/10s timeout
+                        self.work_stack.confirm()
+                        went_out += 1
+                        debug("--> %r" % (new_work, ))
 
                         if self.opts.parallel == 'single':
                             self.renderer.single_step()
@@ -421,59 +420,58 @@ class Master:
                             # in the next loop
                             break
                     else:
+                        # no more work to do
                         break
 
                 # pop from the reader,
-                while True:
-                    try:
-                        # 1/10s timeout
-                        type, *data = work_in.get(True, .1)  # type: str, Any
-                        debug("<-- %s: %r" % (type, data))
-                    except queue.Empty:
-                        # debug('in: timeout!')
-                        break
-                    else:
-                        if type == 'new':
-                            metatile, render = data
-                            if metatile in self.opts.bbox:
-                                self.work_stack.notify(metatile, render)
-                                if not render:
-                                    tiles_skept += len(metatile.tiles)
-                            else:
-                                # do not render tiles out of the bbox
-                                debug("out of bbox, out of mind")
-                                self.work_stack.notify(metatile, False)
-                                # we count this one and all it descendents as rendered
-                                tiles_skept += pyramid_tile_count(metatile.z, opts.max_zoom)
-                                info("[%d+%d/%d: %7.3f%%] %r: out of bbox", tiles_rendered,
-                                    tiles_skept, tiles_to_render,
-                                    (tiles_rendered + tiles_skept) / tiles_to_render * 100,
-                                    metatile)
+                while not work_in.empty():
+                    # 1/10s timeout
+                    type, *data = work_in.get(True, .1)  # type: str, Any
+                    debug("<-- %s: %r" % (type, data))
 
-                        elif type == 'old':
-                            metatile, render_time, saving_time = data
-                            tiles_rendered += len(metatile.tiles)
-                            came_back += 1
+                    if type == 'new':
+                        metatile, render = data
+                        if metatile in self.opts.bbox:
+                            # MetaTile(18, 152912, 93352, 8): too new, skipping
+                            self.work_stack.notify(metatile, render)
+                            if not render:
+                                tiles_skept += len(metatile.tiles)
+                        else:
+                            # do not render tiles out of the bbox
+                            debug("out of bbox, out of mind")
+                            self.work_stack.notify(metatile, False)
+                            # we count this one and all it descendents as rendered
+                            tiles_skept += ( len(metatile.tiles) *
+                                                pyramid_count(metatile.z, opts.max_zoom) )
+                            info("[%d+%d/%d: %7.4f%%] %r: out of bbox", tiles_rendered,
+                                tiles_skept, tiles_to_render,
+                                (tiles_rendered + tiles_skept) / tiles_to_render * 100,
+                                metatile)
 
-                            info("[%d+%d/%d: %7.3f%%] %r: %8.3f,  %8.3f",
-                                 tiles_rendered, tiles_skept, tiles_to_render,
-                                 (tiles_rendered + tiles_skept) / tiles_to_render * 100,
-                                 metatile, render_time, saving_time)
+                    elif type == 'old':
+                        metatile, render_time, saving_time = data
+                        tiles_rendered += len(metatile.tiles)
+                        came_back += 1
 
-                        elif type == 'skept':
-                            metatile, = data
-                            tiles_skept += self.tiles_per_metatile(metatile.z)
-                            came_back += 1
+                        info("[%d+%d/%d: %7.4f%%] %r: %8.3f,  %8.3f",
+                                tiles_rendered, tiles_skept, tiles_to_render,
+                                (tiles_rendered + tiles_skept) / tiles_to_render * 100,
+                                metatile, render_time, saving_time)
 
-                            if self.opts.skip_existing:
-                                message = "present, skipping"
-                            else:
-                                message = "too new, skipping"
+                    elif type == 'skept':
+                        metatile, = data
+                        tiles_skept += len(metatile.tiles)
+                        came_back += 1
 
-                            info("[%d+%d/%d: %7.3f%%] %r: %s",
-                                 tiles_rendered, tiles_skept, tiles_to_render,
-                                 (tiles_rendered + tiles_skept) / tiles_to_render * 100,
-                                 metatile, message)
+                        if self.opts.skip_existing:
+                            message = "present, skipping"
+                        else:
+                            message = "too new, skipping"
+
+                        info("[%d+%d/%d: %7.4f%%] %r: %s",
+                                tiles_rendered, tiles_skept, tiles_to_render,
+                                (tiles_rendered + tiles_skept) / tiles_to_render * 100,
+                                metatile, message)
             except KeyboardInterrupt as e:
                 debug(e)
                 self.finish()
