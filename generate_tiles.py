@@ -13,6 +13,8 @@ import multiprocessing
 from random import randint, random
 from os import getpid
 import math
+from signal import signal, SIGINT, SIG_IGN
+
 
 import map_utils
 
@@ -162,54 +164,83 @@ class RenderThread:
         render_children:Dict[map_utils.Tile, bool] = {}
 
         start = time.perf_counter()
+
+        # handling C-c: if we're rendering, the exception won't be raised until
+        # mapnik has finished, and throwing away that work would be a shame
+
+        # so, from the docs: If an exception occurs in any of the clauses and is
+        # not handled, the exception is temporarily saved. The finally clause
+        # is executed. If there is a saved exception it is re-raised at the
+        # end of the finally clause
+
+        im = mapnik.Image(self.image_size, self.image_size)
+
+        # critical section, disable signals
+        sig = signal(SIGINT, SIG_IGN)
+
         if not self.opts.dry_run:
             # Render image with default Agg renderer
-            im = mapnik.Image(self.image_size, self.image_size)
             mapnik.render(self.m, im)
             # TODO: handle exception, send back into queue
         else:
             debug('thumbtumbling')
             time.sleep(randint(0, 30) / 10)
         mid = time.perf_counter()
+        render_children = self.store_metatile(im, metatile)
+        end = time.perf_counter()
+
+        debug("<== [%s] %r: %s", self.pid, metatile, ('old', mid-start, end-mid))
+        self.queues[1].put(('old', metatile, mid-start, end-mid))
+        debug("<<< [%s]", self.pid)
+
+        # end critical section, restore signal
+        signal(SIGINT, sig)
+
+        return render_children, bail_out
+
+
+    def store_metatile(self, im, metatile):
+        render_children:Dict[map_utils.Tile, bool] = {}
 
         # save the image, splitting it in the right amount of tiles
         for tile in metatile.tiles:
-            i, j = tile.meta_index
-
-            if not self.opts.dry_run:
-                # TODO: Tile.meta_pixel_coords
-                img = im.view(i*self.tile_size, j*self.tile_size,
-                                self.tile_size, self.tile_size)
-                tile.data = img.tostring('png256')
-                # TODO: move to Tile
-                is_empty = map_utils.is_empty(tile.data)
-
-                if not is_empty or self.opts.empty == 'write':
-                    self.backend.store(tile)
-                elif is_empty and self.opts.empty == 'link':
-                    # TODO
-                    pass
-            else:
-                is_empty = ( random() <= 0.75 or
-                             2**metatile.z < self.opts.metatile_size)
-
-            if not is_empty and ( not self.opts.single_tiles or
-                                  tile.z < self.opts.max_zoom):
-                # at least something to render
-                render_children[metatile.child(tile)] = True
-            # TODO: handle empty and link or write; pyramid stuff
-
-            if not self.opts.dry_run:
-                self.backend.commit()
-
-        end = time.perf_counter()
-        # info("%r: %f, %f" % (metatile, mid-start, end-mid))
-
-        debug("<== [%s] %r: %s", getpid(), metatile, ('old', mid-start, end-mid))
-        self.queues[1].put(('old', metatile, mid-start, end-mid))
-        debug("<<< [%s]", getpid())
+            self.store_tile(im, metatile, tile, render_children)
 
         return render_children
+
+
+    def store_tile(self, im, metatile, tile, render_children):
+        i, j = tile.meta_index
+
+        if not self.opts.dry_run:
+            # TODO: Tile.meta_pixel_coords
+            img = im.view(i*self.tile_size, j*self.tile_size,
+                            self.tile_size,   self.tile_size)
+            tile.data = img.tostring('png256')
+            # TODO: move to Tile
+            is_empty = map_utils.is_empty(tile.data)
+
+            if not is_empty or self.opts.empty == 'write':
+                self.backend.store(tile)
+            elif is_empty and self.opts.empty == 'link':
+                # TODO
+                pass
+        else:
+            is_empty = ( random() <= 0.75 and
+                         not 2**metatile.z < self.opts.metatile_size )
+
+        if ( not is_empty and not self.opts.single_tiles and
+             tile.z < self.opts.max_zoom ):
+
+            # debug( "%s; %s; %d < %d", not is_empty,
+            #        not self.opts.single_tiles, tile.z, self.opts.max_zoom )
+
+            # at least something to render
+            render_children[metatile.child(tile)] = True
+        # TODO: handle empty and link or write; pyramid stuff
+
+        if not self.opts.dry_run:
+            self.backend.commit()
 
 
     def load_map(self):
