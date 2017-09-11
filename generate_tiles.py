@@ -17,6 +17,7 @@ from signal import signal, SIGINT, SIG_IGN
 
 
 import map_utils
+# from map_utils import pyramid_count
 
 try:
     import mapnik2 as mapnik
@@ -124,13 +125,15 @@ class RenderThread:
         self.opts = opts
         self.metatile_size:int = opts.metatile_size
         self.tile_size:int = 256
-        self.image_size:int = self.tile_size*self.metatile_size
+        self.image_size:int = self.tile_size * self.metatile_size
 
         if self.opts.parallel == 'single':
+            # RenderThread.loop() is not called in single mode
+            # so do this here
+            self.pid = getpid()
             self.load_map()
 
 
-    # TODO: generate_tiles.py:119: error: Invalid type "generate_tiles.RenderChildren"
     def render_metatile(self, metatile:map_utils.MetaTile) -> Dict[map_utils.Tile, bool]:
         z = metatile.z
         x = metatile.x
@@ -263,17 +266,18 @@ class RenderThread:
 
     def loop(self):
         self.pid = getpid()
-
-        if self.opts.parallel != 'single':
-            self.load_map()
+        self.load_map()
 
         debug('[%s] looping the loop', self.pid)
-        try:
-            while self.single_step():
+
+        finished = False
+        while not finished:
+            try:
+                finished = self.single_step()
+            except KeyboardInterrupt:
+                # do nothing, we'll be outta here
+                debug('break!')
                 pass
-        except KeyboardInterrupt:
-            # do nothing, but we're outta here
-            pass
 
         debug("[%s] I'm outta here...", self.pid)
 
@@ -286,7 +290,7 @@ class RenderThread:
         if metatile is None:
             # self.q.task_done()
             debug('[%s] None, ending loop' % self.pid)
-            return False
+            return True
 
         # TODO: move all these checks to another thread/process.
         skip:bool
@@ -329,7 +333,7 @@ class RenderThread:
             debug("<<< [%s]", self.pid)
 
         # self.q.task_done()
-        return not bail_out
+        return bail_out
 
 
 class Master:
