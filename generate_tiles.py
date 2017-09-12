@@ -607,7 +607,16 @@ def parse_args():
     else:
         logging.basicConfig(level=logging.INFO, format=short_format)
 
-    if opts.format == 'tiles' and opts.tile_dir[-1]!='/':
+    if opts.log_file is not None:
+        # log to the file too
+        root = logging.getLogger()
+
+        handler = logging.FileHandler(opts.log_file)
+        handler.setFormatter(root.handlers[0].formatter)
+
+        root.addHandler(handler)
+
+    if opts.format == 'tiles' and opts.tile_dir[-1] != '/':
         # we need the trailing /, it's actually a series of BUG s in render_tiles()
         opts.tile_dir += '/'
 
