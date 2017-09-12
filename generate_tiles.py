@@ -253,17 +253,19 @@ class RenderThread:
 
     def load_map(self):
         start = time.perf_counter()
+
         self.m  = mapnik.Map(self.image_size, self.image_size)
         # Load style XML
         if not self.opts.dry_run:
             mapnik.load_map(self.m, self.opts.mapfile, True)
+
         end = time.perf_counter()
-        debug('Map loading took %.6fs', end-start)
+        info('[%s] Map loading took %.6fs', self.pid, end - start)
 
         # Obtain <Map> projection
         self.prj = mapnik.Projection(self.m.srs)
         # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
-        self.tileproj = map_utils.GoogleProjection(opts.max_zoom+1)
+        self.tileproj = map_utils.GoogleProjection(opts.max_zoom + 1)
 
 
     def loop(self):
@@ -281,7 +283,7 @@ class RenderThread:
                 debug('break!')
                 pass
 
-        debug("[%s] I'm outta here...", self.pid)
+        info("[%s] finished", self.pid)
 
 
     def single_step(self):
@@ -545,10 +547,10 @@ class Master:
 
     def finish(self):
         if self.opts.parallel != 'single':
-            debug('finishing threads/procs')
+            info('stopping threads/procs')
             # Signal render threads to exit by sending empty request to queue
             for i in range(self.opts.threads):
-                debug("--> None")
+                info("%d..." % (i + 1))
                 self.work_out.put(None)
 
             while self.went_out > self.came_back:
