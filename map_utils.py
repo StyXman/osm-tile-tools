@@ -80,7 +80,7 @@ class DiskBackend:
         tile_uri = self.tile_uri(tile)
         return os.path.isfile(tile_uri)
 
-    def newer_than(self, tile, date):
+    def newer_than(self, tile, date, missing_as_new):
         tile_uri = self.tile_uri(tile)
         try:
             file_date = datetime.datetime.fromtimestamp(os.stat(tile_uri).st_mtime)
@@ -89,7 +89,7 @@ class DiskBackend:
             return file_date > date
         except OSError as e:
             if e.errno == errno.ENOENT:
-                return False
+                return missing_as_new
             else:
                 raise
 

@@ -306,7 +306,8 @@ class RenderThread:
                     skip = skip and self.backend.exists(tile)
                 else:
                     skip= ( skip and
-                            self.backend.newer_than(tile, self.opts.skip_newer)
+                            self.backend.newer_than(tile, self.opts.skip_newer,
+                                                    self.opts.missing_as_new) )
         else:
             skip = False
 
@@ -591,6 +592,8 @@ def parse_args():
     parser.add_argument('-X', '--skip-existing', dest='skip_existing', default=False, action='store_true')
     parser.add_argument('-N', '--skip-newer',    dest='skip_newer', default=None, type=int, metavar='DAYS')
     # parser.add_argument('-L', '--skip-symlinks', dest='skip_', default=None, type=int)
+    parser.add_argument(      '--missing-as-new',  dest='missing_as_new', default=False, action='store_true',
+                        help="missing tiles in a meta tile count as newer, so we don't re-render metatils with empty tiles.")
     parser.add_argument('-E', '--empty',         dest='empty',     default='skip', choices=('skip', 'link', 'write'))
 
     parser.add_argument('-d', '--debug',         dest='debug',     default=False, action='store_true')
