@@ -21,39 +21,40 @@ from typing import List, Tuple, Dict, Optional, Any
 DEG_TO_RAD:float = pi/180
 RAD_TO_DEG:float = 180/pi
 
-def minmax (a:float, b:float, c:float) -> float:
+def minmax(a:float, b:float, c:float) -> float:
     a = max(a,b)
     a = min(a,c)
     return a
 
 class GoogleProjection:
-    def __init__(self,levels:int=18) -> None:
+    def __init__(self, levels:int=18) -> None:
         self.Bc:List[float] = []
         self.Cc:List[float] = []
         self.zc:List[Tuple[float, float]] = []
         self.Ac:List[float] = []
+
         c:int = 256
-        for d in range(0,levels): # type: int
-            e = c/2
-            self.Bc.append(c/360.0)
-            self.Cc.append(c/(2 * pi))
-            self.zc.append((e,e))
+        for d in range(0, levels): # type: int
+            e = c / 2
+            self.Bc.append(c / 360.0)
+            self.Cc.append(c / (2 * pi))
+            self.zc.append((e, e))
             self.Ac.append(c)
             c *= 2
 
-    def fromLLtoPixel(self,ll,zoom):
+    def fromLLtoPixel(self, ll, zoom):
         d = self.zc[zoom]
         e = round(d[0] + ll[0] * self.Bc[zoom])
-        f = minmax(sin(DEG_TO_RAD * ll[1]),-0.9999,0.9999)
-        g = round(d[1] + 0.5*log((1+f)/(1-f))*-self.Cc[zoom])
-        return (e,g)
+        f = minmax(sin(DEG_TO_RAD * ll[1]), -0.9999, 0.9999)
+        g = round(d[1] + 0.5 * log((1 + f) / (1 - f)) * -self.Cc[zoom])
+        return (e, g)
 
-    def fromPixelToLL(self,px,zoom):
+    def fromPixelToLL(self, px, zoom):
         e = self.zc[zoom]
-        f = (px[0] - e[0])/self.Bc[zoom]
-        g = (px[1] - e[1])/-self.Cc[zoom]
-        h = RAD_TO_DEG * ( 2 * atan(exp(g)) - 0.5 * pi)
-        return (f,h)
+        f = (px[0] - e[0]) / self.Bc[zoom]
+        g = (px[1] - e[1]) / -self.Cc[zoom]
+        h = RAD_TO_DEG * (2 * atan(exp(g)) - 0.5 * pi)
+        return (f, h)
 
 
 def is_empty (data):
@@ -222,13 +223,13 @@ class MBTilesBackend:
                               (z, x, y)).fetchall ()
         return data[0][0]==1
 
+    # TODO: newer_than()
 
     def close (self):
         self.session.close ()
 
 
 def coord_range (mn, mx, zoom):
-    image_size=256.0
     return ( coord for coord in range (mn, mx+1)
                    if coord >= 0 and coord < 2**zoom )
 
@@ -263,7 +264,7 @@ class Tile:
         if meta_tile is not None:
             self.meta_index = (x-meta_tile.x, y-meta_tile.y)
 
-        self.pixel_pos = (self.x*256, self.y*256)
+        self.pixel_pos = (self.x * 256, self.y * 256)
         self.image_size = (256, 256)
         self.data:Optional[bytes] = None
 

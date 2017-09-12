@@ -625,7 +625,8 @@ def parse_args():
 
     opts.tile_dir = os.path.abspath(opts.tile_dir)
     if opts.skip_newer is not None:
-        opts.skip_newer = datetime.datetime.now()-datetime.timedelta(days=opts.skip_newer)
+        opts.skip_newer = ( datetime.datetime.now() -
+                            datetime.timedelta(days=opts.skip_newer) )
 
     # so we find any relative resources
     opts.mapfile = os.path.basename(opts.mapfile)
