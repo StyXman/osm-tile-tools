@@ -62,32 +62,33 @@ def is_empty (data):
 
 
 class DiskBackend:
-    def __init__ (self, base, *more):
-        self.base_dir= base
+    def __init__(self, base, *more):
+        self.base_dir = base
 
-    def tile_uri (self, z, x, y):
-        return os.path.join (self.base_dir, str (z), str (x), str (y)+'.png')
+    def tile_uri(self, tile):
+        return os.path.join (self.base_dir, str(tile.z), str(tile.x),
+                             str(tile.y)+'.png')
 
-    def store (self, tile):
-        tile_uri= self.tile_uri (tile.z, tile.x, tile.y)
-        makedirs (os.path.dirname (tile_uri), exist_ok=True)
-        f= open (tile_uri, 'wb+')
-        f.write (tile.data)
-        f.close ()
+    def store(self, tile):
+        tile_uri = self.tile_uri(tile)
+        makedirs(os.path.dirname(tile_uri), exist_ok=True)
+        f= open(tile_uri, 'wb+')
+        f.write(tile.data)
+        f.close()
 
-    def exists (self, z, x, y):
-        tile_uri= self.tile_uri (z, x, y)
-        return os.path.isfile (tile_uri)
+    def exists(self, tile):
+        tile_uri = self.tile_uri(tile)
+        return os.path.isfile(tile_uri)
 
-    def newer_than (self, z, x, y, date):
-        tile_uri= self.tile_uri (z, x, y)
+    def newer_than(self, tile, date):
+        tile_uri = self.tile_uri(tile)
         try:
-            file_date= datetime.datetime.fromtimestamp (os.stat (tile_uri).st_mtime)
+            file_date = datetime.datetime.fromtimestamp(os.stat(tile_uri).st_mtime)
             # debug ("%s: %s <-> %s", tile_uri, file_date.isoformat (),
             #        date.isoformat ())
             return file_date > date
         except OSError as e:
-            if e.errno==errno.ENOENT:
+            if e.errno == errno.ENOENT:
                 return False
             else:
                 raise

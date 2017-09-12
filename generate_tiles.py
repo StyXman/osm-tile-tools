@@ -303,11 +303,10 @@ class RenderThread:
 
             for tile in metatile.tiles: # type: map_utils.Tile
                 if self.opts.skip_existing:
-                    skip = skip and self.backend.exists(tile.z, tile.x, tile.y)
+                    skip = skip and self.backend.exists(tile)
                 else:
                     skip= ( skip and
-                            self.backend.newer_than(tile.z, tile.x, tile.y,
-                                                    self.opts.skip_newer))
+                            self.backend.newer_than(tile, self.opts.skip_newer)
         else:
             skip = False
 
