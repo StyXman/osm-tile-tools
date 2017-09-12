@@ -598,6 +598,7 @@ def parse_args():
 
     parser.add_argument('-d', '--debug',         dest='debug',     default=False, action='store_true')
     parser.add_argument(      '--dry-run',       dest='dry_run',   default=False, action='store_true')
+    parser.add_argument('-l', '--log-file',      dest='log_file',  default=None)
     # TODO: buffer size (256?)
     opts = parser.parse_args()
 
