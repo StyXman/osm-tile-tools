@@ -179,7 +179,8 @@ class RenderThread:
         im = mapnik.Image(self.image_size, self.image_size)
 
         # critical section, disable signals
-        sig = signal(SIGINT, SIG_IGN)
+        if self.opts.parallel != 'single':
+            sig = signal(SIGINT, SIG_IGN)
 
         if not self.opts.dry_run:
             # Render image with default Agg renderer
@@ -200,7 +201,8 @@ class RenderThread:
         debug("<<< [%s]", self.pid)
 
         # end critical section, restore signal
-        signal(SIGINT, sig)
+        if self.opts.parallel != 'single':
+            signal(SIGINT, sig)
 
         return render_children, bail_out
 
