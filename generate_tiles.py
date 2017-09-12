@@ -427,17 +427,18 @@ class Master:
             debug('rendering bbox %s:%s', self.opts.bbox_name, self.opts.bbox)
             for x in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
                 for y in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
-                    t = map_utils.MetaTile(self.opts.min_zoom, x, y,
-                                        self.opts.metatile_size)
-                    if t in self.opts.bbox:
-                        initial_metatiles.append(t)
+                    metatile = map_utils.MetaTile(self.opts.min_zoom, x, y,
+                                                  self.opts.metatile_size)
+
+                    if metatile in self.opts.bbox:
+                        initial_metatiles.append(metatile)
         else:
             # TODO: if possible, order them in depth first/proximity? fashion.
             debug('rendering individual tiles')
             for i in self.opts.tiles:
                 z, x, y = map(int, i.split(','))
-                t = map_utils.MetaTile(z, x, y, self.opts.metatile_size)
-                initial_metatiles.append(t)
+                metatile = map_utils.MetaTile(z, x, y, self.opts.metatile_size)
+                initial_metatiles.append(metatile)
 
         try:
             self.loop(initial_metatiles)
@@ -466,8 +467,8 @@ class Master:
                                      pyramid_count(opts.min_zoom, opts.max_zoom) )
 
         # I could get to the pipes used for the Queues, but it's useless, as
-        # they're constantly ready. keep the probing version, so select()ing on
-        # them leads to a tight loop
+        # they're constantly ready, so select()ing on them leads to a tight loop
+        # keep the probing version
         while self.work_stack.size() > 0 or self.went_out > self.came_back:
             # debug("ws.size(): %s; wo > cb: %d > %d", self.work_stack.size(),
             #       went_out, came_back)
