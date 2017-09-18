@@ -176,15 +176,15 @@ class RenderThread:
         # is executed. If there is a saved exception it is re-raised at the
         # end of the finally clause
 
-        im = mapnik.Image(self.image_size, self.image_size)
 
         # critical section, disable signals
         if self.opts.parallel != 'single':
             sig = signal(SIGINT, SIG_IGN)
 
         if not self.opts.dry_run:
+            metatile.im = mapnik.Image(self.image_size, self.image_size)
             # Render image with default Agg renderer
-            mapnik.render(self.m, im)
+            mapnik.render(self.m, metatile.im)
             # TODO: handle exception, send back into queue
         else:
             debug('[%s] thumbtumbling', self.pid)
@@ -192,63 +192,19 @@ class RenderThread:
 
         debug("[%s] not bailing out", self.pid)
         bail_out = False
-        mid = time.perf_counter()
-        render_children = self.store_metatile(im, metatile)
+        # mid = time.perf_counter()
+        # render_children = self.store_metatile(im, metatile)
         end = time.perf_counter()
 
-        debug("<== [%s] %r: %s", self.pid, metatile, ('old', mid-start, end-mid))
-        self.queues[1].put(('old', metatile, mid-start, end-mid))
+        debug("<== [%s] %r: %s", self.pid, metatile, ('old', end-start))
+        self.queues[1].put(('old', metatile, end-start))
         debug("<<< [%s]", self.pid)
 
         # end critical section, restore signal
         if self.opts.parallel != 'single':
             signal(SIGINT, sig)
 
-        return render_children, bail_out
-
-
-    def store_metatile(self, im, metatile):
-        render_children:Dict[map_utils.Tile, bool] = {}
-
-        # save the image, splitting it in the right amount of tiles
-        for tile in metatile.tiles:
-            self.store_tile(im, metatile, tile, render_children)
-
-        return render_children
-
-
-    def store_tile(self, im, metatile, tile, render_children):
-        i, j = tile.meta_index
-
-        if not self.opts.dry_run:
-            # TODO: Tile.meta_pixel_coords
-            img = im.view(i*self.tile_size, j*self.tile_size,
-                            self.tile_size,   self.tile_size)
-            tile.data = img.tostring('png256')
-            # TODO: move to Tile
-            is_empty = map_utils.is_empty(tile.data)
-
-            if not is_empty or self.opts.empty == 'write':
-                self.backend.store(tile)
-            elif is_empty and self.opts.empty == 'link':
-                # TODO
-                pass
-        else:
-            is_empty = ( random() <= 0.75 and
-                         not 2**metatile.z < self.opts.metatile_size )
-
-        if ( not is_empty and not self.opts.single_tiles and
-             tile.z < self.opts.max_zoom ):
-
-            # debug( "%s; %s; %d < %d", not is_empty,
-            #        not self.opts.single_tiles, tile.z, self.opts.max_zoom )
-
-            # at least something to render
-            render_children[metatile.child(tile)] = True
-        # TODO: handle empty and link or write; pyramid stuff
-
-        if not self.opts.dry_run:
-            self.backend.commit()
+        return bail_out
 
 
     def load_map(self):
@@ -315,7 +271,7 @@ class RenderThread:
 
         render_children:Dict[map_utils.Tile, bool] = {}
         if not skip:
-            render_children, bail_out = self.render_metatile(metatile)
+            bail_out = self.render_metatile(metatile)
         else:
             # TODO: ugh?
             bail_out = False
@@ -545,7 +501,12 @@ class Master:
                 self.progress(metatile, "out of bbox")
 
         elif type == 'old':
-            metatile, render_time, saving_time = data
+            metatile, render_time = data
+
+            debug('sto...')
+            self.store.metatile(metatile)
+            debug('...re!')
+
             self.tiles_rendered += len(metatile.tiles)
             self.came_back += 1
 
@@ -563,6 +524,52 @@ class Master:
                 message = "too new, skipping"
 
             self.progress(metatile, message)
+
+
+    def store_metatile(self, metatile):
+        render_children:Dict[map_utils.Tile, bool] = {}
+
+        # save the image, splitting it in the right amount of tiles
+        for tile in metatile.tiles:
+            self.store_tile(metatile, tile, render_children)
+
+        return render_children
+
+
+    def store_tile(self, metatile, tile, render_children):
+        i, j = tile.meta_index
+
+        if not self.opts.dry_run:
+            im = metatile.im
+            # TODO: Tile.meta_pixel_coords
+            img = im.view(i*self.tile_size, j*self.tile_size,
+                            self.tile_size,   self.tile_size)
+            tile.data = img.tostring('png256')
+            # TODO: move to Tile
+            is_empty = map_utils.is_empty(tile.data)
+
+            if not is_empty or self.opts.empty == 'write':
+                self.backend.store(tile)
+            elif is_empty and self.opts.empty == 'link':
+                # TODO
+                pass
+        else:
+            tile.data = open('sea.png', 'br').read()
+            is_empty = ( random() <= 0.75 and
+                         not 2**metatile.z < self.opts.metatile_size )
+
+        if ( not is_empty and not self.opts.single_tiles and
+             tile.z < self.opts.max_zoom ):
+
+            # debug( "%s; %s; %d < %d", not is_empty,
+            #        not self.opts.single_tiles, tile.z, self.opts.max_zoom )
+
+            # at least something to render
+            render_children[metatile.child(tile)] = True
+        # TODO: handle empty and link or write; pyramid stuff
+
+        if not self.opts.dry_run:
+            self.backend.commit()
 
 
     def finish(self):
@@ -608,15 +615,19 @@ def parse_args():
     # TODO: check it's a power of 2
     parser.add_argument('-m', '--metatile-size', dest='metatile_size', default=1, type=int)
 
-    parser.add_argument('-t', '--threads',       dest='threads',   default=NUM_CPUS, type=int)
-    parser.add_argument('-p', '--parallel-method', dest='parallel', default='fork', choices=('threads', 'fork', 'single'))
+    parser.add_argument('-t', '--threads',       dest='threads',   default=NUM_CPUS,
+                        type=int)
+    parser.add_argument('-p', '--parallel-method', dest='parallel', default='fork',
+                        choices=('threads', 'fork', 'single'))
 
-    parser.add_argument('-X', '--skip-existing', dest='skip_existing', default=False, action='store_true')
-    parser.add_argument('-N', '--skip-newer',    dest='skip_newer', default=None, type=int, metavar='DAYS')
-    # parser.add_argument('-L', '--skip-symlinks', dest='skip_', default=None, type=int)
+    parser.add_argument('-X', '--skip-existing', dest='skip_existing', default=False,
+                        action='store_true')
+    parser.add_argument('-N', '--skip-newer',    dest='skip_newer', default=None,
+                        type=int, metavar='DAYS')
     parser.add_argument(      '--missing-as-new',  dest='missing_as_new', default=False, action='store_true',
                         help="missing tiles in a meta tile count as newer, so we don't re-render metatils with empty tiles.")
-    parser.add_argument('-E', '--empty',         dest='empty',     default='skip', choices=('skip', 'link', 'write'))
+    parser.add_argument('-E', '--empty',         dest='empty',     default='skip',
+                        choices=('skip', 'link', 'write'))
 
     parser.add_argument('-d', '--debug',         dest='debug',     default=False, action='store_true')
     parser.add_argument(      '--dry-run',       dest='dry_run',   default=False, action='store_true')
@@ -667,4 +678,9 @@ if __name__  ==  "__main__":
     opts = parse_args()
 
     master = Master(opts)
+
+    # fixes for locally installed mapnik
+    # mapnik.register_fonts ('/usr/share/fonts/')
+    # mapnik.register_plugins ('/home/mdione/local/lib/mapnik/input/')
+
     master.render_tiles()
