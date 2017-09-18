@@ -378,9 +378,25 @@ class Master:
         percentage = ( (self.tiles_rendered + self.tiles_skept) /
                        self.tiles_to_render * 100 )
 
-        format = "[%d+%d/%d: %7.4f%%] %r: " + format
-        info(format, self.tiles_rendered, self.tiles_skept, self.tiles_to_render,
-             percentage, metatile, *args)
+        if self.tiles_rendered > 0:
+            time_elapsed = time.perf_counter() - self.start
+            # calculated only based on what was actually rendered
+            time_per_tile = time_elapsed / self.tiles_rendered
+            debug((time_elapsed, time_per_tile))
+            eta = ( (self.tiles_to_render - self.tiles_rendered - self.tiles_skept) *
+                    time_per_tile )
+
+            eta_h = int(eta / 3600.0)
+            eta_m = int((eta - eta_h * 3600) / 60)
+            eta_s = int(eta) % 60
+
+            format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [ETA: %d:%02d:%02d]"
+            info(format, self.tiles_rendered, self.tiles_skept, self.tiles_to_render,
+                 percentage, metatile, *args, eta_h, eta_m, eta_s)
+        else:
+            format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [ETA: ∞]"
+            info(format, self.tiles_rendered, self.tiles_skept, self.tiles_to_render,
+                 percentage, metatile, *args)
 
 
     def render_tiles(self) -> None:
@@ -446,10 +462,13 @@ class Master:
             debug(e)
             raise SystemExit("Ctrl-c detected, exiting...")
         finally:
+            debug('out!')
             self.finish()
 
 
     def loop(self, initial_metatiles) -> None:
+        self.start = time.perf_counter()
+
         for metatile in initial_metatiles:
             debug("... %r" % (metatile, ))
             self.work_stack.push(metatile)
@@ -471,7 +490,7 @@ class Master:
         # keep the probing version
         while self.work_stack.size() > 0 or self.went_out > self.came_back:
             # debug("ws.size(): %s; wo > cb: %d > %d", self.work_stack.size(),
-            #       went_out, came_back)
+            #       self.went_out, self.came_back)
 
             # the doc says this is unrealiable, but we don't care
             # full() can be inconsistent only if when we test is false
