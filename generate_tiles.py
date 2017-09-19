@@ -28,7 +28,8 @@ import logging
 from logging import debug, info, exception
 long_format = "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
 short_format = "%(asctime)s %(message)s"
-from typing import Optional, List, Set, Dict
+
+from typing import Optional, List, Set, Dict, Any
 
 try:
     NUM_CPUS = multiprocessing.cpu_count()
@@ -189,8 +190,8 @@ class RenderThread:
         # render_children = self.store_metatile(im, metatile)
         end = time.perf_counter()
 
-        debug("<== [%s] %r: %s", self.pid, metatile, ('old', end-start))
-        self.queues[1].put(('old', metatile, end-start))
+        debug("<== [%s] %r: %s", self.pid, metatile, (end-start))
+        self.queues[1].put((metatile, end-start))
         debug("<<< [%s]", self.pid)
 
         # end critical section, restore signal
@@ -247,32 +248,14 @@ class RenderThread:
 
         bail_out = self.render_metatile(metatile)
 
-        render_children:Dict[map_utils.Tile, bool] = {}
-        if not skip:
-            bail_out = self.render_metatile(metatile)
-        else:
-            # TODO: ugh?
-            bail_out = False
-            debug("[%s] not bailing out", self.pid)
-            self.queues[1].put(('skept', metatile))
-
-            # but notify the children, so they get a chance to be rendered
-            if metatile.z < self.opts.max_zoom:
-                for child in metatile.children():
-                    # we have no other info about whether they should be
-                    # rendered or not, so render them just in case. at worst,
-                    # they could either be empty tiles or too new too
-                    render_children[child] = True
-
-        # debug(render_children)
-        for tile, render in render_children.items():
-            debug("<== [%s] %r: %s", self.pid, tile, render)
-            self.queues[1].put(('new', tile, render))
-            debug("<<< [%s]", self.pid)
-
         # self.q.task_done()
         return bail_out
 
+
+backends:Dict[str,Any] = dict(
+    tiles=  map_utils.DiskBackend,
+    mbtiles=map_utils.MBTilesBackend,
+    )
 
 class Master:
     def __init__(self, opts) -> None:
@@ -332,17 +315,12 @@ class Master:
     def render_tiles(self) -> None:
         debug("render_tiles(%s)", self.opts)
 
-        backends:Dict[str,Any] = dict(
-            tiles=  map_utils.DiskBackend,
-            mbtiles=map_utils.MBTilesBackend,
-            )
-
-        backend = backends[self.opts.format](self.opts.tile_dir, self.opts.bbox)
+        self.backend = backends[self.opts.format](self.opts.tile_dir, self.opts.bbox)
 
         # Launch rendering threads
         if self.opts.parallel != 'single':
             for i in range(self.opts.threads):
-                renderer = RenderThread( self.opts, backend,
+                renderer = RenderThread( self.opts, self.backend,
                                          (self.work_out, self.work_in) )
 
                 if self.opts.parallel == 'fork':
@@ -399,20 +377,38 @@ class Master:
     def should_render(self, metatile):
         # TODO: move all these checks to another thread/process.
         skip:bool
-        if self.opts.skip_existing or self.opts.skip_newer is not None:
-            debug('skip test existing:%s, newer:%s', self.opts.skip_existing,
-                  self.opts.skip_newer)
+        if metatile in self.opts.bbox:
+            if self.opts.skip_existing or self.opts.skip_newer is not None:
+                debug('skip test existing:%s, newer:%s', self.opts.skip_existing,
+                    self.opts.skip_newer)
+                skip = True
+
+                for tile in metatile.tiles: # type: map_utils.Tile
+                    if self.opts.skip_existing:
+                        skip = skip and self.backend.exists(tile)
+                        # debug('skip: %s', skip)
+                        message = "present, skipping"
+                    else:
+                        skip= ( skip and
+                                self.backend.newer_than(tile, self.opts.skip_newer,
+                                                        self.opts.missing_as_new) )
+                        # debug('skip: %s', skip)
+                        message = "too new, skipping"
+
+                if skip:
+                    self.tiles_skept += len(metatile.tiles)
+                    self.progress(metatile, message)
+            else:
+                skip = False
+                # debug('skip: %s', skip)
+        else:
+            # do not render tiles out of the bbox
             skip = True
 
-            for tile in metatile.tiles: # type: map_utils.Tile
-                if self.opts.skip_existing:
-                    skip = skip and self.backend.exists(tile)
-                else:
-                    skip= ( skip and
-                            self.backend.newer_than(tile, self.opts.skip_newer,
-                                                    self.opts.missing_as_new) )
-        else:
-            skip = False
+            # we count this one and all it descendents as skept
+            self.tiles_skept += ( len(metatile.tiles) *
+                                    pyramid_count(metatile.z, opts.max_zoom) )
+            self.progress(metatile, "out of bbox")
 
         return not skip
 
@@ -451,8 +447,17 @@ class Master:
                 # pop from there,
                 metatile = self.work_stack.pop()  # map_utils.MetaTile
                 if metatile is not None:
+                    # TODO: move to another thread
                     if not self.should_render(metatile):
-                        # shortcut
+                        self.work_stack.confirm()
+                        # notify the children, so they get a chance to be rendered
+                        if metatile.z < self.opts.max_zoom:
+                            for child in metatile.children():
+                                # we have no other info about whether they should be
+                                # rendered or not, so render them just in case. at worst,
+                                # they could either be empty tiles or too new too
+                                self.work_stack.notify(child, True)
+
                         continue
 
                     # push in the writer
@@ -473,56 +478,26 @@ class Master:
             # pop from the reader,
             while not self.work_in.empty():
                 # 1/10s timeout
-                type, *data = self.work_in.get(True, .1)  # type: str, Any
-                debug("<-- %s: %r" % (type, data))
+                data = self.work_in.get(True, .1)  # type: str, Any
+                debug("<-- %s: %r" % data)
 
-                self.handle_new_work(type, data)
+                self.handle_new_work(*data)
 
         debug('out!')
 
 
-    def handle_new_work(self, type, data):
-        if type == 'old':
-            metatile, render_time = data
+    def handle_new_work(self, metatile, render_time):
+        debug('sto...')
+        self.store_metatile(metatile)
+        debug('...re!')
 
-            debug('sto...')
-            self.store.metatile(metatile)
-            debug('...re!')
+        for child in metatile.children():
+            self.work_stack.notify(child, not child.skip)
 
-            self.tiles_rendered += len(metatile.tiles)
-            self.came_back += 1
+        self.tiles_rendered += len(metatile.tiles)
+        self.came_back += 1
 
-            self.progress(metatile, render_time, saving_time,
-                          format="%8.3f, %8.3f")
-
-        elif type == 'skept':
-            metatile, = data
-            self.tiles_skept += len(metatile.tiles)
-            self.came_back += 1
-
-            if self.opts.skip_existing:
-                message = "present, skipping"
-            else:
-                message = "too new, skipping"
-
-            self.progress(metatile, message)
-
-        for child in metatile.children:
-            # TODO: move this to should_render?
-            if metatile in self.opts.bbox:
-                # MetaTile(18, 152912, 93352, 8): too new, skipping
-                self.work_stack.notify(metatile, render)
-                if not render:
-                    self.tiles_skept += len(metatile.tiles)
-            else:
-                # do not render tiles out of the bbox
-                debug("out of bbox, out of mind")
-                self.work_stack.notify(metatile, False)
-                # we count this one and all it descendents as rendered
-                self.tiles_skept += ( len(metatile.tiles) *
-                                      pyramid_count(metatile.z, opts.max_zoom) )
-
-                self.progress(metatile, "out of bbox")
+        self.progress(metatile, render_time, format="%8.3f")
 
 
     def store_metatile(self, metatile):
@@ -530,18 +505,18 @@ class Master:
 
         # save the image, splitting it in the right amount of tiles
         for tile in metatile.tiles:
-            self.store_tile(metatile, tile, render_children)
+            is_empty = self.store_tile(metatile, tile, render_children)
 
             # don't render child if: empty; or single tile mode; or too deep
             if ( not (is_empty or self.opts.single_tiles) and
                 tile.z < self.opts.max_zoom ):
 
                 # at least something to render
-                metatile.child(tile).should_render = True
+                metatile.child(tile).skip = False
+            else:
+                metatile.child(tile).skip = True
 
             # TODO: handle empty and link or write; pyramid stuff
-
-        return render_children
 
 
     def store_tile(self, metatile, tile, render_children):
@@ -561,12 +536,15 @@ class Master:
                 # TODO
                 pass
         else:
+            #: TODO: why do I need this?
             tile.data = open('sea.png', 'br').read()
             is_empty = ( random() <= 0.75 and
                          not 2**metatile.z < self.opts.metatile_size )
 
         if not self.opts.dry_run:
             self.backend.commit()
+
+        return is_empty
 
 
     def finish(self):
@@ -579,10 +557,10 @@ class Master:
 
             while self.went_out > self.came_back:
                 debug("%d <-> %d", self.went_out, self.came_back)
-                type, *data = self.work_in.get(True)  # type: str, Any
-                debug("<-- %s: %r" % (type, data))
+                data = self.work_in.get(True)  # type: str, Any
+                debug("<-- %s: %r" % data)
 
-                self.handle_new_work(type, data)
+                self.handle_new_work(*data)
 
             # wait for pending rendering jobs to complete
             if not self.opts.parallel == 'fork':

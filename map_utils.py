@@ -61,9 +61,11 @@ class DiskBackend:
     def __init__(self, base, *more):
         self.base_dir = base
 
+
     def tile_uri(self, tile):
-        return os.path.join (self.base_dir, str(tile.z), str(tile.x),
-                             str(tile.y)+'.png')
+        return os.path.join(self.base_dir, str(tile.z), str(tile.x),
+                            str(tile.y)+'.png')
+
 
     def store(self, tile):
         tile_uri = self.tile_uri(tile)
@@ -72,26 +74,31 @@ class DiskBackend:
         f.write(tile.data)
         f.close()
 
+
     def exists(self, tile):
         tile_uri = self.tile_uri(tile)
         return os.path.isfile(tile_uri)
+
 
     def newer_than(self, tile, date, missing_as_new):
         tile_uri = self.tile_uri(tile)
         try:
             file_date = datetime.datetime.fromtimestamp(os.stat(tile_uri).st_mtime)
-            # debug ("%s: %s <-> %s", tile_uri, file_date.isoformat (),
-            #        date.isoformat ())
+            # debug("%s: %s <-> %s", tile_uri, file_date.isoformat(),
+            #       date.isoformat())
             return file_date > date
         except OSError as e:
             if e.errno == errno.ENOENT:
+                # debug("%s: %s", tile_uri, missing_as_new)
                 return missing_as_new
             else:
                 raise
 
-    def commit (self):
+
+    def commit(self):
         # TODO: flush?
         pass
+
 
 # https://github.com/mapbox/node-mbtiles/blob/master/lib/schema.sql
 # https://github.com/mapbox/mbutil/blob/master/mbutil/util.py
