@@ -57,11 +57,6 @@ class GoogleProjection:
         return (f, h)
 
 
-def is_empty (data):
-    # TODO: this is *completely* style dependent!
-    return len (data)==103 and data[41:44]==b'\xb5\xd0\xd0'
-
-
 class DiskBackend:
     def __init__(self, base, *more):
         self.base_dir = base
@@ -267,6 +262,7 @@ class Tile:
         self.pixel_pos = (self.x * 256, self.y * 256)
         self.image_size = (256, 256)
         self.data:Optional[bytes] = None
+        self._is_empty = None  # Optional[bool]
 
 
     def __eq__(self, other):
@@ -275,6 +271,17 @@ class Tile:
 
     def __repr__(self):
         return "Tile(%d, %d, %d, %r)" % (self.z, self.x, self.y, self.meta_index)
+
+
+    @property
+    def is_empty(self):
+        if self._is_empty is None:
+            # TODO: this is *completely* style dependent!
+            self._is_empty = ( len(self.data)==103 and
+                               self.data[41:44]==b'\xb5\xd0\xd0' )
+
+        return self._is_empty
+
 
 # Children = List[MetaTile]
 class MetaTile:
