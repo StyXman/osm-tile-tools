@@ -627,19 +627,26 @@ def parse_args():
     # TODO: buffer size (256?)
     opts = parser.parse_args()
 
-    if opts.debug:
-        logging.basicConfig(level=logging.DEBUG, format=long_format)
-    else:
+    if opts.log_file is not None:
         logging.basicConfig(level=logging.INFO, format=short_format)
 
-    if opts.log_file is not None:
         # log to the file too
         root = logging.getLogger()
 
         handler = logging.FileHandler(opts.log_file)
         handler.setFormatter(root.handlers[0].formatter)
+        if opts.debug:
+            handler.setLevel(logging.DEBUG)
+        else:
+            handler.setLevel(logging.INFO)
 
         root.addHandler(handler)
+    else:
+        if opts.debug:
+            logging.basicConfig(level=logging.DEBUG, format=long_format)
+        else:
+            logging.basicConfig(level=logging.INFO, format=short_format)
+
 
     if opts.format == 'tiles' and opts.tile_dir[-1] != '/':
         # we need the trailing /, it's actually a series of BUG s in render_tiles()
