@@ -284,8 +284,8 @@ class Tile:
     def is_empty(self):
         if self._is_empty is None:
             # TODO: this is *completely* style dependent!
-            self._is_empty = ( len(self.data)==103 and
-                               self.data[41:44]==b'\xb5\xd0\xd0' )
+            self._is_empty = ( len(self.data) == 103 and
+                               self.data[41:44] == b'\xb5\xd0\xd0' )
 
         return self._is_empty
 
@@ -386,18 +386,18 @@ class BBox:
         lower_right = (tile.pixel_pos[0] + tile.image_size[0] - 1,
                        tile.pixel_pos[1] + tile.image_size[1] - 1)
 
-        # NOTE: fromPixelToLL() return in LonLat!
+        # NOTE: fromPixelToLL() returns in LonLat!
         w, n = self.proj.fromPixelToLL(upper_left, tile.z)
         e, s = self.proj.fromPixelToLL(lower_right, tile.z)
 
-        upper_left = (n, w)
-        lower_left = (s, w)
+        upper_left =  (n, w)
+        lower_left =  (s, w)
         upper_right = (n, e)
         lower_right = (s, e)
 
         other = Polygon([ upper_left, lower_left, lower_right, upper_right ])
 
-        # debug((self.boundary.wkt, other.wkt))
+        debug((self.boundary.wkt, other.wkt))
         return other.intersects(self.boundary)
 
 

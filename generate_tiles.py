@@ -176,10 +176,11 @@ class RenderThread:
             sig = signal(SIGINT, SIG_IGN)
 
         if not self.opts.dry_run:
-            metatile.im = mapnik.Image(self.image_size, self.image_size)
+            im = mapnik.Image(self.image_size, self.image_size)
             # Render image with default Agg renderer
-            mapnik.render(self.m, metatile.im)
+            mapnik.render(self.m, im)
             # TODO: handle exception, send back into queue
+            metatile.im = im.tostring('png256')
         else:
             debug('[%s] thumbtumbling', self.pid)
             time.sleep(randint(0, 30) / 10)
@@ -523,7 +524,7 @@ class Master:
         i, j = tile.meta_index
 
         if not self.opts.dry_run:
-            im = metatile.im
+            im = mapnik.Image.fromstring(metatile.im)
             # TODO: Tile.meta_pixel_coords
             img = im.view(i*self.tile_size, j*self.tile_size,
                             self.tile_size,   self.tile_size)
