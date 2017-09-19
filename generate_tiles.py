@@ -306,12 +306,15 @@ class RenderThread:
             for tile in metatile.tiles: # type: map_utils.Tile
                 if self.opts.skip_existing:
                     skip = skip and self.backend.exists(tile)
+                    # debug('[%s] skip: %s', self.pid, skip)
                 else:
                     skip= ( skip and
                             self.backend.newer_than(tile, self.opts.skip_newer,
                                                     self.opts.missing_as_new) )
+                    # debug('[%s] skip: %s', self.pid, skip)
         else:
             skip = False
+            # debug('[%s] skip: %s', self.pid, skip)
 
         render_children:Dict[map_utils.Tile, bool] = {}
         if not skip:

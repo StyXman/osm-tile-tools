@@ -85,11 +85,12 @@ class DiskBackend:
         tile_uri = self.tile_uri(tile)
         try:
             file_date = datetime.datetime.fromtimestamp(os.stat(tile_uri).st_mtime)
-            # debug ("%s: %s <-> %s", tile_uri, file_date.isoformat (),
-            #        date.isoformat ())
+            # debug("%s: %s <-> %s", tile_uri, file_date.isoformat(),
+            #       date.isoformat())
             return file_date > date
         except OSError as e:
             if e.errno == errno.ENOENT:
+                # debug("%s: %s", tile_uri, missing_as_new)
                 return missing_as_new
             else:
                 raise
