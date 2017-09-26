@@ -612,19 +612,27 @@ def parse_args():
     opts = parser.parse_args()
 
     if opts.log_file is not None:
-        logging.basicConfig(level=logging.INFO, format=short_format)
-
-        # log to the file too
         root = logging.getLogger()
 
-        handler = logging.FileHandler(opts.log_file)
-        handler.setFormatter(root.handlers[0].formatter)
-        if opts.debug:
-            handler.setLevel(logging.DEBUG)
-        else:
-            handler.setLevel(logging.INFO)
+        # this is more or less the same thing we get with basicConfig()
+        stderr_handler = logging.StreamHandler()
+        stderr_handler.setFormatter(logging.Formatter(short_format))
+        stderr_handler.setLevel(logging.INFO)
+        root.addHandler(stderr_handler)
 
-        root.addHandler(handler)
+        file_handler = logging.FileHandler(opts.log_file)
+        if opts.debug:
+            file_handler.setFormatter(logging.Formatter(long_format))
+            file_handler.setLevel(logging.DEBUG)
+            # the root logger will be pre-filtering by level
+            # so we need to set its level to the lowest possible
+            root.setLevel(logging.DEBUG)
+            root.addHandler(file_handler)
+        else:
+            file_handler.setFormatter(logging.Formatter(short_format))
+            file_handler.setLevel(logging.INFO)
+            root.setLevel(logging.INFO)
+
     else:
         if opts.debug:
             logging.basicConfig(level=logging.DEBUG, format=long_format)
