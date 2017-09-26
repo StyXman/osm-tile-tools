@@ -264,7 +264,7 @@ class Master:
         self.renderers = {}
         # we need at least space for the initial batch
         # but do not auto push children in tiles mode
-        self.work_stack = RenderStack(opts.max_zoom, not self.opts.single_tiles)
+        self.work_stack = RenderStack(opts.max_zoom, self.opts.push_children)
 
         # counters
         self.went_out = self.came_back = 0
@@ -452,7 +452,7 @@ class Master:
                     if not self.should_render(metatile):
                         self.work_stack.confirm()
                         # notify the children, so they get a chance to be rendered
-                        if metatile.z < self.opts.max_zoom:
+                        if metatile.z < self.opts.max_zoom and self.opts.push_children:
                             for child in metatile.children():
                                 # we have no other info about whether they should be
                                 # rendered or not, so render them just in case. at worst,
@@ -661,6 +661,7 @@ def parse_args():
 
     # semantic opts
     opts.single_tiles = opts.tiles is not None
+    opts.push_children = not opts.single_tiles
 
     return opts
 
