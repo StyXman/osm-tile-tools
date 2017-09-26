@@ -492,7 +492,7 @@ class Master:
         self.store_metatile(metatile)
         debug('...re!')
 
-        for child in metatile.children():
+        for child in reversed(metatile.children()):
             self.work_stack.notify(child, not child.skip)
 
         self.tiles_rendered += len(metatile.tiles)
