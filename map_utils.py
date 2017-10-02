@@ -13,6 +13,7 @@ import hashlib
 import sqlite3
 
 from shapely.geometry import Polygon
+from shapely import wkt
 
 from logging import debug
 from typing import List, Tuple, Dict, Optional, Any
@@ -33,6 +34,7 @@ class GoogleProjection:
         self.zc:List[Tuple[float, float]] = []
         self.Ac:List[float] = []
 
+        # TODO
         c:int = 256
         for d in range(0, levels): # type: int
             e = c / 2
@@ -42,6 +44,7 @@ class GoogleProjection:
             self.Ac.append(c)
             c *= 2
 
+    # it's LonLat! (x, y)
     def fromLLtoPixel(self, ll, zoom):
         d = self.zc[zoom]
         e = round(d[0] + ll[0] * self.Bc[zoom])
@@ -256,18 +259,22 @@ def bbox (value):
 
 
 class Tile:
-    # def __init__(self, z:int, x:int, y:int, meta_tile:Optional[MetaTile]=None) -> None:
-    def __init__(self, z:int, x:int, y:int, meta_tile=None) -> None:
+    # def __init__(self, z:int, x:int, y:int, metatile:Optional[MetaTile]=None) -> None:
+    def __init__(self, z:int, x:int, y:int, metatile=None) -> None:
         self.z = z
         self.x = x
         self.y = y
 
         self.meta_index:Optional[Tuple[int, int]] = None
-        if meta_tile is not None:
-            self.meta_index = (x-meta_tile.x, y-meta_tile.y)
+        self.meta_pixel_coords = None
+        self.tile_size = 256
+        if metatile is not None:
+            self.meta_index = (x-metatile.x, y-metatile.y)
+            self.meta_pixel_coords = ()
+            self.tile_size = metatile.tile_size
 
-        self.pixel_pos = (self.x * 256, self.y * 256)
-        self.image_size = (256, 256)
+        self.pixel_pos = (self.x * self.tile_size, self.y * self.tile_size)
+        self.image_size = (self.tile_size, self.tile_size)
         self.data:Optional[bytes] = None
         self._is_empty = None  # Optional[bool]
 
@@ -290,14 +297,17 @@ class Tile:
         return self._is_empty
 
 
+tileproj = GoogleProjection(19)
+
 # Children = List[MetaTile]
 class MetaTile:
-    def __init__(self, z:int, x:int, y:int, wanted_size) -> None:
+    def __init__(self, z:int, x:int, y:int, wanted_size:int, tile_size:int) -> None:
         self.z = z
         self.x = x
         self.y = y
-        self.wanted_size = wanted_size
+        self.wanted_size = wanted_size  # in tiles
         self.size = min(2**z, wanted_size)
+        self.tile_size = tile_size
 
         # NOTE: children are not precomputed because it's recursive with no bounds
         # see children()
@@ -307,9 +317,25 @@ class MetaTile:
         self.tiles = [ Tile(self.z, self.x+i, self.y+j, self)
                        for i in range(self.size) for j in range(self.size) ]
 
-        self.pixel_pos = (self.x*256, self.y*256)
-        self.image_size = (self.size*256, self.size*256)
+        # x, y
+        self.pixel_pos = (self.x*self.tile_size, self.y*self.tile_size)
+        self.image_size = (self.size*self.tile_size, self.size*self.tile_size)
 
+        # x, y
+        self.corners = ( self.pixel_pos,
+                         (self.pixel_pos[0] + self.image_size[0],
+                          self.pixel_pos[1] + self.image_size[1]) )
+
+        #
+        self.coords = ( tileproj.fromPixelToLL(self.corners[0], self.z),
+                        tileproj.fromPixelToLL(self.corners[1], self.z) )
+
+        polygon_points = [ (self.coords[i][0], self.coords[j][1])
+                           for i, j in ((0, 0), (1, 0), (1, 1), (0, 1), (0, 0)) ]
+        coords_wkt = ", ".join([ "%s %s" % point for point in polygon_points ])
+        polygon_wkt = 'POLYGON ((%s))' % coords_wkt
+
+        self.polygon = wkt.loads(polygon_wkt)
 
     # see https://github.com/python/mypy/issues/2783#issuecomment-276596902
     # def __eq__(self, other:MetaTile) -> bool:  # type: ignore
@@ -329,11 +355,11 @@ class MetaTile:
                 self._children = [ MetaTile(self.z+1,
                                             2*self.x + i*self.size,
                                             2*self.y + j*self.size,
-                                            self.wanted_size)
+                                            self.wanted_size, self.tile_size)
                                    for i in range(2) for j in range(2) ]
             else:
                 self._children = [ MetaTile(self.z+1, 2*self.x, 2*self.y,
-                                            self.wanted_size) ]
+                                            self.wanted_size, self.tile_size) ]
 
         return self._children
 
@@ -371,33 +397,22 @@ class BBox:
         self.max_z = max_z
         self.proj = GoogleProjection(self.max_z+1)  # +1
 
-        self.upper_left = (self.n, self.w)
-        self.lower_left = (self.s, self.w)
-        self.upper_right = (self.n, self.e)
-        self.lower_right = (self.s, self.e)
+        # it's LonLat! (x, y)
+        self.upper_left = (self.w, self.n)
+        self.lower_left = (self.w, self.s)
+        self.upper_right = (self.w, self.n)
+        self.lower_right = (self.e, self.s)
 
+        # in degrees
         self.boundary = Polygon([ self.upper_left, self.lower_left,
-                                  self.lower_right, self.upper_right ])
+                                  self.lower_right, self.upper_right,
+                                  self.upper_left])
 
 
     def __contains__(self, tile):
-        # TODO: move this to Tile
-        upper_left = tile.pixel_pos
-        lower_right = (tile.pixel_pos[0] + tile.image_size[0] - 1,
-                       tile.pixel_pos[1] + tile.image_size[1] - 1)
+        other = tile.polygon
 
-        # NOTE: fromPixelToLL() returns in LonLat!
-        w, n = self.proj.fromPixelToLL(upper_left, tile.z)
-        e, s = self.proj.fromPixelToLL(lower_right, tile.z)
-
-        upper_left =  (n, w)
-        lower_left =  (s, w)
-        upper_right = (n, e)
-        lower_right = (s, e)
-
-        other = Polygon([ upper_left, lower_left, lower_right, upper_right ])
-
-        debug((self.boundary.wkt, other.wkt))
+        debug((other.wkt, self.boundary.wkt))
         return other.intersects(self.boundary)
 
 
@@ -415,7 +430,7 @@ class BBox:
         ll0 = bbox.upper_left
         ll1 = bbox.lower_right
 
-        image_size = 256.0*self.opts.metatile_size
+        image_size = self.tile_size * self.opts.metatile_size
 
         # we start by adding the min_zoom tiles and let the system handle the rest
         px0 = gprj.fromLLtoPixel(ll0, self.opts.min_zoom)
@@ -448,6 +463,8 @@ class Map:
     def __init__ (self, bbox, max_z):
         self.bbox= bbox
         self.max_z= max_z
+        # TODO:
+        self.tile_size = 256
 
         ll0 = (bbox[0],bbox[3])
         ll1 = (bbox[2],bbox[1])
@@ -458,8 +475,8 @@ class Map:
             px0 = gprj.fromLLtoPixel(ll0,z)
             px1 = gprj.fromLLtoPixel(ll1,z)
             # print px0, px1
-            self.levels.append (( (int (px0[0]/256), int (px0[1]/256)),
-                                  (int (px1[0]/256), int (px1[1]/256)) ))
+            self.levels.append (( (int (px0[0]/self.tile_size), int (px0[1]/self.tile_size)),
+                                  (int (px1[0]/self.tile_size), int (px1[1]/self.tile_size)) ))
         # print self.levels
 
 
@@ -581,6 +598,8 @@ def run_tests():
                  [ False, False, False, False, False, False, False, False ],
                  [ False, False, False, False, False, False, False, False ] ]
     test(b, 3, expected)
+
+
 
     print('A-OK')
 

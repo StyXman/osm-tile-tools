@@ -71,8 +71,8 @@ class RenderStack:
         self.push_children = push_children
 
 
-    def push(self, o:map_utils.MetaTile) -> None:
-        self.to_validate.add(o)
+    def push(self, metatile:map_utils.MetaTile) -> None:
+        self.to_validate.add(metatile)
         # debug("%s, %s, %s", self.first, self.ready, self.to_validate)
 
 
@@ -87,6 +87,7 @@ class RenderStack:
             if metatile.z < self.max_zoom and self.push_children:
                 # automatically push the children
                 for child in metatile.children(): # type: map_utils.MetaTile
+                    debug(child)
                     self.push(child)
 
         t:Optional[map_utils.Tile] = None
@@ -149,6 +150,7 @@ class RenderThread:
         l0 = self.tileproj.fromPixelToLL(p0, z);
         l1 = self.tileproj.fromPixelToLL(p1, z);
 
+        # this is the only time where we convert manually into WebMerc
         # Convert to map projection (e.g. mercator co-ords EPSG:900913)
         c0 = self.prj.forward(mapnik.Coord(l0[0], l0[1]))
         c1 = self.prj.forward(mapnik.Coord(l1[0], l1[1]))
@@ -164,10 +166,7 @@ class RenderThread:
         if self.m.buffer_size < 128:
             self.m.buffer_size = 128
 
-        debug("[%s] bailing out", self.pid)
         bail_out = True
-
-        start = time.perf_counter()
 
         # handling C-c: if we're rendering, the exception won't be raised until
         # mapnik has finished, and throwing away that work would be a shame
@@ -175,24 +174,28 @@ class RenderThread:
         if self.opts.parallel != 'single':
             sig = signal(SIGINT, SIG_IGN)
 
+        start = time.perf_counter()
         if not self.opts.dry_run:
             im = mapnik.Image(self.image_size, self.image_size)
             # Render image with default Agg renderer
+            debug('[%s] rende...', self.pid)
             mapnik.render(self.m, im)
+            debug('[%s] ...ring!', self.pid)
+            mid = time.perf_counter()
             # TODO: handle exception, send back into queue
             metatile.im = im.tostring('png256')
+            end = time.perf_counter()
         else:
             debug('[%s] thumbtumbling', self.pid)
             time.sleep(randint(0, 30) / 10)
+            mid = time.perf_counter()
+            end = time.perf_counter()
 
-        debug("[%s] not bailing out", self.pid)
         bail_out = False
-        # mid = time.perf_counter()
         # render_children = self.store_metatile(im, metatile)
-        end = time.perf_counter()
 
-        debug("<== [%s] %r: %s", self.pid, metatile, (end-start))
-        self.queues[1].put((metatile, end-start))
+        debug("<== [%s] %r: %s", self.pid, metatile, (mid-start, end-mid))
+        self.queues[1].put((metatile, mid-start, end-mid))
         debug("<<< [%s]", self.pid)
 
         # end critical section, restore signal
@@ -265,6 +268,7 @@ class Master:
         # we need at least space for the initial batch
         # but do not auto push children in tiles mode
         self.work_stack = RenderStack(opts.max_zoom, self.opts.push_children)
+        self.tile_size:int = 256
 
         # counters
         self.went_out = self.came_back = 0
@@ -353,7 +357,8 @@ class Master:
             for x in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
                 for y in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
                     metatile = map_utils.MetaTile(self.opts.min_zoom, x, y,
-                                                  self.opts.metatile_size)
+                                                  self.opts.metatile_size,
+                                                  self.tile_size)
 
                     if metatile in self.opts.bbox:
                         initial_metatiles.append(metatile)
@@ -362,17 +367,28 @@ class Master:
             debug('rendering individual tiles')
             for i in self.opts.tiles:
                 z, x, y = map(int, i.split(','))
-                metatile = map_utils.MetaTile(z, x, y, self.opts.metatile_size)
+                metatile = map_utils.MetaTile(z, x, y, self.opts.metatile_size,
+                                              self.tile_size)
                 initial_metatiles.append(metatile)
 
         try:
             self.loop(initial_metatiles)
         except KeyboardInterrupt as e:
-            debug(e)
             raise SystemExit("Ctrl-c detected, exiting...")
+        except Exception as e:
+            exception(e)
         finally:
             debug('out!')
             self.finish()
+
+
+    def notify_all_children(self, metatile, how):
+        if metatile.z < self.opts.max_zoom and self.opts.push_children:
+            for child in metatile.children():
+                # we have no other info about whether they should be
+                # rendered or not, so render them just in case. at worst,
+                # they could either be empty tiles or too new too
+                self.work_stack.notify(child, True)
 
 
     def should_render(self, metatile):
@@ -397,19 +413,26 @@ class Master:
                         message = "too new, skipping"
 
                 if skip:
+                    self.work_stack.confirm()
                     self.tiles_skept += len(metatile.tiles)
                     self.progress(metatile, message)
+
+                    # notify the children, so they get a chance to be rendered
+                    self.notify_all_children(metatile, True)
             else:
                 skip = False
                 # debug('skip: %s', skip)
         else:
             # do not render tiles out of the bbox
             skip = True
+            self.work_stack.confirm()
 
             # we count this one and all it descendents as skept
             self.tiles_skept += ( len(metatile.tiles) *
                                     pyramid_count(metatile.z, opts.max_zoom) )
             self.progress(metatile, "out of bbox")
+
+            self.notify_all_children(metatile, False)
 
         return not skip
 
@@ -423,14 +446,12 @@ class Master:
             # make sure they're rendered!
             self.work_stack.notify(metatile, True)
 
-            if self.opts.single_tiles:
-                self.tiles_to_render += len(metatile.tiles)
-                # debug("%r: %d", metatile, tiles_to_render)
-
-        if not self.opts.single_tiles:
+        first_tiles = len(initial_metatiles)
+        if self.opts.single_tiles:
+            self.tiles_to_render = first_tiles * len(metatile.tiles)
+        else:
             # all initial_metatiles are from the same zoom level
-            first_tiles = len(initial_metatiles)
-            self.tiles_to_render = ( first_tiles * len(initial_metatiles[0].tiles) *
+            self.tiles_to_render = ( first_tiles * len(metatile.tiles) *
                                      pyramid_count(opts.min_zoom, opts.max_zoom) )
 
         # I could get to the pipes used for the Queues, but it's useless, as
@@ -450,15 +471,6 @@ class Master:
                 if metatile is not None:
                     # TODO: move to another thread
                     if not self.should_render(metatile):
-                        self.work_stack.confirm()
-                        # notify the children, so they get a chance to be rendered
-                        if metatile.z < self.opts.max_zoom and self.opts.push_children:
-                            for child in metatile.children():
-                                # we have no other info about whether they should be
-                                # rendered or not, so render them just in case. at worst,
-                                # they could either be empty tiles or too new too
-                                self.work_stack.notify(child, True)
-
                         continue
 
                     # push in the writer
@@ -480,25 +492,27 @@ class Master:
             while not self.work_in.empty():
                 # 1/10s timeout
                 data = self.work_in.get(True, .1)  # type: str, Any
-                debug("<-- %s: %r" % data)
+                debug("<-- %s: %r, %r" % data)
 
                 self.handle_new_work(*data)
 
         debug('out!')
 
 
-    def handle_new_work(self, metatile, render_time):
+    def handle_new_work(self, metatile, render_time, serializing_time):
         debug('sto...')
         self.store_metatile(metatile)
         debug('...re!')
 
-        for child in reversed(metatile.children()):
-            self.work_stack.notify(child, not child.skip)
+        if self.opts.push_children:
+            for child in reversed(metatile.children()):
+                self.work_stack.notify(child, not child.skip)
 
         self.tiles_rendered += len(metatile.tiles)
         self.came_back += 1
 
-        self.progress(metatile, render_time, format="%8.3f")
+        self.progress(metatile, render_time, serializing_time,
+                      format="%8.3f, %8.3f")
 
 
     def store_metatile(self, metatile):
@@ -526,6 +540,7 @@ class Master:
         if not self.opts.dry_run:
             im = mapnik.Image.fromstring(metatile.im)
             # TODO: Tile.meta_pixel_coords
+            # TODO: pass tile_size to MetaTile and Tile
             img = im.view(i*self.tile_size, j*self.tile_size,
                             self.tile_size,   self.tile_size)
             tile.data = img.tostring('png256')
