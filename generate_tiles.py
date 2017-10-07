@@ -105,11 +105,13 @@ class RenderStack:
 
 RenderChildren = Dict[map_utils.Tile, bool]
 class RenderThread:
-    def __init__(self, opts, backend, queues) -> None:
-        self.backend = backend
-        self.queues  = queues
+    def __init__(self, opts, input, output) -> None:
         self.opts = opts
+        self.input = input
+        self.output = output
+
         self.metatile_size:int = opts.metatile_size
+        # TODO:
         self.tile_size:int = 256
         self.image_size:int = self.tile_size * self.metatile_size
 
@@ -166,6 +168,7 @@ class RenderThread:
             mapnik.render(self.m, im)
             debug('[%s] ...ring!', self.pid)
             mid = time.perf_counter()
+
             # TODO: handle exception, send back into queue
             metatile.im = im.tostring('png256')
             end = time.perf_counter()
@@ -175,12 +178,13 @@ class RenderThread:
             mid = time.perf_counter()
             end = time.perf_counter()
 
+        metatile.render_time = mid - start
+        metatile.serializing_time = end - mid
         bail_out = False
-        # render_children = self.store_metatile(im, metatile)
 
-        debug("<== [%s] %r: %s", self.pid, metatile, (mid-start, end-mid))
-        self.queues[1].put((metatile, mid-start, end-mid))
-        debug("<<< [%s]", self.pid)
+        debug("[%s] putting %r", self.pid, metatile)
+        self.output.put(metatile)
+        debug("[%s] put! (%d)", self.pid, self.output.qsize())
 
         # end critical section, restore signal
         if self.opts.parallel != 'single':
@@ -226,12 +230,11 @@ class RenderThread:
 
     def single_step(self):
         # Fetch a tile from the queue and render it
-        debug("[%s] >>>", self.pid)
-        metatile:Optional[map_utils.MetaTile] = self.queues[0].get()
-        debug("[%s] ==> %r", self.pid, metatile)
+        debug("[%s] get..", self.pid)
+        metatile:Optional[map_utils.MetaTile] = self.input.get()
+        debug("[%s] got! %r", self.pid, metatile)
         if metatile is None:
             # self.q.task_done()
-            debug('[%s] None, ending loop' % self.pid)
             return True
 
         bail_out = self.render_metatile(metatile)
@@ -343,20 +346,22 @@ class Master:
 
         if self.opts.parallel == 'fork':
             debug('forks, using mp.Queue()')
-
             # work_out queue is size 1, so higher zoom level tiles don't pile up
             # there if there are lower ZL tiles ready in the work_stack.
-            self.work_in = multiprocessing.Queue(5*self.opts.threads)
-            self.work_out = multiprocessing.Queue(1)
+            self.new_work = multiprocessing.Queue(1)
+            self.saver = multiprocessing.Queue(5*self.opts.threads)
+            self.info = multiprocessing.Queue(5*self.opts.threads)
         elif self.opts.parallel == 'threads':
             debug('threads, using queue.Queue()')
             # TODO: warning about mapnik and multithreads
-            self.work_in = queue.Queue(32)
-            self.work_out = queue.Queue(32)
+            self.new_work = queue.Queue(32)
+            self.saver = queue.Queue(32)
+            self.info = queue.Queue(32)
         else:
             debug('single mode, using queue.Queue()')
-            self.work_in = queue.Queue(5)
-            self.work_out = queue.Queue(1)
+            self.new_work = queue.Queue(1)
+            self.saver = queue.Queue(1)
+            self.info = queue.Queue(1)
 
 
     def progress(self, metatile, *args, format='%s'):
@@ -392,8 +397,7 @@ class Master:
         # Launch rendering threads
         if self.opts.parallel != 'single':
             for i in range(self.opts.threads):
-                renderer = RenderThread( self.opts, self.backend,
-                                         (self.work_out, self.work_in) )
+                renderer = RenderThread(self.opts, self.new_work, self.saver)
 
                 if self.opts.parallel == 'fork':
                     debug('mp.Process()')
@@ -405,14 +409,20 @@ class Master:
                 render_thread.start()
 
                 if self.opts.parallel:
-                    debug("Started render thread %s" % render_thread.name)
+                    debug("Started render thread %s", render_thread.name)
                 else:
-                    debug("Started render thread %s" % render_thread.getName())
+                    debug("Started render thread %s", render_thread.getName())
 
                 self.renderers[i] = render_thread
+
+            if self.opts.parallel == 'fork':
+                sb = StormBringer(self.opts, self.backend, self.saver, self.info)
+                self.store_thread = multiprocessing.Process(target=sb.loop)
+                self.store_thread.start()
         else:
-            self.renderer = RenderThread( self.opts, backend,
-                                          (self.work_out, self.work_in) )
+            self.renderer = RenderThread(self.opts, self.new_work, self.saver)
+            self.store_thread = StormBringer(self.opts, self.backend, self.saver,
+                                             self.info)
 
         if not os.path.isdir(self.opts.tile_dir):
             debug("creating dir %s", self.opts.tile_dir)
@@ -528,7 +538,7 @@ class Master:
             # full() can be inconsistent only if when we test is false
             # and when we put() is true, but only the master is writing
             # so this cannot happen
-            while not self.work_out.full():
+            while not self.new_work.full():
                 # pop from there,
                 metatile = self.work_stack.pop()  # map_utils.MetaTile
                 if metatile is not None:
@@ -537,10 +547,10 @@ class Master:
                         continue
 
                     # push in the writer
-                    self.work_out.put(metatile, True, .1)  # 1/10s timeout
+                    self.new_work.put(metatile, True, .1)  # 1/10s timeout
                     self.work_stack.confirm()
                     self.went_out += 1
-                    debug("--> %r" % (metatile, ))
+                    debug("--> %r", (metatile, ))
 
                     if self.opts.parallel == 'single':
                         self.renderer.single_step()
@@ -551,22 +561,22 @@ class Master:
                     # no more work to do
                     break
 
-            # pop from the reader,
-            while not self.work_in.empty():
-                # 1/10s timeout
-                data = self.work_in.get(True, .1)  # type: str, Any
-                debug("<-- %s: %r, %r" % data)
+            if self.opts.parallel == 'single':
+                self.store_thread.single_step()
 
-                self.handle_new_work(*data)
+            # pop from the reader,
+            while not self.info.empty():
+                # 1/10s timeout
+                data = self.info.get(True, .1)  # type: str, Any
+                debug("<-- %s", data)
+
+                self.handle_new_work(data)
 
         debug('out!')
 
 
-    def handle_new_work(self, metatile, render_time, serializing_time):
-        debug('sto...')
-        self.store_metatile(metatile)
-        debug('...re!')
 
+    def handle_new_work(self, metatile):
         if self.opts.push_children:
             for child in reversed(metatile.children()):
                 if child.render:
@@ -575,56 +585,8 @@ class Master:
         self.tiles_rendered += len(metatile.tiles)
         self.came_back += 1
 
-        self.progress(metatile, render_time, serializing_time,
+        self.progress(metatile, metatile.render_time, metatile.serializing_time,
                       format="%8.3f, %8.3f")
-
-
-    def store_metatile(self, metatile):
-        render_children:Dict[map_utils.Tile, bool] = {}
-
-        # save the image, splitting it in the right amount of tiles
-        for tile in metatile.tiles:
-            is_empty = self.store_tile(metatile, tile, render_children)
-
-            # don't render child if: empty; or single tile mode; or too deep
-            if ( not (is_empty or self.opts.single_tiles) and
-                tile.z < self.opts.max_zoom ):
-
-                # at least something to render
-                metatile.child(tile).skip = False
-            else:
-                metatile.child(tile).skip = True
-
-            # TODO: handle empty and link or write; pyramid stuff
-
-
-    def store_tile(self, metatile, tile, render_children):
-        i, j = tile.meta_index
-
-        if not self.opts.dry_run:
-            im = mapnik.Image.fromstring(metatile.im)
-            # TODO: Tile.meta_pixel_coords
-            # TODO: pass tile_size to MetaTile and Tile
-            img = im.view(i*self.tile_size, j*self.tile_size,
-                            self.tile_size,   self.tile_size)
-            tile.data = img.tostring('png256')
-            is_empty = tile.is_empty
-
-            if not is_empty or self.opts.empty == 'write':
-                self.backend.store(tile)
-            elif is_empty and self.opts.empty == 'link':
-                # TODO
-                pass
-        else:
-            #: TODO: why do I need this?
-            tile.data = open('sea.png', 'br').read()
-            is_empty = ( random() <= 0.75 and
-                         not 2**metatile.z < self.opts.metatile_size )
-
-        if not self.opts.dry_run:
-            self.backend.commit()
-
-        return is_empty
 
 
     def finish(self):
@@ -632,22 +594,25 @@ class Master:
             info('stopping threads/procs')
             # Signal render threads to exit by sending empty request to queue
             for i in range(self.opts.threads):
-                info("%d..." % (i + 1))
-                self.work_out.put(None)
+                info("%d...", (i + 1))
+                self.new_work.put(None)
+
+            self.saver.put(None)
 
             while self.went_out > self.came_back:
                 debug("%d <-> %d", self.went_out, self.came_back)
-                data = self.work_in.get(True)  # type: str, Any
-                debug("<-- %s: %r" % data)
+                data = self.info.get(True)  # type: str, Any
+                debug("<-- %s", data)
 
-                self.handle_new_work(*data)
+                self.handle_new_work(data)
 
             # wait for pending rendering jobs to complete
             if not self.opts.parallel == 'fork':
-                self.work_out.join()
+                self.new_work.join()
+                self.store_thread.join()
             else:
-                self.work_out.close()
-                self.work_out.join_thread()
+                self.new_work.close()
+                self.new_work.join_thread()
 
             for i in range(self.opts.threads):
                 self.renderers[i].join()

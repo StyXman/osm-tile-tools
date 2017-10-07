@@ -305,9 +305,12 @@ class MetaTile:
         self.z = z
         self.x = x
         self.y = y
+
         self.wanted_size = wanted_size  # in tiles
         self.size = min(2**z, wanted_size)
         self.tile_size = tile_size
+
+        self.render = True
 
         # NOTE: children are not precomputed because it's recursive with no bounds
         # see children()
@@ -337,6 +340,12 @@ class MetaTile:
 
         self.polygon = wkt.loads(polygon_wkt)
 
+        self.render_time = None
+        self.serializing_time = None
+        self.deserializing_time = None
+        self.saving_time = None
+
+
     # see https://github.com/python/mypy/issues/2783#issuecomment-276596902
     # def __eq__(self, other:MetaTile) -> bool:  # type: ignore
     def __eq__(self, other) -> bool:  # type: ignore
@@ -345,7 +354,7 @@ class MetaTile:
 
 
     def __repr__(self) -> str:
-        return "MetaTile(%d, %d, %d, %d)" % (self.z, self.x, self.y, self.wanted_size)
+        return "MetaTile(%d, %d, %d)" % (self.z, self.x, self.y)
 
 
     # def children(self) -> Children:
