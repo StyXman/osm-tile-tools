@@ -61,19 +61,20 @@ class RenderStack:
     these children might not be needed to be rendered, they're stored in
     another list, to_validate. Once we know the tile is not empty or any
     other reason to skip it, we notify() it."""
-    def __init__(self, max_zoom:int, push_children:bool=True) -> None:
+    def __init__(self, max_zoom:int) -> None:
         # I don't need order here, it's (probably) better if I validate tiles
         # as soon as possible
         self.first:Optional[map_utils.MetaTile] = None
         self.ready:List[map_utils.Tile] = []
-        self.to_validate:Set[map_utils.MetaTile] = set()
         self.max_zoom = max_zoom
-        self.push_children = push_children
 
 
     def push(self, metatile:map_utils.MetaTile) -> None:
-        self.to_validate.add(metatile)
         # debug("%s, %s, %s", self.first, self.ready, self.to_validate)
+        if self.first is not None:
+            self.ready.insert(0, self.first)
+
+        self.first = metatile
 
 
     def pop(self) -> map_utils.MetaTile:
@@ -84,11 +85,6 @@ class RenderStack:
         """Mark the top of the stack as sent to render, factually pop()'ing it."""
         if self.first is not None:
             metatile:map_utils.MetaTile = self.first
-            if metatile.z < self.max_zoom and self.push_children:
-                # automatically push the children
-                for child in metatile.children(): # type: map_utils.MetaTile
-                    debug(child)
-                    self.push(child)
 
         t:Optional[map_utils.Tile] = None
         if len(self.ready) > 0:
@@ -261,13 +257,96 @@ backends:Dict[str,Any] = dict(
     mbtiles=map_utils.MBTilesBackend,
     )
 
+
+class StormBringer:
+    def __init__(self, opts, backend, input, output):
+        self.opts = opts
+        self.backend = backend
+        self.input = input
+        self.output = output
+
+        if self.opts.parallel == 'single':
+            # StormBringer.loop() is not called in single mode
+            # so do this here
+            self.pid = getpid()
+
+
+    def loop(self):
+        self.pid = getpid()
+
+        debug('[%s] curling the curl', self.pid)
+
+        while True:
+            if not self.single_step():
+                debug('done')
+                break
+
+
+    def single_step(self):
+        debug('[%s] >... (%d)', self.pid, self.input.qsize())
+        metatile = self.input.get(True)
+        debug('[%s] ...>', self.pid)
+
+        if metatile is not None:
+            debug('[%s] sto...', self.pid)
+            self.store_metatile(metatile)
+            debug('[%s] ...re!', self.pid)
+            self.output.put(metatile)
+
+        return metatile is not None
+
+
+    def store_metatile(self, metatile):
+        render_children:Dict[map_utils.Tile, bool] = {}
+
+        # save the image, splitting it in the right amount of tiles
+        for tile in metatile.tiles:
+            is_empty = self.store_tile(metatile, tile, render_children)
+
+            # don't render child if: empty; or single tile mode; or too deep
+            if ( is_empty or self.opts.single_tiles or
+                 tile.z == self.opts.max_zoom ):
+
+                # debug((is_empty, self.opts.single_tiles, tile.z, self.opts.max_zoom))
+                metatile.child(tile).render = False
+
+            # TODO: handle empty and link or write; pyramid stuff
+
+
+    def store_tile(self, metatile, tile, render_children):
+        i, j = tile.meta_index
+
+        if not self.opts.dry_run:
+            im = mapnik.Image.fromstring(metatile.im)
+            # TODO: Tile.meta_pixel_coords
+            # TODO: pass tile_size to MetaTile and Tile
+            img = im.view(i*self.tile_size, j*self.tile_size,
+                            self.tile_size,   self.tile_size)
+            tile.data = img.tostring('png256')
+            is_empty = tile.is_empty
+
+            if not is_empty or self.opts.empty == 'write':
+                self.backend.store(tile)
+            elif is_empty and self.opts.empty == 'link':
+                # TODO
+                pass
+
+            self.backend.commit()
+        else:
+            is_empty = ( random() >= 0.95 and
+                         2**metatile.z >= self.opts.metatile_size )
+            debug(is_empty)
+
+        return is_empty
+
+
 class Master:
     def __init__(self, opts) -> None:
         self.opts = opts
         self.renderers = {}
         # we need at least space for the initial batch
         # but do not auto push children in tiles mode
-        self.work_stack = RenderStack(opts.max_zoom, self.opts.push_children)
+        self.work_stack = RenderStack(opts.max_zoom)
         self.tile_size:int = 256
 
         # counters
@@ -382,13 +461,13 @@ class Master:
             self.finish()
 
 
-    def notify_all_children(self, metatile, how):
+    def push_all_children(self, metatile):
         if metatile.z < self.opts.max_zoom and self.opts.push_children:
             for child in metatile.children():
                 # we have no other info about whether they should be
                 # rendered or not, so render them just in case. at worst,
                 # they could either be empty tiles or too new too
-                self.work_stack.notify(child, True)
+                self.work_stack.push(child)
 
 
     def should_render(self, metatile):
@@ -418,7 +497,7 @@ class Master:
                     self.progress(metatile, message)
 
                     # notify the children, so they get a chance to be rendered
-                    self.notify_all_children(metatile, True)
+                    self.push_all_children(metatile)
             else:
                 skip = False
                 # debug('skip: %s', skip)
@@ -432,8 +511,6 @@ class Master:
                                     pyramid_count(metatile.z, opts.max_zoom) )
             self.progress(metatile, "out of bbox")
 
-            self.notify_all_children(metatile, False)
-
         return not skip
 
 
@@ -441,10 +518,8 @@ class Master:
         self.start = time.perf_counter()
 
         for metatile in initial_metatiles:
-            debug("... %r" % (metatile, ))
+            debug("... %r", (metatile, ))
             self.work_stack.push(metatile)
-            # make sure they're rendered!
-            self.work_stack.notify(metatile, True)
 
         first_tiles = len(initial_metatiles)
         if self.opts.single_tiles:
@@ -506,7 +581,8 @@ class Master:
 
         if self.opts.push_children:
             for child in reversed(metatile.children()):
-                self.work_stack.notify(child, not child.skip)
+                if child.render:
+                    self.work_stack.push(child)
 
         self.tiles_rendered += len(metatile.tiles)
         self.came_back += 1
