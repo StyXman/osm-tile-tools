@@ -95,24 +95,12 @@ class RenderStack:
 
 
     def size(self) -> int:
-        # HACK: int(bool) \belongs (0, 1)
         # debug("%s, %s, %s", self.first, self.ready, self.to_validate)
-        ans:int = ( int(self.first is not None) + len(self.ready) +
-                    len(self.to_validate) )
+        # HACK: int(bool) \belongs (0, 1)
+        ans:int = int(self.first is not None) + len(self.ready)
         # debug(ans)
         return ans
 
-
-    def notify(self, metatile:map_utils.MetaTile, render:bool) -> None:
-        """The MetaTile needs to be rendered."""
-        debug("%s, %s", metatile, render)
-        self.to_validate.remove(metatile)
-
-        if render:
-            if self.first is not None:
-                self.ready.insert(0, self.first)
-
-            self.first = metatile
 
 
 RenderChildren = Dict[map_utils.Tile, bool]
