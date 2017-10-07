@@ -409,7 +409,7 @@ class BBox:
         # it's LonLat! (x, y)
         self.upper_left = (self.w, self.n)
         self.lower_left = (self.w, self.s)
-        self.upper_right = (self.w, self.n)
+        self.upper_right = (self.e, self.n)
         self.lower_right = (self.e, self.s)
 
         # in degrees
