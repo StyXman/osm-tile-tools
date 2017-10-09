@@ -290,47 +290,49 @@ class StormBringer:
 
 
     def store_metatile(self, metatile):
-        render_children:Dict[map_utils.Tile, bool] = {}
-
         # save the image, splitting it in the right amount of tiles
-        for tile in metatile.tiles:
-            is_empty = self.store_tile(metatile, tile, render_children)
+        if not self.opts.dry_run:
+            for tile in metatile.tiles:
+                child = metatile.child(tile)
 
-            # don't render child if: empty; or single tile mode; or too deep
-            if ( is_empty or self.opts.single_tiles or
-                 tile.z == self.opts.max_zoom ):
+                self.store_tile(metatile, tile)
+                child.is_empty = child.is_empty and tile.is_empty
 
-                # debug((is_empty, self.opts.single_tiles, tile.z, self.opts.max_zoom))
-                metatile.child(tile).render = False
+            for child in metatile.children():
+                # don't render child if: empty; or single tile mode; or too deep
+                debug((child.is_empty, self.opts.single_tiles, tile.z, self.opts.max_zoom))
+                if ( child.is_empty or self.opts.single_tiles or
+                     metatile.z == self.opts.max_zoom ):
+
+                    child.render = False
 
             # TODO: handle empty and link or write; pyramid stuff
+        else:
+            for child in metatile.children():
+                rand = random()
+                child.is_empty = (rand >= 0.95 and
+                                  2**metatile.z >= self.opts.metatile_size)
+                child.render = not (child.is_empty or self.opts.single_tiles or
+                                    metatile.z == self.opts.max_zoom)
 
 
-    def store_tile(self, metatile, tile, render_children):
+    def store_tile(self, metatile, tile):
         i, j = tile.meta_index
 
-        if not self.opts.dry_run:
-            im = mapnik.Image.fromstring(metatile.im)
-            # TODO: Tile.meta_pixel_coords
-            # TODO: pass tile_size to MetaTile and Tile
-            img = im.view(i*self.tile_size, j*self.tile_size,
-                            self.tile_size,   self.tile_size)
-            tile.data = img.tostring('png256')
-            is_empty = tile.is_empty
+        im = mapnik.Image.fromstring(metatile.im)
+        # TODO: Tile.meta_pixel_coords
+        # TODO: pass tile_size to MetaTile and Tile
+        img = im.view(i*self.tile_size, j*self.tile_size,
+                        self.tile_size,   self.tile_size)
+        tile.data = img.tostring('png256')
 
-            if not is_empty or self.opts.empty == 'write':
-                self.backend.store(tile)
-            elif is_empty and self.opts.empty == 'link':
-                # TODO
-                pass
+        if not tile.is_empty or self.opts.empty == 'write':
+            self.backend.store(tile)
+        elif tile.is_empty and self.opts.empty == 'link':
+            # TODO
+            pass
 
-            self.backend.commit()
-        else:
-            is_empty = ( random() >= 0.95 and
-                         2**metatile.z >= self.opts.metatile_size )
-            debug(is_empty)
-
-        return is_empty
+        self.backend.commit()
 
 
 class Master:
