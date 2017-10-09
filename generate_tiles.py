@@ -255,6 +255,8 @@ class StormBringer:
         self.backend = backend
         self.input = input
         self.output = output
+        # TODO:
+        self.tile_size:int = 256
 
         if self.opts.parallel == 'single':
             # StormBringer.loop() is not called in single mode
