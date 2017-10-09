@@ -570,7 +570,7 @@ class Master:
                     tight_loop = True
                     break
 
-            if self.opts.parallel == 'single':
+            if self.opts.parallel == 'single' and self.store_queue.qsize() > 0:
                 self.store_thread.single_step()
 
             # pop from the reader,
