@@ -534,9 +534,9 @@ class Master:
         # I could get to the pipes used for the Queues, but it's useless, as
         # they're constantly ready, so select()ing on them leads to a tight loop
         # keep the probing version
-        while self.work_stack.size() > 0 or self.went_out > self.came_back:
-            # debug("ws.size(): %s; wo > cb: %d > %d", self.work_stack.size(),
-            #       self.went_out, self.came_back)
+        while ( self.work_stack.size() > 0 or
+                self.went_out > self.came_back or
+                self.tiles_to_render > self.tiles_rendered + self.tiles_skept ):
 
             # the doc says this is unrealiable, but we don't care
             # full() can be inconsistent only if when we test is false
