@@ -592,10 +592,17 @@ class Master:
 
 
     def handle_new_work(self, metatile):
+        # an empty metatile will be accounted as rendered,
+        # but the children can be pruned
         if self.opts.push_children:
             for child in reversed(metatile.children()):
+                debug("%r: %s, %s", child, child.render, child.is_empty)
                 if child.render:
                     self.work_stack.push(child)
+                elif child.is_empty:
+                    self.tiles_skept += ( len(child.tiles) *
+                                          pyramid_count(child.z, opts.max_zoom) )
+                    self.progress(child, format="empty")
 
         self.tiles_rendered += len(metatile.tiles)
         self.came_back += 1
