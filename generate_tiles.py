@@ -342,6 +342,7 @@ class Master:
         # we need at least space for the initial batch
         # but do not auto push children in tiles mode
         self.work_stack = RenderStack(opts.max_zoom)
+        # TODO:
         self.tile_size:int = 256
 
         # counters
@@ -483,6 +484,7 @@ class Master:
 
                 for tile in metatile.tiles: # type: map_utils.Tile
                     if self.opts.skip_existing:
+                        # TODO: missing as present?
                         skip = skip and self.backend.exists(tile)
                         # debug('skip: %s', skip)
                         message = "present, skipping"
@@ -510,7 +512,7 @@ class Master:
 
             # we count this one and all it descendents as skept
             self.tiles_skept += ( len(metatile.tiles) *
-                                    pyramid_count(metatile.z, opts.max_zoom) )
+                                  pyramid_count(metatile.z, opts.max_zoom) )
             self.progress(metatile, "out of bbox")
 
         return not skip
@@ -664,6 +666,7 @@ def parse_args():
 
     parser.add_argument('-X', '--skip-existing', dest='skip_existing', default=False,
                         action='store_true')
+    # TODO: newer than input_file
     parser.add_argument('-N', '--skip-newer',    dest='skip_newer', default=None,
                         type=int, metavar='DAYS')
     parser.add_argument(      '--missing-as-new',  dest='missing_as_new', default=False, action='store_true',

@@ -297,7 +297,10 @@ class Tile:
         return self._is_empty
 
 
-tileproj = GoogleProjection(19)
+tileproj = GoogleProjection(40)
+
+
+# TODO: MetaTile factory
 
 # Children = List[MetaTile]
 class MetaTile:
@@ -432,41 +435,6 @@ class BBox:
 
 
     # TODO: see if it doesn't make more sense to work everything at pixel level
-
-    def foo(self):
-        gprj = map_utils.GoogleProjection(self.opts.max_zoom+1)
-
-        bbox = map_utils.BBox(self.opts.bbox, self.opts.max_zoom)
-        ll0 = bbox.upper_left
-        ll1 = bbox.lower_right
-
-        image_size = self.tile_size * self.opts.metatile_size
-
-        # we start by adding the min_zoom tiles and let the system handle the rest
-        px0 = gprj.fromLLtoPixel(ll0, self.opts.min_zoom)
-        px1 = gprj.fromLLtoPixel(ll1, self.opts.min_zoom)
-
-        for x in range(int(px0[0]/image_size), int(px1[0]/image_size)+1):
-            # Validate x co-ordinate
-            if ((x < 0) or
-                (x*self.opts.metatile_size >= 2**self.opts.min_zoom)):
-
-                continue
-
-            for y in range(int(px0[1]/image_size), int(px1[1]/image_size)+1):
-                # Validate y co-ordinate
-                if ((y < 0) or
-                    (y*self.opts.metatile_size >= 2**self.opts.min_zoom)):
-
-                    continue
-
-                # Submit tile to be rendered into the queue
-                t = MetaTile(self.opts.min_zoom, x*self.opts.metatile_size,
-                     y*self.opts.metatile_size)
-                debug("... %r" % (t, ))
-                self.work_stack.push(t)
-                # make sure they're rendered!
-                self.work_stack.notify((t, True))
 
 
 class Map:
