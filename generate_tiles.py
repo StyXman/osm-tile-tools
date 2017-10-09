@@ -324,7 +324,7 @@ class StormBringer:
             for tile in metatile.tiles:
                 child = metatile.child(tile)
 
-                self.store_tile(metatile, tile)
+                self.store_tile(tile, image)
                 child.is_empty = child.is_empty and tile.is_empty
 
             end  = time.perf_counter()
@@ -349,14 +349,13 @@ class StormBringer:
                                     metatile.z == self.opts.max_zoom)
 
 
-    def store_tile(self, metatile, tile):
+    def store_tile(self, tile, image):
         i, j = tile.meta_index
 
-        im = mapnik.Image.fromstring(metatile.im)
         # TODO: Tile.meta_pixel_coords
         # TODO: pass tile_size to MetaTile and Tile
-        img = im.view(i*self.tile_size, j*self.tile_size,
-                        self.tile_size,   self.tile_size)
+        img = image.view(i*self.tile_size, j*self.tile_size,
+                           self.tile_size,   self.tile_size)
         tile.data = img.tostring('png256')
 
         if not tile.is_empty or self.opts.empty == 'write':
