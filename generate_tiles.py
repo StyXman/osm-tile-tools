@@ -353,18 +353,18 @@ class Master:
             # work_out queue is size 1, so higher zoom level tiles don't pile up
             # there if there are lower ZL tiles ready in the work_stack.
             self.new_work = multiprocessing.Queue(1)
-            self.saver = multiprocessing.Queue(5*self.opts.threads)
+            self.store_queue = multiprocessing.Queue(5*self.opts.threads)
             self.info = multiprocessing.Queue(5*self.opts.threads)
         elif self.opts.parallel == 'threads':
             debug('threads, using queue.Queue()')
             # TODO: warning about mapnik and multithreads
             self.new_work = queue.Queue(32)
-            self.saver = queue.Queue(32)
+            self.store_queue = queue.Queue(32)
             self.info = queue.Queue(32)
         else:
             debug('single mode, using queue.Queue()')
             self.new_work = queue.Queue(1)
-            self.saver = queue.Queue(1)
+            self.store_queue = queue.Queue(1)
             self.info = queue.Queue(1)
 
 
@@ -401,7 +401,7 @@ class Master:
         # Launch rendering threads
         if self.opts.parallel != 'single':
             for i in range(self.opts.threads):
-                renderer = RenderThread(self.opts, self.new_work, self.saver)
+                renderer = RenderThread(self.opts, self.new_work, self.store_queue)
 
                 if self.opts.parallel == 'fork':
                     debug('mp.Process()')
@@ -420,12 +420,12 @@ class Master:
                 self.renderers[i] = render_thread
 
             if self.opts.parallel == 'fork':
-                sb = StormBringer(self.opts, self.backend, self.saver, self.info)
+                sb = StormBringer(self.opts, self.backend, self.store_queue, self.info)
                 self.store_thread = multiprocessing.Process(target=sb.loop)
                 self.store_thread.start()
         else:
-            self.renderer = RenderThread(self.opts, self.new_work, self.saver)
-            self.store_thread = StormBringer(self.opts, self.backend, self.saver,
+            self.renderer = RenderThread(self.opts, self.new_work, self.store_queue)
+            self.store_thread = StormBringer(self.opts, self.backend, self.store_queue,
                                              self.info)
 
         if not os.path.isdir(self.opts.tile_dir):
