@@ -173,11 +173,28 @@ class RenderThread:
             im = mapnik.Image(self.image_size, self.image_size)
             # Render image with default Agg renderer
             debug('[%s] rende...', self.pid)
+            # TODO: handle exception, send back into queue
             mapnik.render(self.m, im)
             debug('[%s] ...ring!', self.pid)
             mid = time.perf_counter()
 
-            # TODO: handle exception, send back into queue
+            # TODO: all this is on a single tile, no a metatile
+
+            # converting to png256 is the fastest I have found so far:
+            # python3.6 -m timeit -s 'import mapnik; im = mapnik.Image.fromstring(open("Attic/tmp/369.png", "br").read())' 'data = im.tostring("png256")'
+            # 100 loops, best of 3: 7.72 msec per loop
+            # python3.6 -m timeit -s 'import mapnik; im = mapnik.Image.fromstring(open("Attic/tmp/369.png", "br").read())' 'data = im.tostring()'
+            # 100000 loops, best of 3: 13.8 usec per loop
+            # python3.6 -m timeit -s 'import mapnik, bz2; im = mapnik.Image.fromstring(open("Attic/tmp/369.png", "br").read())' 'c = bz2.BZ2Compressor(); c.compress(im.tostring()); data = c.flush()'
+            # 10 loops, best of 3: 20.3 msec per loop
+            # python3.6 -m timeit -s 'import mapnik, gzip; im = mapnik.Image.fromstring(open("Attic/tmp/369.png", "br").read())' 'data = gzip.compress(im.tostring())'
+            # 10 loops, best of 3: 27.7 msec per loop
+            # python3.6 -s -m timeit -s 'import mapnik, lzma; im = mapnik.Image.fromstring(open("Attic/tmp/369.png", "br").read())' "c = lzma.LZMACompressor(); c.compress(im.tostring()); data = c.flush()"
+            # 10 loops, best of 3: 92 msec per loop
+
+            # TODO:
+            # but bz2 compresses the best, 52714 png vs 49876 bzip vs 70828 gzip vs 53032 lzma
+
             metatile.im = im.tostring('png256')
             end = time.perf_counter()
         else:
