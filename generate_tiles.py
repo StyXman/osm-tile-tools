@@ -46,6 +46,14 @@ def pyramid_count(min_zoom, max_zoom):
     return sum([ 4**i for i in range(max_zoom - min_zoom + 1) ])
 
 
+def time2hms(t):
+    h = int(t / 3600.0)
+    m = int((t - h * 3600) / 60)
+    s = int(t) % 60
+
+    return (h, m, s)
+
+
 class RenderStack:
     """A render stack implemented with a list... and more.
 
@@ -381,9 +389,7 @@ class Master:
             eta = ( (self.tiles_to_render - self.tiles_rendered - self.tiles_skept) *
                     time_per_tile )
 
-            eta_h = int(eta / 3600.0)
-            eta_m = int((eta - eta_h * 3600) / 60)
-            eta_s = int(eta) % 60
+            eta_h, eta_m, eta_s = time2hms(eta)
 
             format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [ETA: %d:%02d:%02d]"
             info(format, self.tiles_rendered, self.tiles_skept, self.tiles_to_render,
