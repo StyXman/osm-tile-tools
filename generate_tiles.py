@@ -294,10 +294,10 @@ class StormBringer:
 
         debug('[%s] curling the curl', self.pid)
 
-        while True:
-            if not self.single_step():
-                debug('done')
-                break
+        while self.single_step():
+            pass
+
+        debug('done')
 
 
     def single_step(self):
