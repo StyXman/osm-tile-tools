@@ -317,11 +317,17 @@ class StormBringer:
     def store_metatile(self, metatile):
         # save the image, splitting it in the right amount of tiles
         if not self.opts.dry_run:
+            start = time.perf_counter()
+            image = mapnik.Image.fromstring(metatile.im)
+            mid = time.perf_counter()
+
             for tile in metatile.tiles:
                 child = metatile.child(tile)
 
                 self.store_tile(metatile, tile)
                 child.is_empty = child.is_empty and tile.is_empty
+
+            end  = time.perf_counter()
 
             for child in metatile.children():
                 # don't render child if: empty; or single tile mode; or too deep
@@ -332,6 +338,8 @@ class StormBringer:
                     child.render = False
 
             # TODO: handle empty and link or write; pyramid stuff
+            metatile.deserializing_time = mid - start
+            metatile.saving_time = end - mid
         else:
             for child in metatile.children():
                 rand = random()
@@ -633,7 +641,8 @@ class Master:
         self.came_back += 1
 
         self.progress(metatile, metatile.render_time, metatile.serializing_time,
-                      format="%8.3f, %8.3f")
+                      metatile.deserializing_time, metatile.saving_time,
+                      format="%8.3f, %8.3f, %8.3f, %8.3f")
 
 
     def finish(self):

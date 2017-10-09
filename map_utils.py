@@ -344,10 +344,11 @@ class MetaTile:
 
         self.polygon = wkt.loads(polygon_wkt)
 
+        # times
         self.render_time = None
         self.serializing_time = None
-        self.deserializing_time = None
-        self.saving_time = None
+        self.deserializing_time = 0
+        self.saving_time = 0
 
 
     # see https://github.com/python/mypy/issues/2783#issuecomment-276596902
