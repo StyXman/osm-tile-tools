@@ -28,7 +28,8 @@ import logging
 from logging import debug, info, exception
 long_format = "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
 short_format = "%(asctime)s %(message)s"
-from typing import Optional, List, Set, Dict
+
+from typing import Optional, List, Set, Dict, Any
 
 try:
     NUM_CPUS = multiprocessing.cpu_count()
@@ -43,6 +44,14 @@ def floor(i: int, base: int=1) -> int:
 
 def pyramid_count(min_zoom, max_zoom):
     return sum([ 4**i for i in range(max_zoom - min_zoom + 1) ])
+
+
+def time2hms(t):
+    h = int(t / 3600.0)
+    m = int((t - h * 3600) / 60)
+    s = int(t) % 60
+
+    return (h, m, s)
 
 
 class RenderStack:
@@ -60,19 +69,20 @@ class RenderStack:
     these children might not be needed to be rendered, they're stored in
     another list, to_validate. Once we know the tile is not empty or any
     other reason to skip it, we notify() it."""
-    def __init__(self, max_zoom:int, push_children:bool=True) -> None:
+    def __init__(self, max_zoom:int) -> None:
         # I don't need order here, it's (probably) better if I validate tiles
         # as soon as possible
         self.first:Optional[map_utils.MetaTile] = None
         self.ready:List[map_utils.Tile] = []
-        self.to_validate:Set[map_utils.MetaTile] = set()
         self.max_zoom = max_zoom
-        self.push_children = push_children
 
 
-    def push(self, o:map_utils.MetaTile) -> None:
-        self.to_validate.add(o)
+    def push(self, metatile:map_utils.MetaTile) -> None:
         # debug("%s, %s, %s", self.first, self.ready, self.to_validate)
+        if self.first is not None:
+            self.ready.insert(0, self.first)
+
+        self.first = metatile
 
 
     def pop(self) -> map_utils.MetaTile:
@@ -83,10 +93,6 @@ class RenderStack:
         """Mark the top of the stack as sent to render, factually pop()'ing it."""
         if self.first is not None:
             metatile:map_utils.MetaTile = self.first
-            if metatile.z < self.max_zoom and self.push_children:
-                # automatically push the children
-                for child in metatile.children(): # type: map_utils.MetaTile
-                    self.push(child)
 
         t:Optional[map_utils.Tile] = None
         if len(self.ready) > 0:
@@ -97,33 +103,23 @@ class RenderStack:
 
 
     def size(self) -> int:
-        # HACK: int(bool) \belongs (0, 1)
         # debug("%s, %s, %s", self.first, self.ready, self.to_validate)
-        ans:int = ( int(self.first is not None) + len(self.ready) +
-                    len(self.to_validate) )
+        # HACK: int(bool) \belongs (0, 1)
+        ans:int = int(self.first is not None) + len(self.ready)
         # debug(ans)
         return ans
 
 
-    def notify(self, metatile:map_utils.MetaTile, render:bool) -> None:
-        """The MetaTile needs to be rendered."""
-        debug("%s, %s", metatile, render)
-        self.to_validate.remove(metatile)
-
-        if render:
-            if self.first is not None:
-                self.ready.insert(0, self.first)
-
-            self.first = metatile
-
 
 RenderChildren = Dict[map_utils.Tile, bool]
 class RenderThread:
-    def __init__(self, opts, backend, queues) -> None:
-        self.backend = backend
-        self.queues  = queues
+    def __init__(self, opts, input, output) -> None:
         self.opts = opts
+        self.input = input
+        self.output = output
+
         self.metatile_size:int = opts.metatile_size
+        # TODO:
         self.tile_size:int = 256
         self.image_size:int = self.tile_size * self.metatile_size
 
@@ -148,6 +144,7 @@ class RenderThread:
         l0 = self.tileproj.fromPixelToLL(p0, z);
         l1 = self.tileproj.fromPixelToLL(p1, z);
 
+        # this is the only time where we convert manually into WebMerc
         # Convert to map projection (e.g. mercator co-ords EPSG:900913)
         c0 = self.prj.forward(mapnik.Coord(l0[0], l0[1]))
         c1 = self.prj.forward(mapnik.Coord(l1[0], l1[1]))
@@ -163,92 +160,62 @@ class RenderThread:
         if self.m.buffer_size < 128:
             self.m.buffer_size = 128
 
-        debug("[%s] bailing out", self.pid)
         bail_out = True
-
-        start = time.perf_counter()
 
         # handling C-c: if we're rendering, the exception won't be raised until
         # mapnik has finished, and throwing away that work would be a shame
-
-        # so, from the docs: If an exception occurs in any of the clauses and is
-        # not handled, the exception is temporarily saved. The finally clause
-        # is executed. If there is a saved exception it is re-raised at the
-        # end of the finally clause
-
-        im = mapnik.Image(self.image_size, self.image_size)
-
         # critical section, disable signals
         if self.opts.parallel != 'single':
             sig = signal(SIGINT, SIG_IGN)
 
+        start = time.perf_counter()
         if not self.opts.dry_run:
+            im = mapnik.Image(self.image_size, self.image_size)
             # Render image with default Agg renderer
-            mapnik.render(self.m, im)
+            debug('[%s] rende...', self.pid)
             # TODO: handle exception, send back into queue
+            mapnik.render(self.m, im)
+            debug('[%s] ...ring!', self.pid)
+            mid = time.perf_counter()
+
+            # TODO: all this is on a single tile, no a metatile
+
+            # converting to png256 is the fastest I have found so far:
+            # python3.6 -m timeit -s 'import mapnik; im = mapnik.Image.fromstring(open("Attic/tmp/369.png", "br").read())' 'data = im.tostring("png256")'
+            # 100 loops, best of 3: 7.72 msec per loop
+            # python3.6 -m timeit -s 'import mapnik; im = mapnik.Image.fromstring(open("Attic/tmp/369.png", "br").read())' 'data = im.tostring()'
+            # 100000 loops, best of 3: 13.8 usec per loop
+            # python3.6 -m timeit -s 'import mapnik, bz2; im = mapnik.Image.fromstring(open("Attic/tmp/369.png", "br").read())' 'c = bz2.BZ2Compressor(); c.compress(im.tostring()); data = c.flush()'
+            # 10 loops, best of 3: 20.3 msec per loop
+            # python3.6 -m timeit -s 'import mapnik, gzip; im = mapnik.Image.fromstring(open("Attic/tmp/369.png", "br").read())' 'data = gzip.compress(im.tostring())'
+            # 10 loops, best of 3: 27.7 msec per loop
+            # python3.6 -s -m timeit -s 'import mapnik, lzma; im = mapnik.Image.fromstring(open("Attic/tmp/369.png", "br").read())' "c = lzma.LZMACompressor(); c.compress(im.tostring()); data = c.flush()"
+            # 10 loops, best of 3: 92 msec per loop
+
+            # TODO:
+            # but bz2 compresses the best, 52714 png vs 49876 bzip vs 70828 gzip vs 53032 lzma
+
+            metatile.im = im.tostring('png256')
+            end = time.perf_counter()
         else:
             debug('[%s] thumbtumbling', self.pid)
             time.sleep(randint(0, 30) / 10)
+            mid = time.perf_counter()
+            end = time.perf_counter()
 
-        debug("[%s] not bailing out", self.pid)
+        metatile.render_time = mid - start
+        metatile.serializing_time = end - mid
         bail_out = False
-        mid = time.perf_counter()
-        render_children = self.store_metatile(im, metatile)
-        end = time.perf_counter()
 
-        debug("<== [%s] %r: %s", self.pid, metatile, ('old', mid-start, end-mid))
-        self.queues[1].put(('old', metatile, mid-start, end-mid))
-        debug("<<< [%s]", self.pid)
+        debug("[%s] putting %r", self.pid, metatile)
+        self.output.put(metatile)
+        debug("[%s] put! (%d)", self.pid, self.output.qsize())
 
         # end critical section, restore signal
         if self.opts.parallel != 'single':
             signal(SIGINT, sig)
 
-        return render_children, bail_out
-
-
-    def store_metatile(self, im, metatile):
-        render_children:Dict[map_utils.Tile, bool] = {}
-
-        # save the image, splitting it in the right amount of tiles
-        for tile in metatile.tiles:
-            self.store_tile(im, metatile, tile, render_children)
-
-        return render_children
-
-
-    def store_tile(self, im, metatile, tile, render_children):
-        i, j = tile.meta_index
-
-        if not self.opts.dry_run:
-            # TODO: Tile.meta_pixel_coords
-            img = im.view(i*self.tile_size, j*self.tile_size,
-                            self.tile_size,   self.tile_size)
-            tile.data = img.tostring('png256')
-            # TODO: move to Tile
-            is_empty = map_utils.is_empty(tile.data)
-
-            if not is_empty or self.opts.empty == 'write':
-                self.backend.store(tile)
-            elif is_empty and self.opts.empty == 'link':
-                # TODO
-                pass
-        else:
-            is_empty = ( random() <= 0.75 and
-                         not 2**metatile.z < self.opts.metatile_size )
-
-        if ( not is_empty and not self.opts.single_tiles and
-             tile.z < self.opts.max_zoom ):
-
-            # debug( "%s; %s; %d < %d", not is_empty,
-            #        not self.opts.single_tiles, tile.z, self.opts.max_zoom )
-
-            # at least something to render
-            render_children[metatile.child(tile)] = True
-        # TODO: handle empty and link or write; pyramid stuff
-
-        if not self.opts.dry_run:
-            self.backend.commit()
+        return bail_out
 
 
     def load_map(self):
@@ -288,59 +255,116 @@ class RenderThread:
 
     def single_step(self):
         # Fetch a tile from the queue and render it
-        debug("[%s] >>>", self.pid)
-        metatile:Optional[map_utils.MetaTile] = self.queues[0].get()
-        debug("[%s] ==> %r", self.pid, metatile)
+        debug("[%s] get..", self.pid)
+        metatile:Optional[map_utils.MetaTile] = self.input.get()
+        debug("[%s] got! %r", self.pid, metatile)
         if metatile is None:
             # self.q.task_done()
-            debug('[%s] None, ending loop' % self.pid)
             return True
 
-        # TODO: move all these checks to another thread/process.
-        skip:bool
-        if self.opts.skip_existing or self.opts.skip_newer is not None:
-            debug('[%s] skip test existing:%s, newer:%s',
-                  self.pid, self.opts.skip_existing, self.opts.skip_newer)
-            skip = True
-
-            for tile in metatile.tiles: # type: map_utils.Tile
-                if self.opts.skip_existing:
-                    skip = skip and self.backend.exists(tile)
-                    # debug('[%s] skip: %s', self.pid, skip)
-                else:
-                    skip= ( skip and
-                            self.backend.newer_than(tile, self.opts.skip_newer,
-                                                    self.opts.missing_as_new) )
-                    # debug('[%s] skip: %s', self.pid, skip)
-        else:
-            skip = False
-            # debug('[%s] skip: %s', self.pid, skip)
-
-        render_children:Dict[map_utils.Tile, bool] = {}
-        if not skip:
-            render_children, bail_out = self.render_metatile(metatile)
-        else:
-            # TODO: ugh?
-            bail_out = False
-            debug("[%s] not bailing out", self.pid)
-            self.queues[1].put(('skept', metatile))
-
-            # but notify the children, so they get a chance to be rendered
-            if metatile.z < self.opts.max_zoom:
-                for child in metatile.children():
-                    # we have no other info about whether they should be
-                    # rendered or not, so render them just in case. at worst,
-                    # they could either be empty tiles or too new too
-                    render_children[child] = True
-
-        # debug(render_children)
-        for tile, render in render_children.items():
-            debug("<== [%s] %r: %s", self.pid, tile, render)
-            self.queues[1].put(('new', tile, render))
-            debug("<<< [%s]", self.pid)
+        bail_out = self.render_metatile(metatile)
 
         # self.q.task_done()
         return bail_out
+
+
+backends:Dict[str,Any] = dict(
+    tiles=  map_utils.DiskBackend,
+    mbtiles=map_utils.MBTilesBackend,
+    )
+
+
+class StormBringer:
+    def __init__(self, opts, backend, input, output):
+        self.opts = opts
+        self.backend = backend
+        self.input = input
+        self.output = output
+        # TODO:
+        self.tile_size:int = 256
+
+        if self.opts.parallel == 'single':
+            # StormBringer.loop() is not called in single mode
+            # so do this here
+            self.pid = getpid()
+
+
+    def loop(self):
+        self.pid = getpid()
+
+        debug('[%s] curling the curl', self.pid)
+
+        while self.single_step():
+            pass
+
+        debug('done')
+
+
+    def single_step(self):
+        debug('[%s] >... (%d)', self.pid, self.input.qsize())
+        metatile = self.input.get(True)
+        debug('[%s] ...>', self.pid)
+
+        if metatile is not None:
+            debug('[%s] sto...', self.pid)
+            self.store_metatile(metatile)
+            debug('[%s] ...re!', self.pid)
+            self.output.put(metatile)
+
+        return metatile is not None
+
+
+    def store_metatile(self, metatile):
+        # save the image, splitting it in the right amount of tiles
+        if not self.opts.dry_run:
+            start = time.perf_counter()
+            image = mapnik.Image.fromstring(metatile.im)
+            mid = time.perf_counter()
+
+            for tile in metatile.tiles:
+                child = metatile.child(tile)
+
+                self.store_tile(tile, image)
+                child.is_empty = child.is_empty and tile.is_empty
+
+            end  = time.perf_counter()
+
+            for child in metatile.children():
+                # don't render child if: empty; or single tile mode; or too deep
+                debug((child.is_empty, self.opts.single_tiles, tile.z, self.opts.max_zoom))
+                if ( child.is_empty or self.opts.single_tiles or
+                     metatile.z == self.opts.max_zoom ):
+
+                    child.render = False
+
+            # TODO: handle empty and link or write; pyramid stuff
+            metatile.deserializing_time = mid - start
+            metatile.saving_time = end - mid
+        else:
+            for child in metatile.children():
+                rand = random()
+                child.is_empty = (rand >= 0.95 and
+                                  2**metatile.z >= self.opts.metatile_size)
+                child.render = not (child.is_empty or self.opts.single_tiles or
+                                    metatile.z == self.opts.max_zoom)
+
+
+    def store_tile(self, tile, image):
+        i, j = tile.meta_index
+
+        # TODO: Tile.meta_pixel_coords
+        # TODO: pass tile_size to MetaTile and Tile
+        img = image.view(i*self.tile_size, j*self.tile_size,
+                           self.tile_size,   self.tile_size)
+        tile.data = img.tostring('png256')
+
+        if not tile.is_empty or self.opts.empty == 'write':
+            self.backend.store(tile)
+        elif tile.is_empty and self.opts.empty == 'link':
+            # TODO
+            pass
+
+        self.backend.commit()
 
 
 class Master:
@@ -349,7 +373,9 @@ class Master:
         self.renderers = {}
         # we need at least space for the initial batch
         # but do not auto push children in tiles mode
-        self.work_stack = RenderStack(opts.max_zoom, not self.opts.single_tiles)
+        self.work_stack = RenderStack(opts.max_zoom)
+        # TODO:
+        self.tile_size:int = 256
 
         # counters
         self.went_out = self.came_back = 0
@@ -357,24 +383,22 @@ class Master:
 
         if self.opts.parallel == 'fork':
             debug('forks, using mp.Queue()')
-
             # work_out queue is size 1, so higher zoom level tiles don't pile up
             # there if there are lower ZL tiles ready in the work_stack.
-            self.work_in = multiprocessing.Queue(5*self.opts.threads)
-            self.work_out = multiprocessing.Queue(1)
+            self.new_work = multiprocessing.Queue(1)
+            self.store_queue = multiprocessing.Queue(5*self.opts.threads)
+            self.info = multiprocessing.Queue(5*self.opts.threads)
         elif self.opts.parallel == 'threads':
             debug('threads, using queue.Queue()')
             # TODO: warning about mapnik and multithreads
-            self.work_in = queue.Queue(32)
-            self.work_out = queue.Queue(32)
+            self.new_work = queue.Queue(32)
+            self.store_queue = queue.Queue(32)
+            self.info = queue.Queue(32)
         else:
             debug('single mode, using queue.Queue()')
-            self.work_in = queue.Queue(5)
-            self.work_out = queue.Queue(1)
-
-
-    def tiles_per_metatile(self, zoom):
-        return min(self.opts.metatile_size, 2**zoom) ** 2
+            self.new_work = queue.Queue(1)
+            self.store_queue = queue.Queue(1)
+            self.info = queue.Queue(1)
 
 
     def progress(self, metatile, *args, format='%s'):
@@ -384,14 +408,15 @@ class Master:
         if self.tiles_rendered > 0:
             time_elapsed = time.perf_counter() - self.start
             # calculated only based on what was actually rendered
+            # it's broken for the most part of the time (!)
+            # but it's better than getting a constant 0:00:00
+            # time_per_tile = time_elapsed / ( self.tiles_rendered + self.tiles_skept )
             time_per_tile = time_elapsed / self.tiles_rendered
             debug((time_elapsed, time_per_tile))
             eta = ( (self.tiles_to_render - self.tiles_rendered - self.tiles_skept) *
                     time_per_tile )
 
-            eta_h = int(eta / 3600.0)
-            eta_m = int((eta - eta_h * 3600) / 60)
-            eta_s = int(eta) % 60
+            eta_h, eta_m, eta_s = time2hms(eta)
 
             format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [ETA: %d:%02d:%02d]"
             info(format, self.tiles_rendered, self.tiles_skept, self.tiles_to_render,
@@ -405,18 +430,12 @@ class Master:
     def render_tiles(self) -> None:
         debug("render_tiles(%s)", self.opts)
 
-        backends:Dict[str,Any] = dict(
-            tiles=  map_utils.DiskBackend,
-            mbtiles=map_utils.MBTilesBackend,
-            )
-
-        backend = backends[self.opts.format](self.opts.tile_dir, self.opts.bbox)
+        self.backend = backends[self.opts.format](self.opts.tile_dir, self.opts.bbox)
 
         # Launch rendering threads
         if self.opts.parallel != 'single':
             for i in range(self.opts.threads):
-                renderer = RenderThread( self.opts, backend,
-                                         (self.work_out, self.work_in) )
+                renderer = RenderThread(self.opts, self.new_work, self.store_queue)
 
                 if self.opts.parallel == 'fork':
                     debug('mp.Process()')
@@ -428,14 +447,20 @@ class Master:
                 render_thread.start()
 
                 if self.opts.parallel:
-                    debug("Started render thread %s" % render_thread.name)
+                    debug("Started render thread %s", render_thread.name)
                 else:
-                    debug("Started render thread %s" % render_thread.getName())
+                    debug("Started render thread %s", render_thread.getName())
 
                 self.renderers[i] = render_thread
+
+            if self.opts.parallel == 'fork':
+                sb = StormBringer(self.opts, self.backend, self.store_queue, self.info)
+                self.store_thread = multiprocessing.Process(target=sb.loop)
+                self.store_thread.start()
         else:
-            self.renderer = RenderThread( self.opts, backend,
-                                          (self.work_out, self.work_in) )
+            self.renderer = RenderThread(self.opts, self.new_work, self.store_queue)
+            self.store_thread = StormBringer(self.opts, self.backend, self.store_queue,
+                                             self.info)
 
         if not os.path.isdir(self.opts.tile_dir):
             debug("creating dir %s", self.opts.tile_dir)
@@ -447,7 +472,8 @@ class Master:
             for x in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
                 for y in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
                     metatile = map_utils.MetaTile(self.opts.min_zoom, x, y,
-                                                  self.opts.metatile_size)
+                                                  self.opts.metatile_size,
+                                                  self.tile_size)
 
                     if metatile in self.opts.bbox:
                         initial_metatiles.append(metatile)
@@ -456,58 +482,118 @@ class Master:
             debug('rendering individual tiles')
             for i in self.opts.tiles:
                 z, x, y = map(int, i.split(','))
-                metatile = map_utils.MetaTile(z, x, y, self.opts.metatile_size)
+                metatile = map_utils.MetaTile(z, x, y, self.opts.metatile_size,
+                                              self.tile_size)
                 initial_metatiles.append(metatile)
 
         try:
             self.loop(initial_metatiles)
         except KeyboardInterrupt as e:
-            debug(e)
             raise SystemExit("Ctrl-c detected, exiting...")
+        except Exception as e:
+            exception(e)
         finally:
             debug('out!')
             self.finish()
+
+
+    def push_all_children(self, metatile):
+        if metatile.z < self.opts.max_zoom and self.opts.push_children:
+            for child in metatile.children():
+                # we have no other info about whether they should be
+                # rendered or not, so render them just in case. at worst,
+                # they could either be empty tiles or too new too
+                self.work_stack.push(child)
+
+
+    def should_render(self, metatile):
+        # TODO: move all these checks to another thread/process.
+        skip:bool
+        if metatile in self.opts.bbox:
+            if self.opts.skip_existing or self.opts.skip_newer is not None:
+                debug('skip test existing:%s, newer:%s', self.opts.skip_existing,
+                    self.opts.skip_newer)
+                skip = True
+
+                for tile in metatile.tiles: # type: map_utils.Tile
+                    if self.opts.skip_existing:
+                        # TODO: missing as present?
+                        skip = skip and self.backend.exists(tile)
+                        # debug('skip: %s', skip)
+                        message = "present, skipping"
+                    else:
+                        skip= ( skip and
+                                self.backend.newer_than(tile, self.opts.skip_newer,
+                                                        self.opts.missing_as_new) )
+                        # debug('skip: %s', skip)
+                        message = "too new, skipping"
+
+                if skip:
+                    self.work_stack.confirm()
+                    self.tiles_skept += len(metatile.tiles)
+                    self.progress(metatile, message)
+
+                    # notify the children, so they get a chance to be rendered
+                    self.push_all_children(metatile)
+            else:
+                skip = False
+                # debug('skip: %s', skip)
+        else:
+            # do not render tiles out of the bbox
+            skip = True
+            self.work_stack.confirm()
+
+            # we count this one and all it descendents as skept
+            self.tiles_skept += ( len(metatile.tiles) *
+                                  pyramid_count(metatile.z, opts.max_zoom) )
+            self.progress(metatile, "out of bbox")
+
+        return not skip
 
 
     def loop(self, initial_metatiles) -> None:
         self.start = time.perf_counter()
 
         for metatile in initial_metatiles:
-            debug("... %r" % (metatile, ))
+            debug("... %r", (metatile, ))
             self.work_stack.push(metatile)
-            # make sure they're rendered!
-            self.work_stack.notify(metatile, True)
 
-            if self.opts.single_tiles:
-                self.tiles_to_render += len(metatile.tiles)
-                # debug("%r: %d", metatile, tiles_to_render)
-
-        if not self.opts.single_tiles:
+        first_tiles = len(initial_metatiles)
+        if self.opts.single_tiles:
+            self.tiles_to_render = first_tiles * len(metatile.tiles)
+        else:
             # all initial_metatiles are from the same zoom level
-            first_tiles = len(initial_metatiles)
-            self.tiles_to_render = ( first_tiles * len(initial_metatiles[0].tiles) *
+            self.tiles_to_render = ( first_tiles * len(metatile.tiles) *
                                      pyramid_count(opts.min_zoom, opts.max_zoom) )
 
         # I could get to the pipes used for the Queues, but it's useless, as
         # they're constantly ready, so select()ing on them leads to a tight loop
         # keep the probing version
-        while self.work_stack.size() > 0 or self.went_out > self.came_back:
-            # debug("ws.size(): %s; wo > cb: %d > %d", self.work_stack.size(),
-            #       self.went_out, self.came_back)
+        while ( self.work_stack.size() > 0 or
+                self.went_out > self.came_back or
+                self.tiles_to_render > self.tiles_rendered + self.tiles_skept ):
+
+            tight_loop = True
 
             # the doc says this is unrealiable, but we don't care
             # full() can be inconsistent only if when we test is false
             # and when we put() is true, but only the master is writing
             # so this cannot happen
-            while not self.work_out.full():
+            while not self.new_work.full():
+                tight_loop = False
+
                 # pop from there,
-                new_work = self.work_stack.pop()  # map_utils.MetaTile
-                if new_work is not None:
+                metatile = self.work_stack.pop()  # map_utils.MetaTile
+                if metatile is not None:
+                    # TODO: move to another thread
+                    if not self.should_render(metatile):
+                        continue
+
                     # push in the writer
-                    self.work_out.put(new_work, True, .1)  # 1/10s timeout
+                    self.new_work.put(metatile, True, .1)  # 1/10s timeout
                     self.work_stack.confirm()
                     self.went_out += 1
-                    debug("--> %r" % (new_work, ))
+                    debug("--> %r", (metatile, ))
 
                     if self.opts.parallel == 'single':
                         self.renderer.single_step()
@@ -516,56 +602,58 @@ class Master:
                         break
                 else:
                     # no more work to do
+                    tight_loop = True
                     break
 
-            # pop from the reader,
-            while not self.work_in.empty():
-                # 1/10s timeout
-                type, *data = self.work_in.get(True, .1)  # type: str, Any
-                debug("<-- %s: %r" % (type, data))
+            if self.opts.parallel == 'single' and self.store_queue.qsize() > 0:
+                self.store_thread.single_step()
 
-                self.handle_new_work(type, data)
+            # pop from the reader,
+            while not self.info.empty():
+                tight_loop = False
+
+                # 1/10s timeout
+                data = self.info.get(True, .1)  # type: str, Any
+                debug("<-- %s", data)
+
+                self.handle_new_work(data)
+
+            if tight_loop:
+                # we didn't do anything, so sleep for a while
+                # otherwise, this becomes a thigh loop
+                time.sleep(0.1)
+
+        total_time = time.perf_counter() - self.start
+        h, m, s = time2hms(total_time)
+
+        info("total time: %3d:%02d:%02d", h, m, s)
+        metatiles_rendered = self.tiles_rendered / self.opts.metatile_size**2
+
+        info("%8.3f s/metatile", total_time / metatiles_rendered)
+        info("%8.3f metatile/s", metatiles_rendered / total_time)
 
         debug('out!')
 
 
-    def handle_new_work(self, type, data):
-        if type == 'new':
-            metatile, render = data
-            if metatile in self.opts.bbox:
-                # MetaTile(18, 152912, 93352, 8): too new, skipping
-                self.work_stack.notify(metatile, render)
-                if not render:
-                    self.tiles_skept += len(metatile.tiles)
-            else:
-                # do not render tiles out of the bbox
-                debug("out of bbox, out of mind")
-                self.work_stack.notify(metatile, False)
-                # we count this one and all it descendents as rendered
-                self.tiles_skept += ( len(metatile.tiles) *
-                                      pyramid_count(metatile.z, opts.max_zoom) )
+    def handle_new_work(self, metatile):
+        # an empty metatile will be accounted as rendered,
+        # but the children can be pruned
+        if self.opts.push_children:
+            for child in reversed(metatile.children()):
+                debug("%r: %s, %s", child, child.render, child.is_empty)
+                if child.render:
+                    self.work_stack.push(child)
+                elif child.is_empty:
+                    self.tiles_skept += ( len(child.tiles) *
+                                          pyramid_count(child.z, opts.max_zoom) )
+                    self.progress(child, format="empty")
 
-                self.progress(metatile, "out of bbox")
+        self.tiles_rendered += len(metatile.tiles)
+        self.came_back += 1
 
-        elif type == 'old':
-            metatile, render_time, saving_time = data
-            self.tiles_rendered += len(metatile.tiles)
-            self.came_back += 1
-
-            self.progress(metatile, render_time, saving_time,
-                          format="%8.3f, %8.3f")
-
-        elif type == 'skept':
-            metatile, = data
-            self.tiles_skept += len(metatile.tiles)
-            self.came_back += 1
-
-            if self.opts.skip_existing:
-                message = "present, skipping"
-            else:
-                message = "too new, skipping"
-
-            self.progress(metatile, message)
+        self.progress(metatile, metatile.render_time, metatile.serializing_time,
+                      metatile.deserializing_time, metatile.saving_time,
+                      format="%8.3f, %8.3f, %8.3f, %8.3f")
 
 
     def finish(self):
@@ -573,22 +661,25 @@ class Master:
             info('stopping threads/procs')
             # Signal render threads to exit by sending empty request to queue
             for i in range(self.opts.threads):
-                info("%d..." % (i + 1))
-                self.work_out.put(None)
+                info("%d...", (i + 1))
+                self.new_work.put(None)
+
+            self.store_queue.put(None)
 
             while self.went_out > self.came_back:
                 debug("%d <-> %d", self.went_out, self.came_back)
-                type, *data = self.work_in.get(True)  # type: str, Any
-                debug("<-- %s: %r" % (type, data))
+                data = self.info.get(True)  # type: str, Any
+                debug("<-- %s", data)
 
-                self.handle_new_work(type, data)
+                self.handle_new_work(data)
 
             # wait for pending rendering jobs to complete
             if not self.opts.parallel == 'fork':
-                self.work_out.join()
+                self.new_work.join()
+                self.store_thread.join()
             else:
-                self.work_out.close()
-                self.work_out.join_thread()
+                self.new_work.close()
+                self.new_work.join_thread()
 
             for i in range(self.opts.threads):
                 self.renderers[i].join()
@@ -611,15 +702,20 @@ def parse_args():
     # TODO: check it's a power of 2
     parser.add_argument('-m', '--metatile-size', dest='metatile_size', default=1, type=int)
 
-    parser.add_argument('-t', '--threads',       dest='threads',   default=NUM_CPUS, type=int)
-    parser.add_argument('-p', '--parallel-method', dest='parallel', default='fork', choices=('threads', 'fork', 'single'))
+    parser.add_argument('-t', '--threads',       dest='threads',   default=NUM_CPUS,
+                        type=int)
+    parser.add_argument('-p', '--parallel-method', dest='parallel', default='fork',
+                        choices=('threads', 'fork', 'single'))
 
-    parser.add_argument('-X', '--skip-existing', dest='skip_existing', default=False, action='store_true')
-    parser.add_argument('-N', '--skip-newer',    dest='skip_newer', default=None, type=int, metavar='DAYS')
-    # parser.add_argument('-L', '--skip-symlinks', dest='skip_', default=None, type=int)
+    parser.add_argument('-X', '--skip-existing', dest='skip_existing', default=False,
+                        action='store_true')
+    # TODO: newer than input_file
+    parser.add_argument('-N', '--skip-newer',    dest='skip_newer', default=None,
+                        type=int, metavar='DAYS')
     parser.add_argument(      '--missing-as-new',  dest='missing_as_new', default=False, action='store_true',
                         help="missing tiles in a meta tile count as newer, so we don't re-render metatils with empty tiles.")
-    parser.add_argument('-E', '--empty',         dest='empty',     default='skip', choices=('skip', 'link', 'write'))
+    parser.add_argument('-E', '--empty',         dest='empty',     default='skip',
+                        choices=('skip', 'link', 'write'))
 
     parser.add_argument('-d', '--debug',         dest='debug',     default=False, action='store_true')
     parser.add_argument(      '--dry-run',       dest='dry_run',   default=False, action='store_true')
@@ -628,25 +724,32 @@ def parse_args():
     opts = parser.parse_args()
 
     if opts.log_file is not None:
-        logging.basicConfig(level=logging.INFO, format=short_format)
-
-        # log to the file too
         root = logging.getLogger()
 
-        handler = logging.FileHandler(opts.log_file)
-        handler.setFormatter(root.handlers[0].formatter)
-        if opts.debug:
-            handler.setLevel(logging.DEBUG)
-        else:
-            handler.setLevel(logging.INFO)
+        # this is more or less the same thing we get with basicConfig()
+        stderr_handler = logging.StreamHandler()
+        stderr_handler.setFormatter(logging.Formatter(short_format))
+        stderr_handler.setLevel(logging.INFO)
+        root.addHandler(stderr_handler)
 
-        root.addHandler(handler)
+        file_handler = logging.FileHandler(opts.log_file)
+        if opts.debug:
+            file_handler.setFormatter(logging.Formatter(long_format))
+            file_handler.setLevel(logging.DEBUG)
+            # the root logger will be pre-filtering by level
+            # so we need to set its level to the lowest possible
+            root.setLevel(logging.DEBUG)
+            root.addHandler(file_handler)
+        else:
+            file_handler.setFormatter(logging.Formatter(short_format))
+            file_handler.setLevel(logging.INFO)
+            root.setLevel(logging.INFO)
+
     else:
         if opts.debug:
             logging.basicConfig(level=logging.DEBUG, format=long_format)
         else:
             logging.basicConfig(level=logging.INFO, format=short_format)
-
 
     if opts.format == 'tiles' and opts.tile_dir[-1] != '/':
         # we need the trailing /, it's actually a series of BUG s in render_tiles()
@@ -669,6 +772,7 @@ def parse_args():
 
     # semantic opts
     opts.single_tiles = opts.tiles is not None
+    opts.push_children = not opts.single_tiles
 
     return opts
 
@@ -677,4 +781,9 @@ if __name__  ==  "__main__":
     opts = parse_args()
 
     master = Master(opts)
+
+    # fixes for locally installed mapnik
+    # mapnik.register_fonts ('/usr/share/fonts/')
+    # mapnik.register_plugins ('/home/mdione/local/lib/mapnik/input/')
+
     master.render_tiles()
