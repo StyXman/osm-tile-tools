@@ -623,6 +623,15 @@ class Master:
                 # otherwise, this becomes a thigh loop
                 time.sleep(0.1)
 
+        total_time = time.perf_counter() - self.start
+        h, m, s = time2hms(total_time)
+
+        info("total time: %3d:%02d:%02d", h, m, s)
+        metatiles_rendered = self.tiles_rendered / self.opts.metatile_size**2
+
+        info("%8.3f s/metatile", total_time / metatiles_rendered)
+        info("%8.3f metatile/s", metatiles_rendered / total_time)
+
         debug('out!')
 
 
