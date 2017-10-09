@@ -409,6 +409,9 @@ class Master:
         if self.tiles_rendered > 0:
             time_elapsed = time.perf_counter() - self.start
             # calculated only based on what was actually rendered
+            # it's broken for the most part of the time (!)
+            # but it's better than getting a constant 0:00:00
+            # time_per_tile = time_elapsed / ( self.tiles_rendered + self.tiles_skept )
             time_per_tile = time_elapsed / self.tiles_rendered
             debug((time_elapsed, time_per_tile))
             eta = ( (self.tiles_to_render - self.tiles_rendered - self.tiles_skept) *
