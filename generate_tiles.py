@@ -538,11 +538,15 @@ class Master:
                 self.went_out > self.came_back or
                 self.tiles_to_render > self.tiles_rendered + self.tiles_skept ):
 
+            tight_loop = True
+
             # the doc says this is unrealiable, but we don't care
             # full() can be inconsistent only if when we test is false
             # and when we put() is true, but only the master is writing
             # so this cannot happen
             while not self.new_work.full():
+                tight_loop = False
+
                 # pop from there,
                 metatile = self.work_stack.pop()  # map_utils.MetaTile
                 if metatile is not None:
@@ -563,6 +567,7 @@ class Master:
                         break
                 else:
                     # no more work to do
+                    tight_loop = True
                     break
 
             if self.opts.parallel == 'single':
@@ -570,14 +575,20 @@ class Master:
 
             # pop from the reader,
             while not self.info.empty():
+                tight_loop = False
+
                 # 1/10s timeout
                 data = self.info.get(True, .1)  # type: str, Any
                 debug("<-- %s", data)
 
                 self.handle_new_work(data)
 
-        debug('out!')
+            if tight_loop:
+                # we didn't do anything, so sleep for a while
+                # otherwise, this becomes a thigh loop
+                time.sleep(0.1)
 
+        debug('out!')
 
 
     def handle_new_work(self, metatile):
