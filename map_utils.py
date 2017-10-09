@@ -310,7 +310,8 @@ class MetaTile:
         self.size = min(2**z, wanted_size)
         self.tile_size = tile_size
 
-        self.render = True
+        self.is_empty = True  # to simplify code in store_metatile()
+        self.render = True  # this is going to be reset by store_metatile()
 
         # NOTE: children are not precomputed because it's recursive with no bounds
         # see children()
