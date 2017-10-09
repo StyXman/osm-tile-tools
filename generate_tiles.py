@@ -621,7 +621,7 @@ class Master:
                 info("%d...", (i + 1))
                 self.new_work.put(None)
 
-            self.saver.put(None)
+            self.store_queue.put(None)
 
             while self.went_out > self.came_back:
                 debug("%d <-> %d", self.went_out, self.came_back)
