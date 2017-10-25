@@ -702,7 +702,7 @@ def parse_args():
 
     # TODO: check it's a power of 2
     parser.add_argument('-m', '--metatile-size', dest='metatile_size', default=1, type=int,
-                        help='Must be a power o two.')
+                        help='Must be a power of two.')
 
     parser.add_argument('-t', '--threads',       dest='threads',   default=NUM_CPUS,
                         type=int)
