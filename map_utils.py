@@ -267,11 +267,13 @@ class Tile:
 
         self.meta_index:Optional[Tuple[int, int]] = None
         self.meta_pixel_coords = None
-        self.tile_size = 256
         if metatile is not None:
             self.meta_index = (x-metatile.x, y-metatile.y)
             self.meta_pixel_coords = ()
             self.tile_size = metatile.tile_size
+        else:
+            # TODO: guessed
+            self.tile_size = 256
 
         self.pixel_pos = (self.x * self.tile_size, self.y * self.tile_size)
         self.image_size = (self.tile_size, self.tile_size)

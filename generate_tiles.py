@@ -119,9 +119,7 @@ class RenderThread:
         self.output = output
 
         self.metatile_size:int = opts.metatile_size
-        # TODO:
-        self.tile_size:int = 256
-        self.image_size:int = self.tile_size * self.metatile_size
+        self.image_size:int = self.opts.tile_size * self.metatile_size
 
         if self.opts.parallel == 'single':
             # RenderThread.loop() is not called in single mode
@@ -137,8 +135,8 @@ class RenderThread:
 
         # TODO: move all this somewhere else
         # Calculate pixel positions of bottom-left & top-right
-        p0 = (x * self.tile_size, (y + self.metatile_size) * self.tile_size)
-        p1 = ((x + self.metatile_size) * self.tile_size, y * self.tile_size)
+        p0 = (x * self.opts.tile_size, (y + self.metatile_size) * self.opts.tile_size)
+        p1 = ((x + self.metatile_size) * self.opts.tile_size, y * self.opts.tile_size)
 
         # Convert to LatLong (EPSG:4326)
         l0 = self.tileproj.fromPixelToLL(p0, z);
@@ -280,8 +278,6 @@ class StormBringer:
         self.backend = backend
         self.input = input
         self.output = output
-        # TODO:
-        self.tile_size:int = 256
 
         if self.opts.parallel == 'single':
             # StormBringer.loop() is not called in single mode
@@ -354,8 +350,8 @@ class StormBringer:
 
         # TODO: Tile.meta_pixel_coords
         # TODO: pass tile_size to MetaTile and Tile
-        img = image.view(i*self.tile_size, j*self.tile_size,
-                           self.tile_size,   self.tile_size)
+        img = image.view(i*self.opts.tile_size, j*self.opts.tile_size,
+                           self.opts.tile_size,   self.opts.tile_size)
         tile.data = img.tostring('png256')
 
         if not tile.is_empty or self.opts.empty == 'write':
@@ -374,8 +370,6 @@ class Master:
         # we need at least space for the initial batch
         # but do not auto push children in tiles mode
         self.work_stack = RenderStack(opts.max_zoom)
-        # TODO:
-        self.tile_size:int = 256
 
         # counters
         self.went_out = self.came_back = 0
@@ -771,6 +765,8 @@ def parse_args():
         opts.bbox = map_utils.BBox(a.maps[opts.bbox_name].bbox, opts.max_zoom)
     else:
         opts.bbox = map_utils.BBox(opts.bbox, opts.max_zoom)
+
+    opts.tile_size = 256
 
     # semantic opts
     opts.single_tiles = opts.tiles is not None
