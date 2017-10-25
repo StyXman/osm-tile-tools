@@ -129,6 +129,12 @@ class ModTileBackend(DiskBackend):
                             crumbs[-1]+ '.png')
 
 
+class TestBackend(DiskBackend):
+    def tile_uri(self, tile):
+        return os.path.join(self.base_dir, '-'.join([ str(tile.z), str(tile.x),
+                                                      str(tile.y) + '.png' ]))
+
+
 # https://github.com/mapbox/node-mbtiles/blob/master/lib/schema.sql
 # https://github.com/mapbox/mbutil/blob/master/mbutil/util.py
 

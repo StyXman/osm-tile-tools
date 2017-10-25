@@ -270,6 +270,7 @@ backends:Dict[str,Any] = dict(
     tiles=   map_utils.DiskBackend,
     mbtiles= map_utils.MBTilesBackend,
     mod_tile=map_utils.ModTileBackend,
+    test=    map_utils.TestBackend,
     )
 
 
@@ -689,7 +690,7 @@ def parse_args():
 
     parser.add_argument('-i', '--input-file',    dest='mapfile',   default='osm.xml')
     parser.add_argument('-f', '--format',        dest='format',    default='tiles',
-                        choices=('tiles', 'mbtiles', 'mod_tile'))
+                        choices=('tiles', 'mbtiles', 'mod_tile', 'test'))
     parser.add_argument('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
 
     # TODO: check it's a power of 2
@@ -764,7 +765,7 @@ def parse_args():
     else:
         opts.bbox = map_utils.BBox(opts.bbox, opts.max_zoom)
 
-    if opts.format == 'mod_tile':
+    if opts.format in ('mod_tile', 'test'):
         opts.tile_size = 8 * 256
         if opts.metatile_size < 8:
             opts.metatile_size = 8
