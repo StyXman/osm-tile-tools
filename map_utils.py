@@ -19,8 +19,8 @@ from logging import debug
 from typing import List, Tuple, Dict, Optional, Any
 
 
-DEG_TO_RAD:float = pi/180
-RAD_TO_DEG:float = 180/pi
+DEG_TO_RAD:float = pi / 180
+RAD_TO_DEG:float = 180 / pi
 
 def minmax(a:float, b:float, c:float) -> float:
     a = max(a,b)
@@ -321,12 +321,12 @@ class MetaTile:
         # self._children:Optional[Children] = None
         self._children = None
 
-        self.tiles = [ Tile(self.z, self.x+i, self.y+j, self)
+        self.tiles = [ Tile(self.z, self.x + i, self.y + j, self)
                        for i in range(self.size) for j in range(self.size) ]
 
         # x, y
-        self.pixel_pos = (self.x*self.tile_size, self.y*self.tile_size)
-        self.image_size = (self.size*self.tile_size, self.size*self.tile_size)
+        self.pixel_pos = (self.x * self.tile_size, self.y * self.tile_size)
+        self.image_size = (self.size * self.tile_size, self.size * self.tile_size)
 
         # x, y
         self.corners = ( self.pixel_pos,
@@ -440,8 +440,8 @@ class BBox:
 
 class Map:
     def __init__ (self, bbox, max_z):
-        self.bbox= bbox
-        self.max_z= max_z
+        self.bbox = bbox
+        self.max_z = max_z
         # TODO:
         self.tile_size = 256
 
@@ -449,7 +449,7 @@ class Map:
         ll1 = (bbox[2],bbox[1])
         gprj = GoogleProjection(max_z+1)
 
-        self.levels= []
+        self.levels = []
         for z in range (0, max_z+1):
             px0 = gprj.fromLLtoPixel(ll0,z)
             px1 = gprj.fromLLtoPixel(ll1,z)
@@ -460,19 +460,19 @@ class Map:
 
 
     def __contains__ (self, t):
-        if len (t)==3:
-            z, x, y= t
+        if len (t) == 3:
+            z, x, y = t
             px0, px1= self.levels[z]
             # print (z, px0[0], x, px1[0], px0[1], y, px1[1])
-            ans= px0[0]<=x and x<=px1[0]
+            ans = px0[0] <= x and x <= px1[0]
             # print ans
-            ans= ans and px0[1]<=y and y<=px1[1]
+            ans = ans and px0[1] <= y and y <= px1[1]
             # print ans
-        elif len (t)==2:
-            z, x= t
-            px0, px1= self.levels[z]
+        elif len (t) == 2:
+            z, x = t
+            px0, px1 = self.levels[z]
             # print (z, px0[0], x, px1[0])
-            ans= px0[0]<=x and x<=px1[0]
+            ans = px0[0] <= x and x <= px1[0]
         else:
             raise ValueError
 
@@ -480,13 +480,13 @@ class Map:
 
 
     def iterate_x (self, z):
-        px0, px1= self.levels[z]
-        return coord_range (px0[0], px1[0], z) # NOTE
+        px0, px1 = self.levels[z]
+        return coord_range(px0[0], px1[0], z) # NOTE
 
 
     def iterate_y (self, z):
-        px0, px1= self.levels[z]
-        return coord_range (px0[1], px1[1], z) # NOTE
+        px0, px1 = self.levels[z]
+        return coord_range(px0[1], px1[1], z) # NOTE
 
 
 class Atlas:
