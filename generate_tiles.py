@@ -629,7 +629,8 @@ class Master:
         info("total time: %3d:%02d:%02d", h, m, s)
         metatiles_rendered = self.tiles_rendered / self.opts.metatile_size**2
 
-        info("%8.3f s/metatile", total_time / metatiles_rendered)
+        if metatiles_rendered != 0:
+            info("%8.3f s/metatile", total_time / metatiles_rendered)
         info("%8.3f metatile/s", metatiles_rendered / total_time)
 
         debug('out!')
