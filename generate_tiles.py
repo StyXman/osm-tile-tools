@@ -467,7 +467,7 @@ class Master:
                 for y in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
                     metatile = map_utils.MetaTile(self.opts.min_zoom, x, y,
                                                   self.opts.metatile_size,
-                                                  self.tile_size)
+                                                  self.opts.tile_size)
 
                     if metatile in self.opts.bbox:
                         initial_metatiles.append(metatile)
