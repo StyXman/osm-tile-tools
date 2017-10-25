@@ -701,7 +701,8 @@ def parse_args():
     parser.add_argument('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
 
     # TODO: check it's a power of 2
-    parser.add_argument('-m', '--metatile-size', dest='metatile_size', default=1, type=int)
+    parser.add_argument('-m', '--metatile-size', dest='metatile_size', default=1, type=int,
+                        help='Must be a power o two.')
 
     parser.add_argument('-t', '--threads',       dest='threads',   default=NUM_CPUS,
                         type=int)
