@@ -103,6 +103,61 @@ class DiskBackend:
         pass
 
 
+class ModTileBackend:
+    def __init__(self, base, *more):
+        self.base_dir = base
+
+
+    def tile_uri(self, tile):
+        # TODO: find the real naming scheme
+
+        # The metatiles are then stored
+        # in the following directory structure:
+        # /[base_dir]/[TileSetName]/[Z]/[xxxxyyyy]/[xxxxyyyy]/[xxxxyyyy]/[xxxxyyyy]/[xxxxyyyy].png
+        # Where base_dir is a configurable base path for all tiles. TileSetName
+        # is the name of the style sheet rendered. Z is the zoom level.
+        # [xxxxyyyy] is an 8 bit number, with the first 4 bits taken from the x
+        # coordinate and the second 4 bits taken from the y coordinate. This
+        # attempts to cluster 16x16 square of tiles together into a single sub
+        # directory for more efficient access patterns.
+
+        return os.path.join(self.base_dir, '-'.join([ str(tile.z), str(tile.x),
+                                                      str(tile.y) + '.png' ]))
+
+
+    def store(self, tile):
+        tile_uri = self.tile_uri(tile)
+        makedirs(os.path.dirname(tile_uri), exist_ok=True)
+        f = open(tile_uri, 'wb+')
+        f.write(tile.data)
+        f.close()
+
+
+    def exists(self, tile):
+        tile_uri = self.tile_uri(tile)
+        return os.path.isfile(tile_uri)
+
+
+    def newer_than(self, tile, date, missing_as_new):
+        tile_uri = self.tile_uri(tile)
+        try:
+            file_date = datetime.datetime.fromtimestamp(os.stat(tile_uri).st_mtime)
+            # debug("%s: %s <-> %s", tile_uri, file_date.isoformat(),
+            #       date.isoformat())
+            return file_date > date
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                # debug("%s: %s", tile_uri, missing_as_new)
+                return missing_as_new
+            else:
+                raise
+
+
+    def commit(self):
+        # TODO: flush?
+        pass
+
+
 # https://github.com/mapbox/node-mbtiles/blob/master/lib/schema.sql
 # https://github.com/mapbox/mbutil/blob/master/mbutil/util.py
 

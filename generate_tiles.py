@@ -267,8 +267,9 @@ class RenderThread:
 
 
 backends:Dict[str,Any] = dict(
-    tiles=  map_utils.DiskBackend,
-    mbtiles=map_utils.MBTilesBackend,
+    tiles=   map_utils.DiskBackend,
+    mbtiles= map_utils.MBTilesBackend,
+    mod_tile=map_utils.ModTileBackend,
     )
 
 
@@ -474,11 +475,7 @@ class Master:
         else:
             # TODO: if possible, order them in depth first/proximity? fashion.
             debug('rendering individual tiles')
-            for i in self.opts.tiles:
-                z, x, y = map(int, i.split(','))
-                metatile = map_utils.MetaTile(z, x, y, self.opts.metatile_size,
-                                              self.tile_size)
-                initial_metatiles.append(metatile)
+            initial_metatiles = self.opts.tiles
 
         try:
             self.loop(initial_metatiles)
@@ -691,7 +688,8 @@ def parse_args():
     parser.add_argument(      '--tiles',         dest='tiles',     default= None, nargs='+', metavar='Z,X,Y')
 
     parser.add_argument('-i', '--input-file',    dest='mapfile',   default='osm.xml')
-    parser.add_argument('-f', '--format',        dest='format',    default='tiles') # also 'mbtiles'
+    parser.add_argument('-f', '--format',        dest='format',    default='tiles',
+                        choices=('tiles', 'mbtiles', 'mod_tile'))
     parser.add_argument('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
 
     # TODO: check it's a power of 2
@@ -766,7 +764,37 @@ def parse_args():
     else:
         opts.bbox = map_utils.BBox(opts.bbox, opts.max_zoom)
 
-    opts.tile_size = 256
+    if opts.format == 'mod_tile':
+        opts.tile_size = 8 * 256
+        if opts.metatile_size < 8:
+            opts.metatile_size = 8
+
+        # normalize values
+        opts.metatile_size //= 8
+        if opts.tiles is not None:
+            metatiles = []
+
+            for tile_spec in opts.tiles:
+                z, x, y = map(int, tile_spec.split(','))
+                x //= 8
+                y //= 8
+                metatile = map_utils.MetaTile(z, x, y, opts.metatile_size,
+                                              opts.tile_size)
+                metatiles.append(metatile)
+
+            opts.tiles = metatiles
+    else:
+        opts.tile_size = 256
+        if opts.tiles is not None:
+            metatiles = []
+
+            for tile_spec in opts.tiles:
+                z, x, y = map(int, tile_spec.split(','))
+                metatile = map_utils.MetaTile(z, x, y, opts.metatile_size,
+                                              opts.tile_size)
+                metatiles.append(metatile)
+
+            opts.tiles = metatiles
 
     # semantic opts
     opts.single_tiles = opts.tiles is not None
