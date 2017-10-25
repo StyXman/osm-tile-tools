@@ -709,7 +709,7 @@ def parse_args():
     parser.add_argument('-N', '--skip-newer',    dest='skip_newer', default=None,
                         type=int, metavar='DAYS')
     parser.add_argument(      '--missing-as-new',  dest='missing_as_new', default=False, action='store_true',
-                        help="missing tiles in a meta tile count as newer, so we don't re-render metatils with empty tiles.")
+                        help="missing tiles in a meta tile count as newer, so we don't re-render metatiles with empty tiles.")
     parser.add_argument('-E', '--empty',         dest='empty',     default='skip',
                         choices=('skip', 'link', 'write'))
 
