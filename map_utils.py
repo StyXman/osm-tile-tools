@@ -120,13 +120,24 @@ class ModTileBackend:
         # coordinate and the second 4 bits taken from the y coordinate. This
         # attempts to cluster 16x16 square of tiles together into a single sub
         # directory for more efficient access patterns.
+        x, y = tile.x, tile.y
 
-        return os.path.join(self.base_dir, '-'.join([ str(tile.z), str(tile.x),
-                                                      str(tile.y) + '.png' ]))
+        crumbs = []
+        for crumb_index in range(5):
+            x, x_bits = divmod(x, 16)
+            y, y_bits = divmod(y, 16)
+            debug((x, x_bits, y, y_bits))
+
+            crumb = (x_bits << 4) + y_bits
+            crumbs.insert(0, str(crumb))
+
+        return os.path.join(self.base_dir, str(tile.z), *crumbs[:-1],
+                            crumbs[-1]+ '.png')
 
 
     def store(self, tile):
         tile_uri = self.tile_uri(tile)
+        debug(tile_uri)
         makedirs(os.path.dirname(tile_uri), exist_ok=True)
         f = open(tile_uri, 'wb+')
         f.write(tile.data)
