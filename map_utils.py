@@ -456,7 +456,6 @@ class Map:
             # print px0, px1
             self.levels.append (( (int (px0[0]/self.tile_size), int (px0[1]/self.tile_size)),
                                   (int (px1[0]/self.tile_size), int (px1[1]/self.tile_size)) ))
-        # print self.levels
 
 
     def __contains__ (self, t):
