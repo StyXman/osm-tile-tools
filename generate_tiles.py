@@ -110,7 +110,6 @@ class RenderStack:
         return ans
 
 
-
 RenderChildren = Dict[map_utils.Tile, bool]
 class RenderThread:
     def __init__(self, opts, input, output) -> None:
