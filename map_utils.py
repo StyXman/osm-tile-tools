@@ -626,7 +626,20 @@ def run_tests():
                  [ False, False, False, False, False, False, False, False ] ]
     test(b, 3, expected)
 
+    g = GoogleProjection(18)
+    for z in range(19):
+        side = 256 * 2**z
+        middle = side // 2
 
+        x, y = g.fromLLtoPixel((0, 0), z)
+
+        assert x == middle
+        assert y == middle
+
+        lon, lat = g.fromPixelToLL((x, y), z)
+
+        assert lon == 0
+        assert lat == 0
 
     print('A-OK')
 
