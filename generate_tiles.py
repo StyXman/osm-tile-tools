@@ -772,9 +772,12 @@ def parse_args():
             metatiles = []
 
             for tile_spec in opts.tiles:
-                z, x, y = map(int, tile_spec.split(','))
+                z, x, y = map_utils.tile_spec2zxy(tile_spec)
+
+                # normalize
                 x //= 8
                 y //= 8
+
                 metatile = map_utils.MetaTile(z, x, y, opts.metatile_size,
                                               opts.tile_size)
                 metatiles.append(metatile)
@@ -786,7 +789,7 @@ def parse_args():
             metatiles = []
 
             for tile_spec in opts.tiles:
-                z, x, y = map(int, tile_spec.split(','))
+                z, x, y = map_utils.tile_spec2zxy(tile_spec)
                 metatile = map_utils.MetaTile(z, x, y, opts.metatile_size,
                                               opts.tile_size)
                 metatiles.append(metatile)

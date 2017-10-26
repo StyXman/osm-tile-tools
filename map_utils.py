@@ -290,6 +290,21 @@ def bbox (value):
     return data
 
 
+def tile_spec2zxy(tile_spec):  # str -> Tuple[int, int, int]
+    try:
+        if ',' in tile_spec:
+            data = tile_spec.split(',')
+        elif '/' in tile_spec:
+            data = tile_spec.split('/')
+        else:
+            raise ValueError
+    except ValueError:
+        raise ValueError("METATILE not in form Z,X,Y or Z/X/Y.")
+    else:
+        z, x, y = map(int, data)
+        return (z, x, y)
+
+
 class Tile:
     # def __init__(self, z:int, x:int, y:int, metatile:Optional[MetaTile]=None) -> None:
     def __init__(self, z:int, x:int, y:int, metatile=None) -> None:
