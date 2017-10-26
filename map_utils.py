@@ -373,16 +373,17 @@ class MetaTile:
         self.tiles = [ Tile(self.z, self.x + i, self.y + j, self)
                        for i in range(self.size) for j in range(self.size) ]
 
-        # x, y
+        # (x, y)
         self.pixel_pos = (self.x * self.tile_size, self.y * self.tile_size)
+        # (w, h)
         self.image_size = (self.size * self.tile_size, self.size * self.tile_size)
 
-        # x, y
+        # ((x0, y0), (x1, y1))
         self.corners = ( self.pixel_pos,
                          (self.pixel_pos[0] + self.image_size[0],
                           self.pixel_pos[1] + self.image_size[1]) )
 
-        #
+        # ((lon0, lat0), (lon1, lat1))
         self.coords = ( tileproj.fromPixelToLL(self.corners[0], self.z),
                         tileproj.fromPixelToLL(self.corners[1], self.z) )
 
