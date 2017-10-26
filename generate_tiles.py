@@ -129,18 +129,9 @@ class RenderThread:
 
 
     def render_metatile(self, metatile:map_utils.MetaTile) -> Dict[map_utils.Tile, bool]:
-        z = metatile.z
-        x = metatile.x
-        y = metatile.y
-
-        # TODO: move all this somewhere else
-        # Calculate pixel positions of bottom-left & top-right
-        p0 = (x * self.opts.tile_size, (y + self.metatile_size) * self.opts.tile_size)
-        p1 = ((x + self.metatile_size) * self.opts.tile_size, y * self.opts.tile_size)
-
-        # Convert to LatLong (EPSG:4326)
-        l0 = self.tileproj.fromPixelToLL(p0, z);
-        l1 = self.tileproj.fromPixelToLL(p1, z);
+        # get LatLong (EPSG:4326)
+        l0 = metatile.coords[0]
+        l1 = metatile.coords[1]
 
         # this is the only time where we convert manually into WebMerc
         # Convert to map projection (e.g. mercator co-ords EPSG:900913)
