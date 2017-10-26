@@ -36,7 +36,7 @@ class GoogleProjection:
 
         # TODO
         c:int = 256
-        for d in range(0, levels): # type: int
+        for d in range(levels + 1): # type: int
             e = c / 2
             self.Bc.append(c / 360.0)
             self.Cc.append(c / (2 * pi))
@@ -271,21 +271,21 @@ def coord_range (mn, mx, zoom):
                    if coord >= 0 and coord < 2**zoom )
 
 
-def bbox (value):
-    data= value.split (',')
-    for index, deg in enumerate (data):
+def bbox(value):
+    data = value.split (',')
+    for index, deg in enumerate(data):
         try:
-            deg= float (deg)
+            deg = float(deg)
         except ValueError:
             # let's try with x:y[:z]
-            d= deg.split (':')
-            if len (d)==2:
-                d.append ('0')
+            d = deg.split(':')
+            if len(d) == 2:
+                d.append('0')
 
-            deg, mn, sec= [ int (x) for x in d ]
-            deg= deg + 1/60.0*mn + 1/3600.0*sec
+            deg, mn, sec = [ int(x) for x in d ]
+            deg = deg + 1/60.0*mn + 1/3600.0*sec
 
-        data[index]= deg
+        data[index] = deg
 
     return data
 
@@ -315,7 +315,7 @@ class Tile:
         self.meta_index:Optional[Tuple[int, int]] = None
         self.meta_pixel_coords = None
         if metatile is not None:
-            self.meta_index = (x-metatile.x, y-metatile.y)
+            self.meta_index = (x - metatile.x, y - metatile.y)
             self.meta_pixel_coords = ()
             self.tile_size = metatile.tile_size
         else:

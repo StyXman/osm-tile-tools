@@ -104,7 +104,7 @@ class RenderStack:
 
     def size(self) -> int:
         # debug("%s, %s, %s", self.first, self.ready, self.to_validate)
-        # HACK: int(bool) \belongs (0, 1)
+        # HACK: int(bool) ∈ (0, 1)
         ans:int = int(self.first is not None) + len(self.ready)
         # debug(ans)
         return ans
