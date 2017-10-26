@@ -673,14 +673,18 @@ def parse_args():
     parser = ArgumentParser()
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-b', '--bbox',          dest='bbox',      default=[-180, -85, 180, 85])
+    group.add_argument('-b', '--bbox',          dest='bbox',      default=[-180, -85, 180, 85], metavar='W,S,E,N')
     group.add_argument('-B', '--bbox-name',     dest='bbox_name', default=None)
-    group.add_argument('-T', '--tiles',         dest='tiles',     default= None, nargs='+', metavar='Z,X,Y')
+    group.add_argument('-T', '--tiles',         dest='tiles',     default= None, nargs='+', metavar='METATILE',
+                       help="METATILE can be in the form Z,X,Y or Z/X/Y.")
+    group.add_argument('-c', '--center',        dest='center',    default=None,
+                       help="CENTER can be in form Lat,Lon or Lat/Lon.")
 
     parser.add_argument('-n', '--min-zoom',      dest='min_zoom',  default=0, type=int)
     parser.add_argument('-x', '--max-zoom',      dest='max_zoom',  default=18, type=int)
 
-    parser.add_argument('-i', '--input-file',    dest='mapfile',   default='osm.xml')
+    parser.add_argument('-i', '--input-file',    dest='mapfile',   default='osm.xml',
+                        help="MapnikXML format.")
     parser.add_argument('-f', '--format',        dest='format',    default='tiles',
                         choices=('tiles', 'mbtiles', 'mod_tile', 'test'))
     parser.add_argument('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
