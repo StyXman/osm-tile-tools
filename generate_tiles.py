@@ -310,12 +310,14 @@ class StormBringer:
             mid = time.perf_counter()
 
             for tile in metatile.tiles:
-                child = metatile.child(tile)
-
                 self.store_tile(tile, image)
-                child.is_empty = child.is_empty and tile.is_empty
 
-            end  = time.perf_counter()
+                child = metatile.child(tile)
+                # PixelTile does not have
+                if child is not None:
+                    child.is_empty = child.is_empty and tile.is_empty
+
+            end = time.perf_counter()
 
             for child in metatile.children():
                 # don't render child if: empty; or single tile mode; or too deep
@@ -794,6 +796,23 @@ def parse_args():
                 metatiles.append(metatile)
 
             opts.tiles = metatiles
+
+    if opts.center is not None:
+        opts.tile_size = 1024
+        # input is Lat,Lon but tileproj works with Lon,Lat
+        lat, lon = opts.center.split('/')
+        opts.center = (float(lon), float(lat))
+        debug(opts.center)
+
+        metatiles = []
+
+        for z in range(opts.min_zoom, opts.max_zoom + 1):
+            # TODO: maybe move this conversion to PixelTile
+            x, y = map_utils.tileproj.fromLLtoPixel(opts.center, z)
+            tile = map_utils.PixelTile(z, x, y, 1024)
+            metatiles.append(tile)
+
+        opts.tiles = metatiles
 
     # semantic opts
     opts.single_tiles = opts.tiles is not None

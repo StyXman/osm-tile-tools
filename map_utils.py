@@ -349,6 +349,64 @@ class Tile:
 tileproj = GoogleProjection(40)
 
 
+class PixelTile:
+    """It's a (meta) tile with arbitrary pixel bounds."""
+    def __init__(self, z, center_x, center_y, size):
+        self.z = z
+        self.x = center_x
+        self.y = center_y
+
+        self.is_empty = False
+        self.render = True
+
+        half_size = size // 2
+        # (x, y)
+        self.pixel_pos = (center_x - half_size, center_y - half_size)
+        # debug(self.pixel_pos)
+        # (w, h)
+        self.image_size = (size, size)
+        # debug(self.image_size)
+
+        self.tiles = [ self ]
+
+        # ((x0, y0), (x1, y1))
+        self.corners = ( self.pixel_pos,
+                         (self.pixel_pos[0] + self.image_size[0],
+                          self.pixel_pos[1] + self.image_size[1]) )
+
+        # ((lon0, lat0), (lon1, lat1))
+        self.coords = ( tileproj.fromPixelToLL(self.corners[0], self.z),
+                        tileproj.fromPixelToLL(self.corners[1], self.z) )
+
+        polygon_points = [ (self.coords[i][0], self.coords[j][1])
+                           for i, j in ((0, 0), (1, 0), (1, 1), (0, 1), (0, 0)) ]
+        coords_wkt = ", ".join([ "%s %s" % point for point in polygon_points ])
+        polygon_wkt = 'POLYGON ((%s))' % coords_wkt
+
+        self.polygon = wkt.loads(polygon_wkt)
+
+        # times
+        self.render_time = None
+        self.serializing_time = None
+        self.deserializing_time = 0
+        self.saving_time = 0
+
+        # Tile emulation
+        self.meta_index = (0, 0)
+
+
+    def __repr__(self) -> str:
+        return "PixelTile(%d,%d,%d)" % (self.z, self.x, self.y)
+
+
+    def child(self, tile:Tile):
+        return None
+
+
+    def children(self):
+        return []
+
+
 # TODO: MetaTile factory
 
 # Children = List[MetaTile]
