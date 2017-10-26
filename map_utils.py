@@ -467,7 +467,7 @@ class MetaTile:
 
 
     def __repr__(self) -> str:
-        return "MetaTile(%d, %d, %d)" % (self.z, self.x, self.y)
+        return "MetaTile(%d,%d,%d)" % (self.z, self.x, self.y)
 
 
     # def children(self) -> Children:
