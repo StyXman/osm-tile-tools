@@ -679,7 +679,8 @@ def parse_args():
     group.add_argument('-T', '--tiles',         dest='tiles',     default= None, nargs='+', metavar='METATILE',
                        help="METATILE can be in the form Z,X,Y or Z/X/Y.")
     group.add_argument('-c', '--coords',        dest='coords',    default=None,
-                       help="COORDS can be in form Lat,Lon or Lat/Lon.")
+                       help="COORDS can be in form 'Lat,Lon', ´Lat/Lon'.")
+    group.add_argument('-L', '--longlat',        dest='longlat',    default=None, nargs=2, metavar=('LONG', 'LAT'))
 
     parser.add_argument('-n', '--min-zoom',      dest='min_zoom',  default=0, type=int)
     parser.add_argument('-x', '--max-zoom',      dest='max_zoom',  default=18, type=int)
@@ -797,11 +798,18 @@ def parse_args():
 
             opts.tiles = metatiles
 
-    if opts.coords is not None:
+    if opts.coords is not None or opts.longlat is not None:
         opts.tile_size = 1024
-        # input is Lat,Lon but tileproj works with Lon,Lat
-        lat, lon = opts.coords.split('/')
-        opts.coords = (float(lon), float(lat))
+
+        if opts.coords is not None:
+            # input is Lat,Lon but tileproj works with Lon,Lat
+            lat, long = opts.coords.split('/')
+            opts.coords = (float(long), float(lat))
+        elif opts.longlat is not None:
+            # input is Lon,Lat already
+            long, lat = opts.longlat
+            opts.coords = (float(long), float(lat))
+
         debug(opts.coords)
 
         metatiles = []
