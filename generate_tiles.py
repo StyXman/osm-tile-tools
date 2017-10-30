@@ -678,8 +678,8 @@ def parse_args():
     group.add_argument('-B', '--bbox-name',     dest='bbox_name', default=None)
     group.add_argument('-T', '--tiles',         dest='tiles',     default= None, nargs='+', metavar='METATILE',
                        help="METATILE can be in the form Z,X,Y or Z/X/Y.")
-    group.add_argument('-c', '--center',        dest='center',    default=None,
-                       help="CENTER can be in form Lat,Lon or Lat/Lon.")
+    group.add_argument('-c', '--coords',        dest='coords',    default=None,
+                       help="COORDS can be in form Lat,Lon or Lat/Lon.")
 
     parser.add_argument('-n', '--min-zoom',      dest='min_zoom',  default=0, type=int)
     parser.add_argument('-x', '--max-zoom',      dest='max_zoom',  default=18, type=int)
@@ -797,18 +797,18 @@ def parse_args():
 
             opts.tiles = metatiles
 
-    if opts.center is not None:
+    if opts.coords is not None:
         opts.tile_size = 1024
         # input is Lat,Lon but tileproj works with Lon,Lat
-        lat, lon = opts.center.split('/')
-        opts.center = (float(lon), float(lat))
-        debug(opts.center)
+        lat, lon = opts.coords.split('/')
+        opts.coords = (float(lon), float(lat))
+        debug(opts.coords)
 
         metatiles = []
 
         for z in range(opts.min_zoom, opts.max_zoom + 1):
             # TODO: maybe move this conversion to PixelTile
-            x, y = map_utils.tileproj.fromLLtoPixel(opts.center, z)
+            x, y = map_utils.tileproj.fromLLtoPixel(opts.coords, z)
             tile = map_utils.PixelTile(z, x, y, 1024)
             metatiles.append(tile)
 
