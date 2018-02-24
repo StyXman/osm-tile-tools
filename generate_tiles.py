@@ -212,7 +212,7 @@ class RenderThread:
         self.m  = mapnik.Map(self.image_size, self.image_size)
         # Load style XML
         if not self.opts.dry_run:
-            mapnik.load_map(self.m, self.opts.mapfile, True)
+            mapnik.load_map(self.m, self.opts.mapfile, self.opts.strict)
 
         end = time.perf_counter()
         info('[%s] Map loading took %.6fs', self.pid, end - start)
@@ -713,6 +713,9 @@ def parse_args():
     parser.add_argument('-d', '--debug',         dest='debug',     default=False, action='store_true')
     parser.add_argument('-l', '--log-file',      dest='log_file',  default=None)
     parser.add_argument(      '--dry-run',       dest='dry_run',   default=False, action='store_true')
+
+    parser.add_argument(      '--strict',        dest='strict',    default=False, action='store_true')
+
     # TODO: buffer size (256?)
     opts = parser.parse_args()
 
