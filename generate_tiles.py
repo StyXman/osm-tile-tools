@@ -756,9 +756,6 @@ def parse_args():
         opts.skip_newer = ( datetime.datetime.now() -
                             datetime.timedelta(days=opts.skip_newer) )
 
-    # so we find any relative resources
-    opts.mapfile = os.path.basename(opts.mapfile)
-
     # pick bbox from bboxes.ini
     if opts.bbox_name is not None:
         a = map_utils.Atlas([ opts.bbox_name ])
