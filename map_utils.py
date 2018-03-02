@@ -19,8 +19,10 @@ from logging import debug
 from typing import List, Tuple, Dict, Optional, Any
 
 
-DEG_TO_RAD:float = pi / 180
-RAD_TO_DEG:float = 180 / pi
+# DEG_TO_RAD:float = pi / 180
+# RAD_TO_DEG:float = 180 / pi
+DEG_TO_RAD = pi / 180
+RAD_TO_DEG = 180 / pi
 
 def minmax(a:float, b:float, c:float) -> float:
     a = max(a,b)
@@ -29,13 +31,18 @@ def minmax(a:float, b:float, c:float) -> float:
 
 class GoogleProjection:
     def __init__(self, levels:int=18) -> None:
-        self.Bc:List[float] = []
-        self.Cc:List[float] = []
-        self.zc:List[Tuple[float, float]] = []
-        self.Ac:List[float] = []
+        # self.Bc:List[float] = []
+        # self.Cc:List[float] = []
+        # self.zc:List[Tuple[float, float]] = []
+        # self.Ac:List[float] = []
+        self.Bc = []
+        self.Cc = []
+        self.zc = []
+        self.Ac = []
 
         # TODO
-        c:int = 256
+        # c:int = 256
+        c = 256
         for d in range(levels + 1): # type: int
             e = c / 2
             self.Bc.append(c / 360.0)
@@ -312,7 +319,8 @@ class Tile:
         self.x = x
         self.y = y
 
-        self.meta_index:Optional[Tuple[int, int]] = None
+        # self.meta_index:Optional[Tuple[int, int]] = None
+        self.meta_index = None
         self.meta_pixel_coords = None
         if metatile is not None:
             self.meta_index = (x - metatile.x, y - metatile.y)
@@ -324,7 +332,8 @@ class Tile:
 
         self.pixel_pos = (self.x * self.tile_size, self.y * self.tile_size)
         self.image_size = (self.tile_size, self.tile_size)
-        self.data:Optional[bytes] = None
+        # self.data:Optional[bytes] = None
+        self.data = None
         self._is_empty = None  # Optional[bool]
 
 

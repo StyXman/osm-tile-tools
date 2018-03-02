@@ -72,8 +72,10 @@ class RenderStack:
     def __init__(self, max_zoom:int) -> None:
         # I don't need order here, it's (probably) better if I validate tiles
         # as soon as possible
-        self.first:Optional[map_utils.MetaTile] = None
-        self.ready:List[map_utils.Tile] = []
+        # self.first:Optional[map_utils.MetaTile] = None
+        # self.ready:List[map_utils.Tile] = []
+        self.first = None
+        self.ready = []
         self.max_zoom = max_zoom
 
 
@@ -92,9 +94,11 @@ class RenderStack:
     def confirm(self) -> None:
         """Mark the top of the stack as sent to render, factually pop()'ing it."""
         if self.first is not None:
-            metatile:map_utils.MetaTile = self.first
+            # metatile:map_utils.MetaTile = self.first
+            metatile = self.first
 
-        t:Optional[map_utils.Tile] = None
+        # t:Optional[map_utils.Tile] = None
+        t = None
         if len(self.ready) > 0:
             t = self.ready.pop(0)
 
@@ -105,7 +109,8 @@ class RenderStack:
     def size(self) -> int:
         # debug("%s, %s, %s", self.first, self.ready, self.to_validate)
         # HACK: int(bool) ∈ (0, 1)
-        ans:int = int(self.first is not None) + len(self.ready)
+        # ans:int = int(self.first is not None) + len(self.ready)
+        ans = int(self.first is not None) + len(self.ready)
         # debug(ans)
         return ans
 
@@ -117,8 +122,10 @@ class RenderThread:
         self.input = input
         self.output = output
 
-        self.metatile_size:int = opts.metatile_size
-        self.image_size:int = self.opts.tile_size * self.metatile_size
+        # self.metatile_size:int = opts.metatile_size
+        # self.image_size:int = self.opts.tile_size * self.metatile_size
+        self.metatile_size = opts.metatile_size
+        self.image_size = self.opts.tile_size * self.metatile_size
 
         if self.opts.parallel == 'single':
             # RenderThread.loop() is not called in single mode
@@ -244,7 +251,8 @@ class RenderThread:
     def single_step(self):
         # Fetch a tile from the queue and render it
         debug("[%s] get..", self.pid)
-        metatile:Optional[map_utils.MetaTile] = self.input.get()
+        # metatile:Optional[map_utils.MetaTile] = self.input.get()
+        metatile = self.input.get()
         debug("[%s] got! %r", self.pid, metatile)
         if metatile is None:
             # self.q.task_done()
@@ -256,7 +264,8 @@ class RenderThread:
         return bail_out
 
 
-backends:Dict[str,Any] = dict(
+# backends:Dict[str,Any] = dict(
+backends = dict(
     tiles=   map_utils.DiskBackend,
     mbtiles= map_utils.MBTilesBackend,
     mod_tile=map_utils.ModTileBackend,
@@ -492,7 +501,7 @@ class Master:
 
     def should_render(self, metatile):
         # TODO: move all these checks to another thread/process.
-        skip:bool
+        # skip:bool
         if metatile in self.opts.bbox:
             if self.opts.skip_existing or self.opts.skip_newer is not None:
                 debug('skip test existing:%s, newer:%s', self.opts.skip_existing,
@@ -835,7 +844,7 @@ if __name__  ==  "__main__":
     master = Master(opts)
 
     # fixes for locally installed mapnik
-    # mapnik.register_fonts ('/usr/share/fonts/')
-    # mapnik.register_plugins ('/home/mdione/local/lib/mapnik/input/')
+    mapnik.register_fonts ('/usr/share/fonts/')
+    mapnik.register_plugins ('/home/mdione/local/lib/mapnik/input/')
 
     master.render_tiles()
