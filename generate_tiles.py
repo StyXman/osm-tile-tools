@@ -465,15 +465,32 @@ class Master:
 
         initial_metatiles = []
         if not self.opts.single_tiles:
-            debug('rendering bbox %s:%s', self.opts.bbox_name, self.opts.bbox)
-            for x in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
-                for y in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
-                    metatile = map_utils.MetaTile(self.opts.min_zoom, x, y,
-                                                  self.opts.metatile_size,
-                                                  self.opts.tile_size)
+            # attributes used a lot, so hold them in local vars
+            bbox = self.opts.bbox
+            tile_size = self.opts.tile_size
+            metatile_size = self.opts.metatile_size
+            metatile_pixel_size = metatile_size * tile_size
+            min_zoom = self.opts.min_zoom
 
-                    if metatile in self.opts.bbox:
-                        initial_metatiles.append(metatile)
+            debug('rendering bbox %s: %s', self.opts.bbox_name, bbox)
+            # debug(bbox.lower_left)
+            # debug(bbox.upper_right)
+            w, s = map_utils.tileproj.fromLLtoPixel(bbox.lower_left, min_zoom)
+            e, n = map_utils.tileproj.fromLLtoPixel(bbox.upper_right, min_zoom)
+            # debug("%d, %d, %d, %d", w, s, e, n)
+            # debug("%d", 2**min_zoom)
+
+            w =  w // metatile_pixel_size      * metatile_size
+            s = (s // metatile_pixel_size + 1) * metatile_size
+            e = (e // metatile_pixel_size + 1) * metatile_size
+            n =  n // metatile_pixel_size      * metatile_size
+            # debug("%d, %d, %d, %d", w, s, e, n)
+
+            for x in range(w, e, metatile_size):
+                for y in range(n, s, metatile_size):
+                    metatile = map_utils.MetaTile(min_zoom, x, y, metatile_size,
+                                                  tile_size)
+                    initial_metatiles.append(metatile)
         else:
             # TODO: if possible, order them in depth first/proximity? fashion.
             debug('rendering individual tiles')
