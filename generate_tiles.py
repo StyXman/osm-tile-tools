@@ -17,12 +17,7 @@ from signal import signal, SIGINT, SIG_IGN
 
 
 import map_utils
-# from map_utils import pyramid_count
 
-try:
-    import mapnik2 as mapnik
-except:
-    import mapnik
 
 import logging
 from logging import debug, info, exception
@@ -840,6 +835,18 @@ def parse_args():
 
 if __name__  ==  "__main__":
     opts = parse_args()
+
+    # this is
+    try:
+        import mapnik2 as mapnik
+    except ImportError as e1:
+        try:
+            import mapnik
+        except ImportError as e2:
+            print("Could not import mapnik for one of these reasons:", file=sys.stdout)
+            print(e1, file=sys.stdout)
+            print(e2, file=sys.stdout)
+            sys.exit(1)
 
     master = Master(opts)
 
