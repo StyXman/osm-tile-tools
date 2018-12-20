@@ -7,10 +7,11 @@ import map_utils
 
 sector= sys.argv[1]
 
-a= map_utils.Atlas ([sector])
-m= a.maps[sector]
-be= map_utils.MBTilesBackend ("%s.mbt" % sector, m.bbox)
+a = map_utils.Atlas([sector])
+m = a.maps[sector]
+be = map_utils.MBTilesBackend(sector, m.bbox)
 
+print('INSERTING TILES')
 for z in range (m.max_z+1):
     for x in m.iterate_x (z):
         for y in m.iterate_y (z):
@@ -21,6 +22,6 @@ for z in range (m.max_z+1):
             except FileNotFoundError:
                 pass
             else:
-                be.store (z, x, y, data)
+                be.store_raw(z, x, y, data)
 
         be.commit ()
