@@ -761,12 +761,12 @@ def parse_args():
         opts.skip_newer = ( datetime.datetime.now() -
                             datetime.timedelta(days=opts.skip_newer) )
 
-    # pick bbox from bboxes.ini
     if opts.bbox_name is not None:
-        a = map_utils.Atlas([ opts.bbox_name ])
-        opts.bbox = map_utils.BBox(a.maps[opts.bbox_name].bbox, opts.max_zoom)
+        # pick bbox from bboxes.ini
+        atlas = map_utils.Atlas([ opts.bbox_name ])
+        opts.bbox = map_utils.BBox(atlas.maps[opts.bbox_name].bbox, opts.max_zoom)
     else:
-        opts.bbox = map_utils.BBox(opts.bbox, opts.max_zoom)
+        opts.bbox = map_utils.BBox([ float(s) for s in opts.bbox.split(',') ], opts.max_zoom)
 
     if opts.format in ('mod_tile', 'test'):
         opts.tile_size = 8 * 256
