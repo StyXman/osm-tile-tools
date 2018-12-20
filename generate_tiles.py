@@ -458,21 +458,46 @@ class Master:
             self.store_thread = StormBringer(self.opts, self.backend, self.store_queue,
                                              self.info)
 
+
         if not os.path.isdir(self.opts.tile_dir):
             debug("creating dir %s", self.opts.tile_dir)
             os.makedirs(self.opts.tile_dir, exist_ok=True)
 
         initial_metatiles = []
         if not self.opts.single_tiles:
-            debug('rendering bbox %s:%s', self.opts.bbox_name, self.opts.bbox)
-            for x in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
-                for y in range(0, 2**self.opts.min_zoom, self.opts.metatile_size):
-                    metatile = map_utils.MetaTile(self.opts.min_zoom, x, y,
-                                                  self.opts.metatile_size,
-                                                  self.opts.tile_size)
+            # attributes used a lot, so hold them in local vars
+            bbox = self.opts.bbox
+            tile_size = self.opts.tile_size
+            metatile_size = self.opts.metatile_size
+            metatile_pixel_size = metatile_size * tile_size
+            min_zoom = self.opts.min_zoom
 
-                    if metatile in self.opts.bbox:
-                        initial_metatiles.append(metatile)
+            debug('rendering bbox %s: %s', self.opts.bbox_name, bbox)
+            # debug(bbox.lower_left)
+            # debug(bbox.upper_right)
+            w, s = map_utils.tileproj.lon_lat2pixel(bbox.lower_left, min_zoom)
+            e, n = map_utils.tileproj.lon_lat2pixel(bbox.upper_right, min_zoom)
+            # debug("%r, %r, %r, %r", w, s, e, n)
+            # debug("%d", 2**min_zoom)
+
+            w =  w // metatile_pixel_size      * metatile_size
+            s = (s // metatile_pixel_size + 1) * metatile_size
+            e = (e // metatile_pixel_size + 1) * metatile_size
+            n =  n // metatile_pixel_size      * metatile_size
+            # debug("%r, %r, %r, %r", w, s, e, n)
+            # debug("%sx%s", list(range(w, e, metatile_size)), list(range(n, s, metatile_size)))
+
+            count = 0
+            info('Creating initial metatiles...')
+            for x in range(w, e, metatile_size):
+                for y in range(n, s, metatile_size):
+                    metatile = map_utils.MetaTile(min_zoom, x, y, metatile_size,
+                                                  tile_size)
+                    initial_metatiles.append(metatile)
+                    count += 1
+                    if count % 1000 == 0:
+                        info('%d...' % count)
+            info("%d initial metatiles created." % count)
         else:
             # TODO: if possible, order them in depth first/proximity? fashion.
             debug('rendering individual tiles')
