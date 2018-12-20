@@ -15,6 +15,10 @@ from os import getpid
 import math
 from signal import signal, SIGINT, SIG_IGN
 
+try:
+    import mapnik2 as mapnik
+except:
+    import mapnik
 
 import map_utils
 
@@ -836,18 +840,6 @@ def parse_args():
 
 if __name__  ==  "__main__":
     opts = parse_args()
-
-    # this is
-    try:
-        import mapnik2 as mapnik
-    except ImportError as e1:
-        try:
-            import mapnik
-        except ImportError as e2:
-            print("Could not import mapnik for one of these reasons:", file=sys.stdout)
-            print(e1, file=sys.stdout)
-            print(e2, file=sys.stdout)
-            sys.exit(1)
 
     master = Master(opts)
 
