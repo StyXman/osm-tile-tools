@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from math import pi,cos,sin,log,exp,atan
+from math import pi, cos, sin, log, exp, atan
 from configparser import ConfigParser
 import os.path
 from os.path import dirname, basename, join as path_join
@@ -220,7 +220,8 @@ class MBTilesBackend:
             FROM
                 map JOIN images
                     ON images.tile_id = map.tile_id;''')
-        self.session.commit ()
+
+        self.session.commit()
 
         #version|1.0.0
         #center|-18.7,65,7
@@ -228,24 +229,23 @@ class MBTilesBackend:
         #description|Inspired by the 1975 map of Iceland by the Danish Geodetisk Institut.
 
         # generate metadata
-        metadata= dict(
-            name='Elevation',
-            type='baselayer',
-            version='2.39.0-04f6d1b',  # I wonder why git uses only 7 chars by default
-            description="StyXman's simple map",
-            format='png',
-            bounds=','.join ([ str (i) for i in bounds ]),
-            attribution='Map data © OpenStreetMap CC-BY-SA; NASA SRTM',
+        metadata = dict(
+            name ='Elevation',
+            type ='baselayer',
+            version ='2.39.0-04f6d1b',  # I wonder why git uses only 7 chars by default
+            description ="StyXman's simple map",
+            format ='png',
+            bounds =','.join([ str(i) for i in bounds ]),
+            attribution ='Map data © OpenStreetMap CC-BY-SA; NASA SRTM',
             )
 
-        for k, v in metadata.items ():
+        for k, v in metadata.items():
             try:
-                cursor.execute ('''INSERT INTO metadata (name, value) VALUES (?, ?);''',
-                                (k, v))
+                cursor.execute('''INSERT INTO metadata(name, value) VALUES (?, ?);''',
+                               (k, v))
             except sqlite3.IntegrityError:
-                cursor.execute ('''UPDATE metadata SET value = ? WHERE name = ?;''',
-                                (v, k))
-        self.session.commit ()
+                cursor.execute('''UPDATE metadata SET value = ? WHERE name = ?;''',
+                               (v, k))
 
         # info for OsmAnd
         cursor.execute('''INSERT INTO info(url, tilenumbering, minzoom, maxzoom) VALUES (?, ?, ?, ?);''',
