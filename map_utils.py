@@ -276,23 +276,27 @@ class MBTilesBackend:
 
 
     def store (self, tile):
+        self.store_raw(tile.z, tile.x, tile.y, tile.data)
+
+
+    def store_raw (self, z, x, y, image):
         # create one of these each time because there's no way to reset them
         # and barely takes any time
         hasher = hashlib.md5 ()
         # md5 gives 340282366920938463463374607431768211456 possible values
         # and is *fast*
-        hasher.update (tile.data)
+        hasher.update (image)
         # thanks Pablo Carranza for pointing out possible collisions
         # further deduplicate with file length
-        hasher.update (str (len (data)).encode ('ascii'))
-        img_id= hasher.hexdigest ()
+        hasher.update (str (len (image)).encode ('ascii'))
+        img_id = hasher.hexdigest ()
 
         debug((tile, img_id))
 
         cursor= self.session.cursor ()
         try:
             cursor.execute ('''INSERT INTO images (tile_id, tile_data) VALUES (?, ?);''',
-                            (img_id, data))
+                            (img_id, image))
         except sqlite3.IntegrityError:
             # it already exists and there's no reason to try to update anything
             pass
@@ -300,14 +304,14 @@ class MBTilesBackend:
         try:
             cursor.execute ('''INSERT INTO map (zoom_level, tile_column, tile_row, tile_id)
                                 VALUES (?, ?, ?, ?);''',
-                            (tile.z, tile.x, tile.y, img_id))
+                            (z, x, y, img_id))
         except sqlite3.IntegrityError:
             cursor.execute ('''UPDATE map
                                 SET tile_id = ?
                                 WHERE zoom_level = ?
                                   AND tile_column = ?
                                   AND tile_row = ?;''',
-                            (img_id, tile.z, tile.x, tile.y))
+                            (img_id, z, x, y))
         cursor.close ()
 
 
