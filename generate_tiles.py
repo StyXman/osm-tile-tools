@@ -678,7 +678,7 @@ def parse_args():
     parser = ArgumentParser()
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-b', '--bbox',          dest='bbox',      default=[-180, -85, 180, 85], metavar='W,S,E,N')
+    group.add_argument('-b', '--bbox',          dest='bbox',      default='-180,-85,180,85', metavar='W,S,E,N')
     group.add_argument('-B', '--bbox-name',     dest='bbox_name', default=None)
     group.add_argument('-T', '--tiles',         dest='tiles',     default= None, nargs='+', metavar='METATILE',
                        help="METATILE can be in the form Z,X,Y or Z/X/Y.")
