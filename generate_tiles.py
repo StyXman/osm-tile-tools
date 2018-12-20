@@ -714,7 +714,7 @@ def parse_args():
     parser.add_argument('-E', '--empty',         dest='empty',     default='skip',
                         choices=('skip', 'link', 'write'))
 
-    parser.add_argument('-d', '--debug',         dest='debug',     default=False, action='store_true')
+    parser.add_argument(      '--debug',         dest='debug',     default=False, action='store_true')
     parser.add_argument('-l', '--log-file',      dest='log_file',  default=None)
     parser.add_argument(      '--dry-run',       dest='dry_run',   default=False, action='store_true')
 
