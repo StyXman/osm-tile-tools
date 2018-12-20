@@ -155,34 +155,68 @@ class TestBackend(DiskBackend):
 # but internally we fill them separately
 
 class MBTilesBackend:
-    def __init__ (self, base, bounds, minzoom=0, maxzoom=18, center=None):
-        self.session= sqlite3.connect ("%s.mbtiles" % base)
-        self.session.set_trace_callback (print)
+    def __init__(self, base, bounds, min_zoom=0, max_zoom=18, center=None):
+        # .sqlitedb 'cause I'll use it primarily for OsmAnd
+        self.session = sqlite3.connect("%s.sqlitedb" % base)
+        self.session.set_trace_callback(print)
 
-        cursor= self.session.cursor ()
-        cursor.execute ('''CREATE TABLE IF NOT EXISTS metadata (
-            name VARCHAR NOT NULL,
-            value VARCHAR,
+        cursor= self.session.cursor()
+        # mbtiles
+        cursor.execute('''CREATE TABLE IF NOT EXISTS metadata(
+            name    VARCHAR NOT NULL,
+            value   VARCHAR,
             PRIMARY KEY (name)
         );''')
-        cursor.execute ('''CREATE TABLE IF NOT EXISTS map (
-            zoom_level INTEGER NOT NULL,
-            tile_column INTEGER NOT NULL,
-            tile_row INTEGER NOT NULL,
-            tile_id VARCHAR(32),
+
+        # OsmAnd
+        # see https://github.com/osmandapp/Osmand/blob/master/OsmAnd/src/net/osmand/plus/SQLiteTileSource.java#L179
+        # and https://osmand.net/help-online/technical-articles#OsmAnd_SQLite_Spec
+        cursor.execute('''CREATE TABLE IF NOT EXISTS info(
+            -- all these are optional
+            -- rule           VARCHAR,
+            -- referer        VARCHAR,
+            -- timecolumn     VARCHAR,
+            -- expireminutes  INTEGER,
+            -- ellipsoid      INTEGER,
+            url            VARCHAR,
+            -- this one is important so we don't get constrained by BigPlanet,
+            -- which has max_z == 17
+            tilenumbering  VARCHAR,
+            minzoom        INTEGER NOT NULL,
+            maxzoom        INTEGER NOT NULL
+        );''')
+
+        # common
+        cursor.execute('''CREATE TABLE IF NOT EXISTS map(
+            zoom_level   INTEGER NOT NULL,
+            tile_column  INTEGER NOT NULL,
+            tile_row     INTEGER NOT NULL,
+            tile_id      VARCHAR(32),
             CONSTRAINT map_index PRIMARY KEY (zoom_level, tile_column, tile_row)
         );''')
-        cursor.execute ('''CREATE TABLE IF NOT EXISTS images (
-            tile_id VARCHAR(32) NOT NULL,
-            tile_data BLOB,
+
+        cursor.execute('''CREATE TABLE IF NOT EXISTS images(
+            tile_id    VARCHAR(32) NOT NULL,
+            tile_data  BLOB,
             PRIMARY KEY (tile_id)
         );''')
-        cursor.execute ('''CREATE VIEW IF NOT EXISTS tiles AS
+
+        # see https://gist.github.com/rzymek/034ef469fa01fdd592a6aadde76e95fa
+        # just ignore the info about inverted y/tile_row
+        cursor.execute('''CREATE VIEW IF NOT EXISTS tiles AS
             SELECT
-                map.zoom_level AS zoom_level,
-                map.tile_column AS tile_column,
-                map.tile_row AS tile_row,
-                images.tile_data AS tile_data
+                -- mbtiles
+                map.zoom_level    AS zoom_level,
+                map.tile_column   AS tile_column,
+                map.tile_row      AS tile_row,
+                images.tile_data  AS tile_data,
+
+                -- OsmAnd
+                map.zoom_level    AS z,
+                map.tile_column   AS x,
+                map.tile_row      AS y,
+                0                 AS s,  -- TODO: check where does this s come from
+                images.tile_data  AS image
             FROM
                 map JOIN images
                     ON images.tile_id = map.tile_id;''')
@@ -213,7 +247,19 @@ class MBTilesBackend:
                                 (v, k))
         self.session.commit ()
 
-        cursor.close ()
+        # info for OsmAnd
+        cursor.execute('''INSERT INTO info(url, tilenumbering, minzoom, maxzoom) VALUES (?, ?, ?, ?);''',
+                       ("http://dionecanali.hd.free.fr/~mdione/Elevation/$1/$2/$3.png", "normal",
+                        min_zoom, max_zoom))
+
+        # TODO: replace by (1 << 8) -1 ?
+        for z in range(max_zoom + 1):
+            cursor.execute('''INSERT INTO max_y(z, y) VALUES (?, ?);''', (z, 2**z - 1))
+
+        self.session.commit()
+        self.session.set_trace_callback(None)
+
+        cursor.close()
 
 
     def store (self, tile):
