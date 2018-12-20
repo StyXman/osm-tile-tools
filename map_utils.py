@@ -24,47 +24,60 @@ from typing import List, Tuple, Dict, Optional, Any
 DEG_TO_RAD = pi / 180
 RAD_TO_DEG = 180 / pi
 
-def minmax(a:float, b:float, c:float) -> float:
-    a = max(a,b)
-    a = min(a,c)
-    return a
+def constrain(lower_limit:float, x:float, upper_limit:float) -> float:
+    """Constrains x to the [lower_limit, upper_limit] segment."""
+    ans = max(lower_limit, x)
+    ans = min(ans, upper_limit)
+
+    return ans
 
 class GoogleProjection:
+    """This class converts from LonLat to pixel and vice versa. For that, it pre
+    calculates some values for each zoom level, which are store in 3 arrays.
+
+    For information about the formulas in lon_lat2pixel() and pixel2lon_lat(), see
+    https://en.wikipedia.org/wiki/Mercator_projection#Mathematics_of_the_Mercator_projection"""
     def __init__(self, levels:int=18) -> None:
-        # self.Bc:List[float] = []
-        # self.Cc:List[float] = []
-        # self.zc:List[Tuple[float, float]] = []
-        # self.Ac:List[float] = []
-        self.Bc = []
-        self.Cc = []
-        self.zc = []
-        self.Ac = []
+        self.pixels_per_degree:List[float] = []
+        self.pixels_per_radian:List[float] = []  # pixels per radian
+        self.center_pixel:List[Tuple[int, int]] = []  # pixel for (0, 0)
+        # self.world_size:List[int] = []  # world size in pixels
 
-        # TODO
-        # c:int = 256
-        c = 256
+        world_size:int = 256  # size in pixels of the image representing the whole world
         for d in range(levels + 1): # type: int
-            e = c / 2
-            self.Bc.append(c / 360.0)
-            self.Cc.append(c / (2 * pi))
-            self.zc.append((e, e))
-            self.Ac.append(c)
-            c *= 2
+            center:int = world_size // 2
+            self.pixels_per_degree.append(world_size / 360.0)
+            self.pixels_per_radian.append(world_size / (2 * pi))
+            self.center_pixel.append((center, center))
+            # self.world_size.append(c)
+            # the world doubels in size on each zoom level
+            world_size *= 2
 
-    # it's LonLat! (x, y)
-    def fromLLtoPixel(self, ll, zoom):
-        d = self.zc[zoom]
-        e = round(d[0] + ll[0] * self.Bc[zoom])
-        f = minmax(sin(DEG_TO_RAD * ll[1]), -0.9999, 0.9999)
-        g = round(d[1] + 0.5 * log((1 + f) / (1 - f)) * -self.Cc[zoom])
-        return (e, g)
+    # it's LonLat! (lon, lat)
+    def lon_lat2pixel(self, lon_lat:Tuple[float, float], zoom:int) -> Tuple[int, int]:
+        lon, lat = lon_lat
+        center_x, center_y = self.center_pixel[zoom]
 
-    def fromPixelToLL(self, px, zoom):
-        e = self.zc[zoom]
-        f = (px[0] - e[0]) / self.Bc[zoom]
-        g = (px[1] - e[1]) / -self.Cc[zoom]
-        h = RAD_TO_DEG * (2 * atan(exp(g)) - 0.5 * pi)
-        return (f, h)
+        # x is easy because it's linear to the longitude
+        x = center_x + round(lon * self.pixels_per_degree[zoom])
+
+        # y is... what?
+        f = constrain(-0.9999, sin(DEG_TO_RAD * lat), 0.9999)
+        y = center_y + round(0.5 * log((1 + f) / (1 - f)) * -self.pixels_per_radian[zoom])
+
+        return (x, y)
+
+    def pixel2lon_lat(self, px:Tuple[int, int], zoom:int) -> Tuple[float,float]:
+        x, y = px
+        center_x, center_y = self.center_pixel[zoom]
+
+        # longitude is linear to x
+        lon = (x - center_x) / self.pixels_per_degree[zoom]
+
+        angle = (y - center_y) / -self.pixels_per_radian[zoom]  # angle in radians
+        lat = RAD_TO_DEG * (2 * atan(exp(angle)) - 0.5 * pi)
+
+        return (lon, lat)
 
 
 class DiskBackend:
@@ -430,8 +443,8 @@ class PixelTile:
                           self.pixel_pos[1] + self.image_size[1]) )
 
         # ((lon0, lat0), (lon1, lat1))
-        self.coords = ( tileproj.fromPixelToLL(self.corners[0], self.z),
-                        tileproj.fromPixelToLL(self.corners[1], self.z) )
+        self.coords = ( tileproj.pixel2lon_lat(self.corners[0], self.z),
+                        tileproj.pixel2lon_lat(self.corners[1], self.z) )
 
         polygon_points = [ (self.coords[i][0], self.coords[j][1])
                            for i, j in ((0, 0), (1, 0), (1, 1), (0, 1), (0, 0)) ]
@@ -497,8 +510,8 @@ class MetaTile:
                           self.pixel_pos[1] + self.image_size[1]) )
 
         # ((lon0, lat0), (lon1, lat1))
-        self.coords = ( tileproj.fromPixelToLL(self.corners[0], self.z),
-                        tileproj.fromPixelToLL(self.corners[1], self.z) )
+        self.coords = ( tileproj.pixel2lon_lat(self.corners[0], self.z),
+                        tileproj.pixel2lon_lat(self.corners[1], self.z) )
 
         polygon_points = [ (self.coords[i][0], self.coords[j][1])
                            for i, j in ((0, 0), (1, 0), (1, 1), (0, 1), (0, 0)) ]
@@ -614,8 +627,8 @@ class Map:
 
         self.levels = []
         for z in range (0, max_z+1):
-            px0 = gprj.fromLLtoPixel(ll0,z)
-            px1 = gprj.fromLLtoPixel(ll1,z)
+            px0 = gprj.lon_lat2pixel(ll0,z)
+            px1 = gprj.lon_lat2pixel(ll1,z)
             # print px0, px1
             self.levels.append (( (int (px0[0]/self.tile_size), int (px0[1]/self.tile_size)),
                                   (int (px1[0]/self.tile_size), int (px1[1]/self.tile_size)) ))
@@ -745,12 +758,12 @@ def run_tests():
         side = 256 * 2**z
         middle = side // 2
 
-        x, y = g.fromLLtoPixel((0, 0), z)
+        x, y = g.lon_lat2pixel((0, 0), z)
 
         assert x == middle
         assert y == middle
 
-        lon, lat = g.fromPixelToLL((x, y), z)
+        lon, lat = g.pixel2lon_lat((x, y), z)
 
         assert lon == 0
         assert lat == 0

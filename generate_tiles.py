@@ -820,7 +820,7 @@ def parse_args():
 
         for z in range(opts.min_zoom, opts.max_zoom + 1):
             # TODO: maybe move this conversion to PixelTile
-            x, y = map_utils.tileproj.fromLLtoPixel(opts.coords, z)
+            x, y = map_utils.tileproj.lon_lat2pixel(opts.coords, z)
             tile = map_utils.PixelTile(z, x, y, 1024)
             metatiles.append(tile)
 
