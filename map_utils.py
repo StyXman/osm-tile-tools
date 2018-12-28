@@ -26,12 +26,14 @@ from typing import List, Tuple, Dict, Optional, Any
 DEG_TO_RAD = pi / 180
 RAD_TO_DEG = 180 / pi
 
+
 def constrain(lower_limit:float, x:float, upper_limit:float) -> float:
     """Constrains x to the [lower_limit, upper_limit] segment."""
     ans = max(lower_limit, x)
     ans = min(ans, upper_limit)
 
     return ans
+
 
 class GoogleProjection:
     """This class converts from LonLat to pixel and vice versa. For that, it pre
@@ -95,7 +97,7 @@ class DiskBackend:
     def store(self, tile):
         tile_uri = self.tile_uri(tile)
         makedirs(os.path.dirname(tile_uri), exist_ok=True)
-        f= open(tile_uri, 'wb+')
+        f = open(tile_uri, 'wb+')
         f.write(tile.data)
         f.close()
 
@@ -317,7 +319,7 @@ class MBTilesBackend:
 
         debug((tile, img_id))
 
-        cursor= self.session.cursor ()
+        cursor = self.session.cursor ()
         try:
             cursor.execute ('''INSERT INTO images (tile_id, tile_data) VALUES (?, ?);''',
                             (img_id, image))
@@ -374,17 +376,18 @@ class MBTilesBackend:
 
     # TODO: newer_than()
 
+
     def close (self):
         self.session.close ()
 
 
-def coord_range (mn, mx, zoom):
-    return ( coord for coord in range (mn, mx+1)
+def coord_range(mn, mx, zoom):
+    return ( coord for coord in range(mn, mx+1)
                    if coord >= 0 and coord < 2**zoom )
 
 
 def bbox(value):
-    data = value.split (',')
+    data = value.split(',')
     for index, deg in enumerate(data):
         try:
             deg = float(deg)
@@ -711,18 +714,18 @@ class Map:
 
 
 class Atlas:
-    def __init__ (self, sectors):
-        self.maps= {}
-        c= ConfigParser ()
-        c.read ('bboxes.ini')
-        self.minZoom= 0
-        self.maxZoom= 0
+    def __init__(self, sectors):
+        self.maps = {}
+        c = ConfigParser()
+        c.read('bboxes.ini')
+        self.minZoom = 0
+        self.maxZoom = 0
 
         for sector in sectors:
-            bb= bbox (c.get ('bboxes', sector))
+            bb = bbox(c.get('bboxes', sector))
             # #4 is the max_z
-            if bb[4]>self.maxZoom:
-                self.maxZoom= int (bb[4])
+            if bb[4] > self.maxZoom:
+                self.maxZoom = int(bb[4])
 
         for sector in sectors:
             bb= bbox (c.get ('bboxes', sector))

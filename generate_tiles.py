@@ -868,6 +868,7 @@ if __name__  ==  "__main__":
 
     master = Master(opts)
 
+
     # fixes for locally installed mapnik
     mapnik.register_fonts ('/usr/share/fonts/')
     mapnik.register_plugins ('/home/mdione/local/lib/mapnik/input/')
