@@ -4,13 +4,15 @@ from math import pi, cos, sin, log, exp, atan
 from configparser import ConfigParser
 import os.path
 from os.path import dirname, basename, join as path_join
-from os import listdir, stat, unlink, mkdir, walk, makedirs
+from os import listdir, unlink, mkdir, walk, makedirs
+import os
 from errno import ENOENT, EEXIST
 from shutil import copy, rmtree
 import datetime
 import errno
 import hashlib
 import sqlite3
+import stat
 
 from shapely.geometry import Polygon
 from shapely import wkt
@@ -183,12 +185,19 @@ class TestBackend(DiskBackend):
 # but internally we fill them separately
 
 class MBTilesBackend:
-    def __init__(self, base, bounds, min_zoom=0, max_zoom=18, center=None):
-        # .sqlitedb 'cause I'll use it primarily for OsmAnd
-        self.session = sqlite3.connect("%s.sqlitedb" % base)
+    # .sqlitedb 'cause I'll use it primarily for OsmAnd
+    def __init__(self, base, bounds, min_zoom=0, max_zoom=18, center=None, ext='sqlitedb'):
+        self.path = "%s.%s" % (base, ext)
+        self.session = sqlite3.connect(self.path)
         self.session.set_trace_callback(print)
 
-        cursor= self.session.cursor()
+        if not stat.S_ISREG(os.stat(self.path).st_mode):
+            # create the db
+            self.init()
+
+
+    def init(self):
+        cursor = self.session.cursor()
         # mbtiles
         cursor.execute('''CREATE TABLE IF NOT EXISTS metadata(
             name    VARCHAR NOT NULL,
