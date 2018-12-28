@@ -103,6 +103,21 @@ class DiskBackend:
         return os.path.isfile(tile_uri)
 
 
+    def fetch(self, tile):
+        tile_uri = self.tile_uri(tile)
+        try:
+            print(tile_uri)
+            f = open(tile_uri, 'br')
+        except OSError as e:
+            print(e)
+            return False
+        else:
+            tile.data = f.read()
+            f.close()
+
+            return True
+
+
     def newer_than(self, tile, date, missing_as_new):
         tile_uri = self.tile_uri(tile)
         try:
@@ -329,6 +344,24 @@ class MBTilesBackend:
                                    AND map.tile_row = ?;''',
                               (z, x, y)).fetchall ()
         return data[0][0]==1
+
+
+    def fetch(self, tile):
+        print(tile)
+        cursor = self.session.cursor()
+        data = cursor.execute('''SELECT tile_data
+                                 FROM tiles
+                                 WHERE tiles.z = ?
+                                   AND tiles.x = ?
+                                   AND tiles.y = ?;''',
+                              (tile.z, tile.x, tile.y)).fetchall()
+
+        if len(data) == 0:
+            return False
+
+        tile.data = data[0][0]
+        return True
+
 
     # TODO: newer_than()
 
