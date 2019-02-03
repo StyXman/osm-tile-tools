@@ -369,14 +369,16 @@ class MBTilesBackend:
     def store_raw (self, z: int, x: int, y: int, image: bytes):
         # create one of these each time because there's no way to reset them
         # and barely takes any time
-        hasher = hashlib.md5 ()
+        hasher = hashlib.md5()
+
         # md5 gives 340282366920938463463374607431768211456 possible values
         # and is *fast*
-        hasher.update (image)
+        hasher.update(image)
+
         # thanks Pablo Carranza for pointing out possible collisions
         # further deduplicate with file length
-        hasher.update (str (len (image)).encode ('ascii'))
-        img_id = hasher.hexdigest ()
+        hasher.update(str(len(image)).encode('ascii'))
+        img_id = hasher.hexdigest()
 
         debug((tile, img_id))
 
