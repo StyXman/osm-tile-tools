@@ -103,8 +103,7 @@ class Tile:
 
         self.pixel_pos = (self.x * self.tile_size, self.y * self.tile_size)
         self.image_size = (self.tile_size, self.tile_size)
-        # self.data:Optional[bytes] = None
-        self.data = None
+        self.data: Optional[bytes] = None
         self._is_empty = None  # Optional[bool]
 
 
@@ -141,7 +140,7 @@ class Tile:
 TileOrTuple = Union[Tile, Tuple[int, int, int]]
 
 class DiskBackend:
-    def __init__(self, base, *more):
+    def __init__(self, base:str, *more):
         self.base_dir = base
 
 
@@ -152,8 +151,9 @@ class DiskBackend:
         return os.path.join(self.base_dir, z, x, y + '.png')
 
 
+    def store(self, tile: Tile):
+        assert tile.data is not None
 
-    def store(self, tile):
         tile_uri = self.tile_uri(tile)
         makedirs(os.path.dirname(tile_uri), exist_ok=True)
         f = open(tile_uri, 'wb+')
@@ -161,12 +161,12 @@ class DiskBackend:
         f.close()
 
 
-    def exists(self, tile):
+    def exists(self, tile: TileOrTuple):
         tile_uri = self.tile_uri(tile)
         return os.path.isfile(tile_uri)
 
 
-    def fetch(self, tile):
+    def fetch(self, tile: Tile):
         tile_uri = self.tile_uri(tile)
         try:
             print(tile_uri)
@@ -181,7 +181,7 @@ class DiskBackend:
             return True
 
 
-    def newer_than(self, tile, date, missing_as_new):
+    def newer_than(self, tile: TileOrTuple, date, missing_as_new):
         tile_uri = self.tile_uri(tile)
         try:
             file_date = datetime.datetime.fromtimestamp(os.stat(tile_uri).st_mtime)
@@ -202,7 +202,7 @@ class DiskBackend:
 
 
 class ModTileBackend(DiskBackend):
-    def tile_uri(self, tile):
+    def tile_uri(self, tile: TileOrTuple):
         # The metatiles are then stored
         # in the following directory structure:
         # /[base_dir]/[TileSetName]/[Z]/[xxxxyyyy]/[xxxxyyyy]/[xxxxyyyy]/[xxxxyyyy]/[xxxxyyyy].png
@@ -214,7 +214,7 @@ class ModTileBackend(DiskBackend):
         # directory for more efficient access patterns.
         z, x, y = tile
 
-        crumbs = []
+        crumbs: List[str] = []
         for crumb_index in range(5):
             x, x_bits = divmod(x, 16)
             y, y_bits = divmod(y, 16)
@@ -360,11 +360,13 @@ class MBTilesBackend:
         cursor.close()
 
 
-    def store (self, tile):
+    def store (self, tile: Tile):
+        assert tile.data is not None
+
         self.store_raw(tile.z, tile.x, tile.y, tile.data)
 
 
-    def store_raw (self, z, x, y, image):
+    def store_raw (self, z: int, x: int, y: int, image: bytes):
         # create one of these each time because there's no way to reset them
         # and barely takes any time
         hasher = hashlib.md5 ()
@@ -405,7 +407,7 @@ class MBTilesBackend:
             self.session.commit ()
 
 
-    def exists (self, z, x, y):
+    def exists (self, tile: TileOrTuple):
         cursor= self.session.cursor ()
         data= cursor.execute('''SELECT count(map.zoom_level)
                                 FROM map
@@ -417,7 +419,7 @@ class MBTilesBackend:
         return data[0][0] == 1
 
 
-    def fetch(self, tile):
+    def fetch(self, tile: Tile):
         print(tile)
         cursor = self.session.cursor()
         data = cursor.execute('''SELECT tile_data
@@ -565,6 +567,8 @@ class MetaTile:
         self.tiles = [ Tile(self.z, self.x + i, self.y + j, self)
                        for i in range(self.size) for j in range(self.size) ]
 
+        self.im: Optional[bytes] = None
+
         # (x, y)
         self.pixel_pos = (self.x * self.tile_size, self.y * self.tile_size)
         # (w, h)
@@ -587,8 +591,8 @@ class MetaTile:
         self.polygon = wkt.loads(polygon_wkt)
 
         # times
-        self.render_time = None
-        self.serializing_time = None
+        self.render_time:Optional[float] = None
+        self.serializing_time:Optional[float] = None
         self.deserializing_time = 0
         self.saving_time = 0
 
