@@ -201,6 +201,10 @@ class DiskBackend:
         pass
 
 
+    def __contains__(self, tile: TileOrTuple):
+        return self.exists(tile)
+
+
 class ModTileBackend(DiskBackend):
     def tile_uri(self, tile: TileOrTuple):
         # The metatiles are then stored
@@ -447,6 +451,10 @@ class MBTilesBackend:
 
     def close (self):
         self.session.close ()
+
+
+    def __contains__(self, tile: TileOrTuple):
+        return self.exists(tile)
 
 
 def coord_range(mn, mx, zoom):
