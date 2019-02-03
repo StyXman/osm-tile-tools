@@ -83,6 +83,48 @@ class GoogleProjection:
 
         return (lon, lat)
 
+class Tile:
+    # def __init__(self, z:int, x:int, y:int, metatile:Optional[MetaTile]=None) -> None:
+    def __init__(self, z:int, x:int, y:int, metatile=None) -> None:
+        self.z = z
+        self.x = x
+        self.y = y
+
+        # self.meta_index:Optional[Tuple[int, int]] = None
+        self.meta_index = None
+        self.meta_pixel_coords = None
+        if metatile is not None:
+            self.meta_index = (x - metatile.x, y - metatile.y)
+            self.meta_pixel_coords = ()
+            self.tile_size = metatile.tile_size
+        else:
+            # TODO: guessed
+            self.tile_size = 256
+
+        self.pixel_pos = (self.x * self.tile_size, self.y * self.tile_size)
+        self.image_size = (self.tile_size, self.tile_size)
+        # self.data:Optional[bytes] = None
+        self.data = None
+        self._is_empty = None  # Optional[bool]
+
+
+    def __eq__(self, other):
+        return ( self.z == other.z and self.x == other.x and self.y == other.y )
+
+
+    def __repr__(self):
+        return "Tile(%d, %d, %d, %r)" % (self.z, self.x, self.y, self.meta_index)
+
+
+    @property
+    def is_empty(self):
+        if self._is_empty is None:
+            # TODO: this is *completely* style dependent!
+            self._is_empty = ( len(self.data) == 103 and
+                               self.data[41:44] == b'\xb5\xd0\xd0' )
+
+        return self._is_empty
+
 
 class DiskBackend:
     def __init__(self, base, *more):
@@ -418,49 +460,6 @@ def tile_spec2zxy(tile_spec):  # str -> Tuple[int, int, int]
     else:
         z, x, y = map(int, data)
         return (z, x, y)
-
-
-class Tile:
-    # def __init__(self, z:int, x:int, y:int, metatile:Optional[MetaTile]=None) -> None:
-    def __init__(self, z:int, x:int, y:int, metatile=None) -> None:
-        self.z = z
-        self.x = x
-        self.y = y
-
-        # self.meta_index:Optional[Tuple[int, int]] = None
-        self.meta_index = None
-        self.meta_pixel_coords = None
-        if metatile is not None:
-            self.meta_index = (x - metatile.x, y - metatile.y)
-            self.meta_pixel_coords = ()
-            self.tile_size = metatile.tile_size
-        else:
-            # TODO: guessed
-            self.tile_size = 256
-
-        self.pixel_pos = (self.x * self.tile_size, self.y * self.tile_size)
-        self.image_size = (self.tile_size, self.tile_size)
-        # self.data:Optional[bytes] = None
-        self.data = None
-        self._is_empty = None  # Optional[bool]
-
-
-    def __eq__(self, other):
-        return ( self.z == other.z and self.x == other.x and self.y == other.y )
-
-
-    def __repr__(self):
-        return "Tile(%d, %d, %d, %r)" % (self.z, self.x, self.y, self.meta_index)
-
-
-    @property
-    def is_empty(self):
-        if self._is_empty is None:
-            # TODO: this is *completely* style dependent!
-            self._is_empty = ( len(self.data) == 103 and
-                               self.data[41:44] == b'\xb5\xd0\xd0' )
-
-        return self._is_empty
 
 
 tileproj = GoogleProjection(40)
