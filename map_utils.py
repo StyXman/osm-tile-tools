@@ -420,7 +420,7 @@ class MBTilesBackend:
                                 WHERE map.zoom_level = ?
                                   AND map.tile_column = ?
                                   AND map.tile_row = ?;''',
-                             tile).fetchall()
+                             tuple(tile)).fetchall()
 
         return data[0][0] == 1
 
@@ -433,7 +433,7 @@ class MBTilesBackend:
                                  WHERE tiles.z = ?
                                    AND tiles.x = ?
                                    AND tiles.y = ?;''',
-                              tile).fetchall()
+                              tuple(tile)).fetchall()
 
         if len(data) == 0:
             return False
