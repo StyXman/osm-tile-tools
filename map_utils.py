@@ -247,9 +247,13 @@ class TestBackend(DiskBackend):
 
 class MBTilesBackend:
     # .sqlitedb 'cause I'll use it primarily for OsmAnd
-    def __init__(self, base, bounds, min_zoom=0, max_zoom=18, center=None, ext='sqlitedb'):
+    def __init__(self, base, bounds, min_zoom=0, max_zoom=18, center=None, ext='sqlitedb',
+                 ro=False):
         self.path = "%s.%s" % (base, ext)
-        self.session = sqlite3.connect(self.path)
+        if ro:
+            self.session = sqlite3.connect('file:' + self.path + '?mode=ro', uri=True)
+        else:
+            self.session = sqlite3.connect(self.path)
         self.session.set_trace_callback(print)
 
         if not stat.S_ISREG(os.stat(self.path).st_mode):
