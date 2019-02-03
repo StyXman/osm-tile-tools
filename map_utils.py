@@ -484,7 +484,7 @@ def tile_spec2zxy(tile_spec):  # str -> Tuple[int, int, int]
         return (z, x, y)
 
 
-tileproj = GoogleProjection(40)
+tileproj = GoogleProjection(30)
 
 
 class PixelTile:
