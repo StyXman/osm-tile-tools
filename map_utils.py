@@ -140,6 +140,8 @@ class Tile:
 TileOrTuple = Union[Tile, Tuple[int, int, int]]
 
 class DiskBackend:
+    fs_based = True
+
     def __init__(self, base:str, *more):
         self.base_dir = base
 
@@ -250,6 +252,8 @@ class TestBackend(DiskBackend):
 # but internally we fill them separately
 
 class MBTilesBackend:
+    fs_based = False
+
     # .sqlitedb 'cause I'll use it primarily for OsmAnd
     def __init__(self, base, bounds, min_zoom=0, max_zoom=18, center=None, ext='sqlitedb',
                  ro=False):
