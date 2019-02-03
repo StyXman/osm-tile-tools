@@ -18,7 +18,7 @@ from shapely.geometry import Polygon
 from shapely import wkt
 
 from logging import debug
-from typing import List, Tuple, Dict, Optional, Any
+from typing import List, Tuple, Dict, Optional, Any, Union
 
 
 # DEG_TO_RAD:float = pi / 180
@@ -124,6 +124,17 @@ class Tile:
                                self.data[41:44] == b'\xb5\xd0\xd0' )
 
         return self._is_empty
+
+
+    def __iter__(self):
+        return self.iter()
+
+
+    def iter(self):
+        """Returns a generator over the 'coords'."""
+        yield self.z
+        yield self.x
+        yield self.y
 
 
 class DiskBackend:
