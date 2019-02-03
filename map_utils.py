@@ -137,14 +137,20 @@ class Tile:
         yield self.y
 
 
+# helper types
+TileOrTuple = Union[Tile, Tuple[int, int, int]]
+
 class DiskBackend:
     def __init__(self, base, *more):
         self.base_dir = base
 
 
-    def tile_uri(self, tile):
-        return os.path.join(self.base_dir, str(tile.z), str(tile.x),
-                            str(tile.y)+'.png')
+    def tile_uri(self, tile: TileOrTuple) -> str:
+        # this works because I made Tile iterable
+        z, x, y = ( str(i) for i in tile )
+
+        return os.path.join(self.base_dir, z, x, y + '.png')
+
 
 
     def store(self, tile):
@@ -206,7 +212,7 @@ class ModTileBackend(DiskBackend):
         # coordinate and the second 4 bits taken from the y coordinate. This
         # attempts to cluster 16x16 square of tiles together into a single sub
         # directory for more efficient access patterns.
-        x, y = tile.x, tile.y
+        z, x, y = tile
 
         crumbs = []
         for crumb_index in range(5):
@@ -217,14 +223,14 @@ class ModTileBackend(DiskBackend):
             crumb = (x_bits << 4) + y_bits
             crumbs.insert(0, str(crumb))
 
-        return os.path.join(self.base_dir, str(tile.z), *crumbs[:-1],
-                            crumbs[-1]+ '.png')
+        return os.path.join(self.base_dir, str(z), *crumbs[:-1], crumbs[-1] + '.png')
 
 
 class TestBackend(DiskBackend):
     def tile_uri(self, tile):
-        return os.path.join(self.base_dir, '-'.join([ str(tile.z), str(tile.x),
-                                                      str(tile.y) + '.png' ]))
+        z, x, y = ( str(i) for i in tile )
+
+        return os.path.join(self.base_dir, '-'.join([ z, x, y + '.png' ]))
 
 
 # https://github.com/mapbox/node-mbtiles/blob/master/lib/schema.sql
@@ -401,13 +407,14 @@ class MBTilesBackend:
 
     def exists (self, z, x, y):
         cursor= self.session.cursor ()
-        data= cursor.execute ('''SELECT count(map.zoom_level)
-                                 FROM map
-                                 WHERE map.zoom_level = ?
-                                   AND map.tile_column = ?
-                                   AND map.tile_row = ?;''',
-                              (z, x, y)).fetchall ()
-        return data[0][0]==1
+        data= cursor.execute('''SELECT count(map.zoom_level)
+                                FROM map
+                                WHERE map.zoom_level = ?
+                                  AND map.tile_column = ?
+                                  AND map.tile_row = ?;''',
+                             tile).fetchall()
+
+        return data[0][0] == 1
 
 
     def fetch(self, tile):
@@ -418,7 +425,7 @@ class MBTilesBackend:
                                  WHERE tiles.z = ?
                                    AND tiles.x = ?
                                    AND tiles.y = ?;''',
-                              (tile.z, tile.x, tile.y)).fetchall()
+                              tile).fetchall()
 
         if len(data) == 0:
             return False
