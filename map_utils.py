@@ -255,11 +255,12 @@ class MBTilesBackend:
     fs_based = False
 
     # .sqlitedb 'cause I'll use it primarily for OsmAnd
-    def __init__(self, base, bounds, min_zoom=0, max_zoom=18, center=None, ext='sqlitedb',
-                 ro=False):
-        self.path = "%s.%s" % (base, ext)
+    def __init__(self, path, bounds, min_zoom=0, max_zoom=18, center=None, ro=False):
+        self.path = path
         if ro:
-            self.session = sqlite3.connect('file:' + self.path + '?mode=ro', uri=True)
+            spec = 'file:' + self.path + '?mode=ro'
+            # print(spec)
+            self.session = sqlite3.connect(spec, uri=True)
         else:
             self.session = sqlite3.connect(self.path)
         self.session.set_trace_callback(print)
