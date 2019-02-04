@@ -69,7 +69,7 @@ def main():
         basename, ext = os.path.splitext(map)
 
         if mbt_exts.match(ext) is not None:
-            atlas[basename] = map_utils.MBTilesBackend(basename, ext)
+            atlas[basename] = map_utils.MBTilesBackend(map, None, ro=True)
 
         elif stat.S_ISDIR(os.stat(map).st_mode):
             atlas[basename] = map_utils.DiskBackend(map)
