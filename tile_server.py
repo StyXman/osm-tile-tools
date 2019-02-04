@@ -27,18 +27,33 @@ class TileServer(SimpleHTTPRequestHandler):
 
             tile = map_utils.Tile(*[ int(i) for i in (z, x, y) ])
 
-            # TODO: implement 'depth first'
-            for map in self.atlas.values():
-                if map.fetch(tile):
+            # TODO: implement 'depth first'; that is, sort maps somehow
+            # will need a tree, probably, beware of overlapping maps
+            found = False
+            for name, backend in self.atlas.items():  #
+                if tile in backend:
+                    found = True
                     break
 
-            if tile.data is not None:
+            if found:
+                if backend.fs_based:
+                    full_path = os.path.join(name, self.path)
+                    size = os.stat(full_path).st_size
+                else:
+                    backend.fetch(tile)
+                    size = len(tile.data)
+
                 self.send_response(HTTPStatus.OK)
                 self.send_header('Content-Type', 'image/png')
-                self.send_header('Content-Length', len(tile.data))
+                self.send_header('Content-Length', size)
                 self.end_headers()
-                # TODO; use sendfile
-                self.wfile.write(tile.data)
+
+                if backend.fs_based:
+                    # create a socket to use high level sendfile()
+                    sender = socket.fromfd(self.wfile.raw.fileno())
+                    sender.sendfile(open(full_path))
+                else:
+                    self.wfile.write(tile.data)
             else:
                 self.send_error(HTTPStatus.NOT_FOUND, 'Tile not found.')
 
