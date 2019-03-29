@@ -769,11 +769,12 @@ def parse_args():
             # the root logger will be pre-filtering by level
             # so we need to set its level to the lowest possible
             root.setLevel(logging.DEBUG)
-            root.addHandler(file_handler)
         else:
             file_handler.setFormatter(logging.Formatter(short_format))
             file_handler.setLevel(logging.INFO)
             root.setLevel(logging.INFO)
+
+        root.addHandler(file_handler)
 
     else:
         if opts.debug:
