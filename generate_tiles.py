@@ -459,7 +459,7 @@ class Master:
                                              self.info)
 
 
-        if not os.path.isdir(self.opts.tile_dir):
+        if not os.path.isdir(self.opts.tile_dir) and not self.opts.format == 'mbtiles':
             debug("creating dir %s", self.opts.tile_dir)
             os.makedirs(self.opts.tile_dir, exist_ok=True)
 
