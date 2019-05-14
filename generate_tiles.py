@@ -298,7 +298,7 @@ class StormBringer:
 
     def single_step(self):
         debug('[%s] >... (%d)', self.pid, self.input.qsize())
-        metatile = self.input.get(True)
+        metatile = self.input.get()
         debug('[%s] ...>', self.pid)
 
         if metatile is not None:
@@ -630,7 +630,7 @@ class Master:
                 tight_loop = False
 
                 # 1/10s timeout
-                data = self.info.get(True, .1)  # type: str, Any
+                data = self.info.get(block=True, timeout=0.1)  # type: (str, Any)
                 debug("<-- %s", data)
 
                 self.handle_new_work(data)
@@ -686,7 +686,7 @@ class Master:
 
             while self.went_out > self.came_back:
                 debug("%d <-> %d", self.went_out, self.came_back)
-                data = self.info.get(True)  # type: str, Any
+                data = self.info.get()  # type: str, Any
                 debug("<-- %s", data)
 
                 self.handle_new_work(data)
