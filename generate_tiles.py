@@ -156,11 +156,6 @@ class RenderThread:
 
         bail_out = True
 
-        # handling C-c: if we're rendering, the exception won't be raised until
-        # mapnik has finished, and throwing away that work would be a shame
-        # critical section, disable signals
-        if self.opts.parallel != 'single':
-            sig = signal(SIGINT, SIG_IGN)
 
         start = time.perf_counter()
         if not self.opts.dry_run:
@@ -205,10 +200,6 @@ class RenderThread:
         self.output.put(metatile)
         debug("[%s] put! (%d)", self.pid, self.output.qsize())
 
-        # end critical section, restore signal
-        if self.opts.parallel != 'single':
-            signal(SIGINT, sig)
-
         return bail_out
 
 
@@ -230,6 +221,10 @@ class RenderThread:
 
 
     def loop(self):
+        # disable SIGINT so C-c/KeyboardInterrupt is handled by Master
+        # even in the case of multiprocessing
+        sig = signal(SIGINT, SIG_IGN)
+
         self.pid = getpid()
         self.load_map()
 
@@ -286,6 +281,10 @@ class StormBringer:
 
 
     def loop(self):
+        # disable SIGINT so C-c/KeyboardInterrupt is handled by Master
+        # even in the case of multiprocessing
+        sig = signal(SIGINT, SIG_IGN)
+
         self.pid = getpid()
 
         debug('[%s] curling the curl', self.pid)
@@ -506,11 +505,12 @@ class Master:
         try:
             self.loop(initial_metatiles)
         except KeyboardInterrupt as e:
-            raise SystemExit("Ctrl-c detected, exiting...")
+            info("Ctrl-c detected, exiting...")
         except Exception as e:
-            exception(e)
+            info('unknown exception caught!')
+            exception(str(e))
         finally:
-            debug('out!')
+            debug('render_tiles() out!')
             self.finish()
 
 
