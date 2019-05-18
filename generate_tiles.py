@@ -231,13 +231,8 @@ class RenderThread:
         debug('[%s] looping the loop', self.pid)
 
         finished = False
-        while not finished:
-            try:
-                finished = self.single_step()
-            except KeyboardInterrupt:
-                # do nothing, we'll be outta here
-                debug('break!')
-                pass
+        while self.single_step():
+            pass
 
         info("[%s] finished", self.pid)
 
@@ -248,14 +243,17 @@ class RenderThread:
         # metatile:Optional[map_utils.MetaTile] = self.input.get()
         metatile = self.input.get()
         debug("[%s] got! %r", self.pid, metatile)
+
         if metatile is None:
-            # self.q.task_done()
-            return True
+            # send the storage thread a message
+            debug("[%s] putting %r", self.pid, None)
+            self.output.put(None)
+            debug("[%s] put! (%d)", self.pid, self.output.qsize())
+            return False
 
         bail_out = self.render_metatile(metatile)
 
-        # self.q.task_done()
-        return bail_out
+        return not bail_out
 
 
 # backends:Dict[str,Any] = dict(
@@ -273,6 +271,10 @@ class StormBringer:
         self.backend = backend
         self.input = input
         self.output = output
+        # the amount of threads writing on input
+        # this is needed so we can stop only after all the writers sent their last jobs
+        self.writers = opts.threads
+        self.done_writers = 0
 
         if self.opts.parallel == 'single':
             # StormBringer.loop() is not called in single mode
@@ -305,8 +307,12 @@ class StormBringer:
             self.store_metatile(metatile)
             debug('[%s] ...re!', self.pid)
             self.output.put(metatile)
+        else:
+            # this writer finished
+            self.done_writers += 1
+            debug('[%s] %d <-> %d', self.pid, self.writers, self.done_writers)
 
-        return metatile is not None
+        return self.done_writers != self.writers
 
 
     def store_metatile(self, metatile):
@@ -681,8 +687,6 @@ class Master:
             for i in range(self.opts.threads):
                 info("%d...", (i + 1))
                 self.new_work.put(None)
-
-            self.store_queue.put(None)
 
             while self.went_out > self.came_back:
                 debug("%d <-> %d", self.went_out, self.came_back)
