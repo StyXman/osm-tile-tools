@@ -114,6 +114,35 @@ class RenderStack:
         return ans
 
 
+class SimpleQueue:
+    '''Class based on a list that implements the minimum needed to look like a
+    *.Queue. The advantage is that there is no (de)serializing here.'''
+
+    def __init__(self, size):
+        self.queue = []
+
+
+    def get(self, block=True, timeout=None):
+        if block:
+            waited = 0.0
+
+            while len(self.queue) == 0 and (timeout is None or waited < timeout):
+                sleep(0.1)
+                waited += 0.1
+
+        return self.queue.pop(0)
+
+
+    def put(self, value, block=True, timeout=None):
+        # ignore block and timeout, making it a unbound queue
+        # TODO: revisit?
+        self.queue.append(value)
+
+
+    def qsize(self):
+        return len(self.queue)
+
+
 RenderChildren = Dict[map_utils.Tile, bool]
 class RenderThread:
     def __init__(self, opts, input, output) -> None:
@@ -131,6 +160,8 @@ class RenderThread:
             # so do this here
             self.pid = getpid()
             self.load_map()
+
+        self.store_thread = None
 
 
     def render_metatile(self, metatile:map_utils.MetaTile) -> Dict[map_utils.Tile, bool]:
@@ -167,11 +198,12 @@ class RenderThread:
             debug('[%s] ...ring!', self.pid)
             mid = time.perf_counter()
 
-            # TODO: all this is on a single tile, no a metatile
+            # TODO: all this is on a single tile, not a metatile
 
             # converting to png256 is the fastest I have found so far:
             # python3.6 -m timeit -s 'import mapnik; im = mapnik.Image.fromstring(open("Attic/tmp/369.png", "br").read())' 'data = im.tostring("png256")'
             # 100 loops, best of 3: 7.72 msec per loop
+            # tostring() looks nice, but I can't rebuild a mapnik.Image from it :(
             # python3.6 -m timeit -s 'import mapnik; im = mapnik.Image.fromstring(open("Attic/tmp/369.png", "br").read())' 'data = im.tostring()'
             # 100000 loops, best of 3: 13.8 usec per loop
             # python3.6 -m timeit -s 'import mapnik, bz2; im = mapnik.Image.fromstring(open("Attic/tmp/369.png", "br").read())' 'c = bz2.BZ2Compressor(); c.compress(im.tostring()); data = c.flush()'
@@ -184,7 +216,12 @@ class RenderThread:
             # TODO:
             # but bz2 compresses the best, 52714 png vs 49876 bzip vs 70828 gzip vs 53032 lzma
 
-            metatile.im = im.tostring('png256')
+            if not self.opts.store_thread:
+                # metatile will go in a non-marshaling queue, no need tostring() it
+                metatile.im = im
+            else:
+                metatile.im = im.tostring('png256')
+
             end = time.perf_counter()
         else:
             debug('[%s] thumbtumbling', self.pid)
@@ -199,6 +236,11 @@ class RenderThread:
         debug("[%s] putting %r", self.pid, metatile)
         self.output.put(metatile)
         debug("[%s] put! (%d)", self.pid, self.output.qsize())
+
+        if not self.opts.store_thread and self.output.qsize() > 0:
+            # NOTE: mypy complains here that Item "Process" of "Union[Process, StormBringer]" has no attribute "single_step"
+            # the solutions are ugly, so I'm leaving it as that
+            self.store_thread.single_step()
 
         return bail_out
 
@@ -276,7 +318,7 @@ class StormBringer:
         self.writers = opts.threads
         self.done_writers = 0
 
-        if self.opts.parallel == 'single':
+        if not self.opts.store_thread:
             # StormBringer.loop() is not called in single mode
             # so do this here
             self.pid = getpid()
@@ -300,12 +342,15 @@ class StormBringer:
     def single_step(self):
         debug('[%s] >... (%d)', self.pid, self.input.qsize())
         metatile = self.input.get()
-        debug('[%s] ...>', self.pid)
+        debug('[%s] ...> %s', self.pid, metatile)
 
         if metatile is not None:
             debug('[%s] sto...', self.pid)
             self.store_metatile(metatile)
             debug('[%s] ...re!', self.pid)
+            # we don't need it anymore and *.Queue complains that
+            # mapnik._mapnik.Image is not pickle()'able
+            metatile.im = None
             self.output.put(metatile)
         else:
             # this writer finished
@@ -319,7 +364,10 @@ class StormBringer:
         # save the image, splitting it in the right amount of tiles
         if not self.opts.dry_run:
             start = time.perf_counter()
-            image = mapnik.Image.fromstring(metatile.im)
+            if not self.opts.store_thread:
+                image = metatile.im
+            else:
+                image = mapnik.Image.frombuffer(metatile.im)
             mid = time.perf_counter()
 
             for tile in metatile.tiles:
@@ -373,7 +421,8 @@ class StormBringer:
 class Master:
     def __init__(self, opts) -> None:
         self.opts = opts
-        self.renderers = {}
+        self.renderers:Dict[int, Union[multiprocessing.Process, threading.Thread]] = {}
+        self.store_thread:Union[multiprocessing.Process, StormBringer]
         # we need at least space for the initial batch
         # but do not auto push children in tiles mode
         self.work_stack = RenderStack(opts.max_zoom)
@@ -387,18 +436,29 @@ class Master:
             # work_out queue is size 1, so higher zoom level tiles don't pile up
             # there if there are lower ZL tiles ready in the work_stack.
             self.new_work = multiprocessing.Queue(1)
-            self.store_queue = multiprocessing.Queue(5*self.opts.threads)
+            if not self.opts.store_thread:
+                debug('SimpleQueue')
+                self.store_queue = SimpleQueue(5*self.opts.threads)
+            else:
+                self.store_queue = multiprocessing.Queue(5*self.opts.threads)
             self.info = multiprocessing.Queue(5*self.opts.threads)
         elif self.opts.parallel == 'threads':
             debug('threads, using queue.Queue()')
             # TODO: warning about mapnik and multithreads
             self.new_work = queue.Queue(32)
-            self.store_queue = queue.Queue(32)
+            if not self.opts.store_thread:
+                debug('SimpleQueue')
+                self.store_queue = SimpleQueue(32)
+            else:
+                self.store_queue = queue.Queue(32)
             self.info = queue.Queue(32)
-        else:
+        else:  # 'single'
             debug('single mode, using queue.Queue()')
             self.new_work = queue.Queue(1)
-            self.store_queue = queue.Queue(1)
+            if not self.opts.store_thread:
+                self.store_queue = SimpleQueue(1)
+            else:
+                self.store_queue = queue.Queue(1)
             self.info = queue.Queue(1)
 
 
@@ -435,34 +495,33 @@ class Master:
 
         # Launch rendering threads
         if self.opts.parallel != 'single':
+            sb = StormBringer(self.opts, self.backend, self.store_queue, self.info)
+            if self.opts.store_thread:
+                self.store_thread = self.opts.parallel_factory(target=sb.loop)
+                self.store_thread.start()
+                debug("Started store thread %s", self.store_thread.name)
+            else:
+                self.store_thread = sb
+
             for i in range(self.opts.threads):
                 renderer = RenderThread(self.opts, self.new_work, self.store_queue)
 
-                if self.opts.parallel == 'fork':
-                    debug('mp.Process()')
-                    render_thread = multiprocessing.Process(target=renderer.loop)
-                elif self.opts.parallel == 'threads':
-                    debug('th.Thread()')
-                    render_thread = threading.Thread(target=renderer.loop)
-
+                render_thread = self.opts.parallel_factory(target=renderer.loop)
+                if not self.opts.store_thread:
+                    debug("Store object created, attached to thread")
+                    renderer.store_thread = self.store_thread
                 render_thread.start()
-
-                if self.opts.parallel:
-                    debug("Started render thread %s", render_thread.name)
-                else:
-                    debug("Started render thread %s", render_thread.getName())
+                debug("Started render thread %s", render_thread.name)
 
                 self.renderers[i] = render_thread
-
-            if self.opts.parallel == 'fork':
-                sb = StormBringer(self.opts, self.backend, self.store_queue, self.info)
-                self.store_thread = multiprocessing.Process(target=sb.loop)
-                self.store_thread.start()
         else:
-            self.renderer = RenderThread(self.opts, self.new_work, self.store_queue)
+            # in this case we create the 'thread', but in fact we only use its single_step()
             self.store_thread = StormBringer(self.opts, self.backend, self.store_queue,
                                              self.info)
-
+            debug("Store object created, not threaded")
+            self.renderer = RenderThread(self.opts, self.new_work, self.store_queue)
+            self.renderer.store_thread = self.store_thread
+            debug("Renderer object created, not threaded")
 
         if not os.path.isdir(self.opts.tile_dir) and not self.opts.format == 'mbtiles':
             debug("creating dir %s", self.opts.tile_dir)
@@ -598,7 +657,7 @@ class Master:
 
             tight_loop = True
 
-            # the doc says this is unrealiable, but we don't care
+            # the doc says this is unreliable, but we don't care
             # full() can be inconsistent only if when we test is false
             # and when we put() is true, but only the master is writing
             # so this cannot happen
@@ -628,15 +687,12 @@ class Master:
                     tight_loop = True
                     break
 
-            if self.opts.parallel == 'single' and self.store_queue.qsize() > 0:
-                self.store_thread.single_step()
-
             # pop from the reader,
             while not self.info.empty():
                 tight_loop = False
 
                 # 1/10s timeout
-                data = self.info.get(block=True, timeout=0.1)  # type: (str, Any)
+                data = self.info.get(block=True, timeout=0.1)  # type: Tuple[str, Any]
                 debug("<-- %s", data)
 
                 self.handle_new_work(data)
@@ -656,7 +712,7 @@ class Master:
             info("%8.3f s/metatile", total_time / metatiles_rendered)
         info("%8.3f metatile/s", metatiles_rendered / total_time)
 
-        debug('out!')
+        debug('loop() out!')
 
 
     def handle_new_work(self, metatile):
@@ -683,7 +739,7 @@ class Master:
     def finish(self):
         if self.opts.parallel != 'single':
             info('stopping threads/procs')
-            # Signal render threads to exit by sending empty request to queue
+            # signal render threads to exit by sending empty request to queue
             for i in range(self.opts.threads):
                 info("%d...", (i + 1))
                 self.new_work.put(None)
@@ -736,6 +792,8 @@ def parse_args():
                         type=int)
     parser.add_argument('-p', '--parallel-method', dest='parallel', default='fork',
                         choices=('threads', 'fork', 'single'))
+    parser.add_argument(      '--store-thread', dest='store_thread', default=False,
+                        action='store_true', help="Have a separate process/thread for storing the tiles.")
 
     parser.add_argument('-X', '--skip-existing', dest='skip_existing', default=False,
                         action='store_true')
@@ -856,9 +914,23 @@ def parse_args():
 
         opts.tiles = metatiles
 
+    # I need this for ... what?
+    if opts.parallel == 'single':
+        opts.threads = 1
+        opts.store_thread = False
+    elif opts.parallel == 'fork':
+        debug('mp.Process()')
+        opts.parallel_factory = multiprocessing.Process
+    elif opts.parallel == 'threads':
+        debug('th.Thread()')
+        opts.parallel_factory = threading.Thread
+
     # semantic opts
     opts.single_tiles = opts.tiles is not None
     opts.push_children = not opts.single_tiles
+
+    # debug(opts)
+    info(opts)
 
     return opts
 
@@ -872,5 +944,6 @@ if __name__  ==  "__main__":
     # fixes for locally installed mapnik
     mapnik.register_fonts ('/usr/share/fonts/')
     mapnik.register_plugins ('/home/mdione/local/lib/mapnik/input/')
+    info(mapnik.__file__)
 
     master.render_tiles()
