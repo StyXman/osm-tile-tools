@@ -757,19 +757,19 @@ class Atlas:
     def __init__(self, sectors):
         self.maps = {}
         c = ConfigParser()
-        c.read('bboxes.ini')
+        c.read('atlas.ini')
         self.minZoom = 0
         self.maxZoom = 0
 
-        for sector in sectors:
-            bb = bbox(c.get('bboxes', sector))
+        for map in maps:
+            bb = bbox(c.get('maps', map))
             # #4 is the max_z
             if bb[4] > self.maxZoom:
                 self.maxZoom = int(bb[4])
 
-        for sector in sectors:
-            bb= bbox (c.get ('bboxes', sector))
-            self.maps[sector]= Map (bb[:4], self.maxZoom)
+        for map in maps:
+            bb= bbox (c.get ('maps', map))
+            self.maps[map]= Map (bb[:4], self.maxZoom)
 
 
     def __contains__ (self, t):
