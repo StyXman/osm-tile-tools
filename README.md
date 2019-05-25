@@ -60,6 +60,38 @@ optional arguments:
 --strict              Use Mapnik's strict mode.
 ```
 
+## tile_list.py
+
+Returns the list of slippy map tiles for a bbox and max ZL
+
+Example:
+
+    ./tile_list.py 7.419318,46.92836,7.487983,46.997832,10
+    0/0/0.png
+    1/1/0.png
+    2/2/1.png
+    3/4/2.png
+    4/8/5.png
+    5/16/11.png
+    6/33/22.png
+    7/66/45.png
+    8/133/90.png
+    9/266/180.png
+    10/533/360.png
+
+## tile_server.py
+
+It serves slippy map tiles over http, using several sources than can b either in
+slippy map format or MBTiles. Each tile is search on each source until found, so
+you can stack several sources like that.
+
+I developed this so I could serve a country size map down to ZL11 plus several
+city-and-about maps down to ZL18.
+
+Example:
+
+    ./tile_server.py Argentina.sqlitedb Cordoba.sqlitedb  # OsmAnd MBTiles format
+
 # TODO
 
 The rest.
