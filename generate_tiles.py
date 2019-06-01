@@ -805,12 +805,16 @@ def parse_args():
     parser.add_argument('-E', '--empty',           dest='empty',     default='skip',
                         choices=('skip', 'link', 'write'))
 
-    parser.add_argument(      '--debug',         dest='debug',     default=False, action='store_true')
-    parser.add_argument('-l', '--log-file',      dest='log_file',  default=None)
-    parser.add_argument(      '--dry-run',       dest='dry_run',   default=False, action='store_true')
+    parser.add_argument(      '--debug',    dest='debug',    default=False,
+                        action='store_true')
+    parser.add_argument('-l', '--log-file', dest='log_file', default=None)
+    parser.add_argument(      '--dry-run',  dest='dry_run',  default=False,
+                        action='store_true')
 
-    parser.add_argument(      '--strict',        dest='strict',    default=False, action='store_true',
-                        help='''Use Mapnik's strict mode.''')
+    parser.add_argument(      '--debug-mapnik',  dest='debug_mapnik', default=False,
+                        action='store_true', help='''Turn on mapnik's debug logs.''')
+    parser.add_argument(      '--strict',        dest='strict',       default=False,
+                        action='store_true', help='''Use Mapnik's strict mode.''')
 
     # TODO: buffer size (256?)
     opts = parser.parse_args()
@@ -819,6 +823,9 @@ def parse_args():
         logging.basicConfig(level=logging.DEBUG, format=long_format)
     else:
         logging.basicConfig(level=logging.INFO, format=short_format)
+
+    if opts.debug_mapnik:
+        mapnik.logger.set_severity(mapnik.severity_type.Debug)
 
     debug(opts)
 
@@ -948,7 +955,6 @@ if __name__  ==  "__main__":
     opts = parse_args()
 
     master = Master(opts)
-
 
     # fixes for locally installed mapnik
     mapnik.register_fonts ('/usr/share/fonts/')
