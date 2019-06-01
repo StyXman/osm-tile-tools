@@ -902,6 +902,8 @@ def parse_args():
                 zoom, lat, long = data
                 opts.min_zoom = int(zoom)
                 opts.max_zoom = opts.min_zoom
+            else:
+                lat, long = data
 
             opts.coords = (float(long), float(lat))
         elif opts.longlat is not None:
