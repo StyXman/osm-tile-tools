@@ -895,7 +895,14 @@ def parse_args():
 
         if opts.coords is not None:
             # input is Lat,Lon but tileproj works with Lon,Lat
-            lat, long = opts.coords.split('/')
+            data = opts.coords.split('/')
+
+            if len(data) == 3:
+                # it has a zoom level spec too, use that as min_zoom, max_zoom
+                zoom, lat, long = data
+                opts.min_zoom = int(zoom)
+                opts.max_zoom = opts.min_zoom
+
             opts.coords = (float(long), float(lat))
         elif opts.longlat is not None:
             # input is Lon,Lat already
