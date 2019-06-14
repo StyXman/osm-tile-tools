@@ -505,13 +505,13 @@ class Master:
             eta = ( (self.tiles_to_render - self.tiles_rendered - self.tiles_skept) *
                     time_per_tile )
 
-            format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [ETA: %d:%02d:%02d]"
+            format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %d:%02d:%02d, ETA: %d:%02d:%02d]"
             info(format, self.tiles_rendered, self.tiles_skept, self.tiles_to_render,
-                 percentage, metatile, *args, *time2hms(eta))
+                 percentage, metatile, *args, *time2hms(time_elapsed), *time2hms(eta))
         else:
-            format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [ETA: ∞]"
+            format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %d:%02d:%02d, ETA: ∞]"
             info(format, self.tiles_rendered, self.tiles_skept, self.tiles_to_render,
-                 percentage, metatile, *args)
+                 percentage, metatile, *args, *time2hms(time_elapsed))
 
 
     def render_tiles(self) -> None:
@@ -758,9 +758,7 @@ class Master:
         self.tiles_rendered += len(metatile.tiles)
         self.came_back += 1
 
-        self.progress(metatile, metatile.render_time, metatile.serializing_time,
-                      metatile.deserializing_time, metatile.saving_time,
-                      format="%8.3f, %8.3f, %8.3f, %8.3f")
+        self.progress(metatile, *metatile.times(),  format="%8.3f, %8.3f, %8.3f, %8.3f")
 
 
     def finish(self):
