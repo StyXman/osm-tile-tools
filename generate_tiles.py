@@ -14,6 +14,9 @@ from random import randint, random
 from os import getpid
 import math
 from signal import signal, SIGINT, SIG_IGN
+import bisect
+import statistics
+
 
 try:
     import mapnik2 as mapnik
@@ -28,12 +31,31 @@ from logging import debug, info, exception
 long_format = "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
 short_format = "%(asctime)s %(message)s"
 
+
 from typing import Optional, List, Set, Dict, Any
+
 
 try:
     NUM_CPUS = multiprocessing.cpu_count()
 except NotImplementedError:
     NUM_CPUS = 1
+
+
+class MedianTracker:
+    def __init__(self):
+        self.items = []
+
+
+    def add(self, item):
+        index = bisect.bisect(self.items, item)
+        self.items.insert(index, item)
+
+
+    def median(self):
+        if len(self.items) == 0:
+            return 0
+
+        return statistics.median(self.items)
 
 
 def floor(i: int, base: int=1) -> int:
@@ -387,6 +409,7 @@ class StormBringer:
                      metatile.z == self.opts.max_zoom ):
 
                     child.render = False
+                    child.skipped = True
 
             # TODO: handle empty and link or write; pyramid stuff
             metatile.deserializing_time = mid - start
@@ -461,27 +484,30 @@ class Master:
                 self.store_queue = queue.Queue(1)
             self.info = queue.Queue(1)
 
+        # statistics
+        self.median = MedianTracker()
+
 
     def progress(self, metatile, *args, format='%s'):
         percentage = ( (self.tiles_rendered + self.tiles_skept) /
                        self.tiles_to_render * 100 )
 
+        time_elapsed = time.perf_counter() - self.start
+
+        if not metatile.skipped:
+            total_render_time = sum(metatile.times())
+            debug(total_render_time)
+            self.median.add(total_render_time)
+
         if self.tiles_rendered > 0:
-            time_elapsed = time.perf_counter() - self.start
-            # calculated only based on what was actually rendered
-            # it's broken for the most part of the time (!)
-            # but it's better than getting a constant 0:00:00
-            # time_per_tile = time_elapsed / ( self.tiles_rendered + self.tiles_skept )
-            time_per_tile = time_elapsed / self.tiles_rendered
+            time_per_tile = self.median.median()
             debug((time_elapsed, time_per_tile))
             eta = ( (self.tiles_to_render - self.tiles_rendered - self.tiles_skept) *
                     time_per_tile )
 
-            eta_h, eta_m, eta_s = time2hms(eta)
-
             format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [ETA: %d:%02d:%02d]"
             info(format, self.tiles_rendered, self.tiles_skept, self.tiles_to_render,
-                 percentage, metatile, *args, eta_h, eta_m, eta_s)
+                 percentage, metatile, *args, *time2hms(eta))
         else:
             format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [ETA: ∞]"
             info(format, self.tiles_rendered, self.tiles_skept, self.tiles_to_render,
@@ -669,6 +695,7 @@ class Master:
                 if metatile is not None:
                     # TODO: move to another thread
                     if not self.should_render(metatile):
+                        metatile.skipped = True
                         continue
 
                     # push in the writer
