@@ -774,19 +774,19 @@ class Map:
 class Atlas:
     def __init__(self, maps):
         self.maps = {}
-        c = ConfigParser()
-        c.read('atlas.ini')
+        atlas_config = ConfigParser()
+        atlas_config.read('atlas.ini')
         self.minZoom = 0
         self.maxZoom = 0
 
         for map in maps:
-            bb = bbox(c.get('maps', map))
+            bb = bbox(atlas_config.get('maps', map))
             # #4 is the max_z
             if bb[4] > self.maxZoom:
                 self.maxZoom = int(bb[4])
 
         for map in maps:
-            bb= bbox (c.get ('maps', map))
+            bb= bbox (atlas_config.get ('maps', map))
             self.maps[map]= Map (bb[:4], self.maxZoom)
 
 
