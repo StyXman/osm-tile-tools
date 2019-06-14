@@ -772,7 +772,7 @@ class Map:
 
 
 class Atlas:
-    def __init__(self, sectors):
+    def __init__(self, maps):
         self.maps = {}
         c = ConfigParser()
         c.read('atlas.ini')
