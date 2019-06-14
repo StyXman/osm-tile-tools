@@ -541,8 +541,8 @@ class PixelTile:
         self.polygon = wkt.loads(polygon_wkt)
 
         # times
-        self.render_time = None
-        self.serializing_time = None
+        self.render_time = 0
+        self.serializing_time = 0
         self.deserializing_time = 0
         self.saving_time = 0
 
@@ -611,8 +611,8 @@ class MetaTile:
         self.polygon = wkt.loads(polygon_wkt)
 
         # times
-        self.render_time:Optional[float] = None
-        self.serializing_time:Optional[float] = None
+        self.render_time:float = 0
+        self.serializing_time:float = 0
         self.deserializing_time = 0
         self.saving_time = 0
 
@@ -669,6 +669,11 @@ class MetaTile:
 
     def __hash__(self):
         return hash((self.z, self.x, self.y, self.size))
+
+
+    def times(self):
+        return (self.render_time, self.serializing_time, self.deserializing_time,
+                self.saving_time)
 
 
 class BBox:
