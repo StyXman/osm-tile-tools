@@ -562,6 +562,18 @@ class PixelTile:
         return []
 
 
+    # TODO: move to BaseTile
+    def __iter__(self):
+        return self.iter()
+
+
+    def iter(self):
+        """Returns a generator over the 'coords'."""
+        yield self.z
+        yield self.x
+        yield self.y
+
+
 # TODO: MetaTile factory
 
 # Children = List[MetaTile]
