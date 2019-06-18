@@ -589,7 +589,6 @@ class MetaTile:
 
         self.is_empty = True  # to simplify code in store_metatile()
         self.render = True  # this is going to be reset by store_metatile()
-        self.skipped = False
 
         # NOTE: children are not precomputed because it's recursive with no bounds
         # see children()

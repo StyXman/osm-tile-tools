@@ -70,7 +70,7 @@ def pyramid_count(min_zoom, max_zoom):
 def time2hms(t):
     h = int(t / 3600.0)
     m = int((t - h * 3600) / 60)
-    s = int(t) % 60
+    s = t % 60
 
     return (h, m, s)
 
@@ -409,7 +409,6 @@ class StormBringer:
                      metatile.z == self.opts.max_zoom ):
 
                     child.render = False
-                    child.skipped = True
 
             # TODO: handle empty and link or write; pyramid stuff
             metatile.deserializing_time = mid - start
@@ -492,24 +491,26 @@ class Master:
         percentage = ( (self.tiles_rendered + self.tiles_skept) /
                        self.tiles_to_render * 100 )
 
-        time_elapsed = time.perf_counter() - self.start
+        now = time.perf_counter()
+        time_elapsed = now - self.start
+        total_render_time = sum(metatile.times())
 
-        if not metatile.skipped:
-            total_render_time = sum(metatile.times())
-            debug(total_render_time)
-            self.median.add(total_render_time)
+        if total_render_time > 0:
+            self.median.add(total_render_time / len(metatile.tiles))
+            debug (self.median.items)
 
         if self.tiles_rendered > 0:
             time_per_tile = self.median.median()
-            debug((time_elapsed, time_per_tile))
             eta = ( (self.tiles_to_render - self.tiles_rendered - self.tiles_skept) *
-                    time_per_tile )
+                    time_per_tile ) / self.opts.threads
+            debug((self.start, now, time_elapsed, total_render_time, time_per_tile, eta))
 
-            format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %d:%02d:%02d, ETA: %d:%02d:%02d]"
+            format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %d:%02d:%06.3f, ETA: %d:%02d:%06.3f, Total: %d:%02d:%02d]"
             info(format, self.tiles_rendered, self.tiles_skept, self.tiles_to_render,
-                 percentage, metatile, *args, *time2hms(time_elapsed), *time2hms(eta))
+                 percentage, metatile, *args, *time2hms(time_elapsed),
+                 *time2hms(eta), *time2hms(time_elapsed + eta))
         else:
-            format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %d:%02d:%02d, ETA: ∞]"
+            format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %d:%02d:%06.3f, ETA: ∞, Total: ∞]"
             info(format, self.tiles_rendered, self.tiles_skept, self.tiles_to_render,
                  percentage, metatile, *args, *time2hms(time_elapsed))
 
@@ -695,7 +696,6 @@ class Master:
                 if metatile is not None:
                     # TODO: move to another thread
                     if not self.should_render(metatile):
-                        metatile.skipped = True
                         continue
 
                     # push in the writer
