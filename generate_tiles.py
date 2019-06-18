@@ -180,7 +180,6 @@ class RenderThread:
         if self.opts.parallel == 'single':
             # RenderThread.loop() is not called in single mode
             # so do this here
-            self.pid = getpid()
             self.load_map()
 
         self.store_thread = None
@@ -214,10 +213,10 @@ class RenderThread:
         if not self.opts.dry_run:
             im = mapnik.Image(self.image_size, self.image_size)
             # Render image with default Agg renderer
-            debug('[%s] rende...', self.pid)
+            debug('[%s] rende...', self.name)
             # TODO: handle exception, send back into queue
             mapnik.render(self.m, im)
-            debug('[%s] ...ring!', self.pid)
+            debug('[%s] ...ring!', self.name)
             mid = time.perf_counter()
 
             # TODO: all this is on a single tile, not a metatile
@@ -246,7 +245,7 @@ class RenderThread:
 
             end = time.perf_counter()
         else:
-            debug('[%s] thumbtumbling', self.pid)
+            debug('[%s] thumbtumbling', self.name)
             time.sleep(randint(0, 30) / 10)
             mid = time.perf_counter()
             end = time.perf_counter()
@@ -255,9 +254,9 @@ class RenderThread:
         metatile.serializing_time = end - mid
         bail_out = False
 
-        debug("[%s] putting %r", self.pid, metatile)
+        debug("[%s] putting %r", self.name, metatile)
         self.output.put(metatile)
-        debug("[%s] put! (%d)", self.pid, self.output.qsize())
+        debug("[%s] put! (%d)", self.name, self.output.qsize())
 
         if not self.opts.store_thread and self.output.qsize() > 0:
             # NOTE: mypy complains here that Item "Process" of "Union[Process, StormBringer]" has no attribute "single_step"
@@ -276,7 +275,7 @@ class RenderThread:
             mapnik.load_map(self.m, self.opts.mapfile, self.opts.mapnik_strict)
 
         end = time.perf_counter()
-        info('[%s] Map loading took %.6fs', self.pid, end - start)
+        info('[%s] Map loading took %.6fs', self.name, end - start)
 
         # Obtain <Map> projection
         self.prj = mapnik.Projection(self.m.srs)
@@ -289,30 +288,30 @@ class RenderThread:
         # even in the case of multiprocessing
         sig = signal(SIGINT, SIG_IGN)
 
-        self.pid = getpid()
         self.load_map()
 
-        debug('[%s] looping the loop', self.pid)
+        info("[%s]: starting...", self.name)
+        debug('[%s] looping the loop', self.name)
 
         finished = False
         while self.single_step():
             pass
 
-        info("[%s] finished", self.pid)
+        info("[%s] finished", self.name)
 
 
     def single_step(self):
         # Fetch a tile from the queue and render it
-        debug("[%s] get..", self.pid)
+        debug("[%s] get..", self.name)
         # metatile:Optional[map_utils.MetaTile] = self.input.get()
         metatile = self.input.get()
-        debug("[%s] got! %r", self.pid, metatile)
+        debug("[%s] got! %r", self.name, metatile)
 
         if metatile is None:
             # send the storage thread a message
-            debug("[%s] putting %r", self.pid, None)
+            debug("[%s] putting %r", self.name, None)
             self.output.put(None)
-            debug("[%s] put! (%d)", self.pid, self.output.qsize())
+            debug("[%s] put! (%d)", self.name, self.output.qsize())
             return False
 
         bail_out = self.render_metatile(metatile)
@@ -340,36 +339,29 @@ class StormBringer:
         self.writers = opts.threads
         self.done_writers = 0
 
-        if not self.opts.store_thread:
-            # StormBringer.loop() is not called in single mode
-            # so do this here
-            self.pid = getpid()
-
 
     def loop(self):
         # disable SIGINT so C-c/KeyboardInterrupt is handled by Master
         # even in the case of multiprocessing
         sig = signal(SIGINT, SIG_IGN)
 
-        self.pid = getpid()
-
-        debug('[%s] curling the curl', self.pid)
+        debug('[%s] curling the curl', self.name)
 
         while self.single_step():
             pass
 
-        debug('done')
+        debug('[%s] done', self.name)
 
 
     def single_step(self):
-        debug('[%s] >... (%d)', self.pid, self.input.qsize())
+        debug('[%s] >... (%d)', self.name, self.input.qsize())
         metatile = self.input.get()
-        debug('[%s] ...> %s', self.pid, metatile)
+        debug('[%s] ...> %s', self.name, metatile)
 
         if metatile is not None:
-            debug('[%s] sto...', self.pid)
+            debug('[%s] sto...', self.name)
             self.store_metatile(metatile)
-            debug('[%s] ...re!', self.pid)
+            debug('[%s] ...re!', self.name)
             # we don't need it anymore and *.Queue complains that
             # mapnik._mapnik.Image is not pickle()'able
             metatile.im = None
@@ -377,7 +369,7 @@ class StormBringer:
         else:
             # this writer finished
             self.done_writers += 1
-            debug('[%s] %d <-> %d', self.pid, self.writers, self.done_writers)
+            debug('[%s] %d <-> %d', self.name, self.writers, self.done_writers)
 
         return self.done_writers != self.writers
 
@@ -503,7 +495,7 @@ class Master:
             time_per_tile = self.median.median()
             eta = ( (self.tiles_to_render - self.tiles_rendered - self.tiles_skept) *
                     time_per_tile ) / self.opts.threads
-            debug((self.start, now, time_elapsed, total_render_time, time_per_tile, eta))
+            info((self.start, now, time_elapsed, total_render_time, time_per_tile, eta))
 
             format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %d:%02d:%06.3f, ETA: %d:%02d:%06.3f, Total: %d:%02d:%02d]"
             info(format, self.tiles_rendered, self.tiles_skept, self.tiles_to_render,
@@ -525,18 +517,23 @@ class Master:
             sb = StormBringer(self.opts, self.backend, self.store_queue, self.info)
             if self.opts.store_thread:
                 self.store_thread = self.opts.parallel_factory(target=sb.loop)
+                sb.name = self.store_thread.name
                 self.store_thread.start()
                 debug("Started store thread %s", self.store_thread.name)
             else:
+                sb.name = 'store-emb'
                 self.store_thread = sb
 
             for i in range(self.opts.threads):
                 renderer = RenderThread(self.opts, self.new_work, self.store_queue)
 
                 render_thread = self.opts.parallel_factory(target=renderer.loop)
+                renderer.name = render_thread.name
+
                 if not self.opts.store_thread:
                     debug("Store object created, attached to thread")
                     renderer.store_thread = self.store_thread
+
                 render_thread.start()
                 debug("Started render thread %s", render_thread.name)
 
@@ -545,8 +542,10 @@ class Master:
             # in this case we create the 'thread', but in fact we only use its single_step()
             self.store_thread = StormBringer(self.opts, self.backend, self.store_queue,
                                              self.info)
+            self.store_thread.name = 'single-store'
             debug("Store object created, not threaded")
             self.renderer = RenderThread(self.opts, self.new_work, self.store_queue)
+            self.renderer.name = 'single-render'
             self.renderer.store_thread = self.store_thread
             debug("Renderer object created, not threaded")
 
