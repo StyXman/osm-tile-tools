@@ -176,11 +176,6 @@ class RenderThread:
         # self.image_size:int = self.opts.tile_size * self.metatile_size
         self.metatile_size = opts.metatile_size
 
-        if self.opts.parallel == 'single':
-            # RenderThread.loop() is not called in single mode
-            # so do this here
-            self.load_map()
-
         self.store_thread = None
 
 
@@ -546,6 +541,7 @@ class Master:
             debug("Store object created, not threaded")
             self.renderer = RenderThread(self.opts, self.new_work, self.store_queue)
             self.renderer.name = 'single-render'
+            self.renderer.load_map()
             self.renderer.store_thread = self.store_thread
             debug("Renderer object created, not threaded")
 
