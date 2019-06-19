@@ -492,7 +492,7 @@ class Master:
                     time_per_tile ) / self.opts.threads
             debug((self.start, now, time_elapsed, total_render_time, time_per_tile, eta))
 
-            format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %d:%02d:%06.3f, ETA: %d:%02d:%06.3f, Total: %d:%02d:%02d]"
+            format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %d:%02d:%06.3f, ETA: %d:%02d:%06.3f, Total: %d:%02d:%06.3f]"
             info(format, self.tiles_rendered, self.tiles_skept, self.tiles_to_render,
                  percentage, metatile, *args, *time2hms(time_elapsed),
                  *time2hms(eta), *time2hms(time_elapsed + eta))
