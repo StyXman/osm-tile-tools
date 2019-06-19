@@ -643,14 +643,15 @@ class MetaTile:
     def children(self):
         if self._children is None:
             if self.size == self.wanted_size:
-                self._children = [ MetaTile(self.z+1,
-                                            2*self.x + i*self.size,
-                                            2*self.y + j*self.size,
+                self._children = [ MetaTile(self.z + 1,
+                                            2 * self.x + i * self.size,
+                                            2 * self.y + j * self.size,
                                             self.wanted_size, self.tile_size)
                                    for i in range(2) for j in range(2) ]
             else:
-                self._children = [ MetaTile(self.z+1, 2*self.x, 2*self.y,
+                self._children = [ MetaTile(self.z + 1, 2 * self.x, 2 * self.y,
                                             self.wanted_size, self.tile_size) ]
+            debug((self, self._children))
 
         return self._children
 

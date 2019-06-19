@@ -175,7 +175,6 @@ class RenderThread:
         # self.metatile_size:int = opts.metatile_size
         # self.image_size:int = self.opts.tile_size * self.metatile_size
         self.metatile_size = opts.metatile_size
-        self.image_size = self.opts.tile_size * self.metatile_size
 
         if self.opts.parallel == 'single':
             # RenderThread.loop() is not called in single mode
@@ -201,7 +200,8 @@ class RenderThread:
         else:
             bbox = mapnik.Envelope(c0.x, c0.y, c1.x, c1.y)
 
-        self.m.resize(self.image_size, self.image_size)
+        image_size = self.opts.tile_size * min(self.metatile_size, 2**metatile.z)
+        self.m.resize(image_size, image_size)
         self.m.zoom_to_box(bbox)
         if self.m.buffer_size < 128:
             self.m.buffer_size = 128
@@ -211,7 +211,7 @@ class RenderThread:
 
         start = time.perf_counter()
         if not self.opts.dry_run:
-            im = mapnik.Image(self.image_size, self.image_size)
+            im = mapnik.Image(image_size, image_size)
             # Render image with default Agg renderer
             debug('[%s] rende...', self.name)
             # TODO: handle exception, send back into queue
@@ -269,7 +269,7 @@ class RenderThread:
     def load_map(self):
         start = time.perf_counter()
 
-        self.m  = mapnik.Map(self.image_size, self.image_size)
+        self.m  = mapnik.Map(0, 0)
         # Load style XML
         if not self.opts.dry_run:
             mapnik.load_map(self.m, self.opts.mapfile, self.opts.mapnik_strict)
@@ -557,10 +557,10 @@ class Master:
         if not self.opts.single_tiles:
             # attributes used a lot, so hold them in local vars
             bbox = self.opts.bbox
-            tile_size = self.opts.tile_size
-            metatile_size = self.opts.metatile_size
-            metatile_pixel_size = metatile_size * tile_size
             min_zoom = self.opts.min_zoom
+            tile_size = self.opts.tile_size
+            metatile_size = min(self.opts.metatile_size, 2**min_zoom)
+            metatile_pixel_size = metatile_size * tile_size
 
             debug('rendering bbox %s: %s', self.opts.bbox_name, bbox)
             # debug(bbox.lower_left)
@@ -581,7 +581,7 @@ class Master:
             info('Creating initial metatiles...')
             for x in range(w, e, metatile_size):
                 for y in range(n, s, metatile_size):
-                    metatile = map_utils.MetaTile(min_zoom, x, y, metatile_size,
+                    metatile = map_utils.MetaTile(min_zoom, x, y, self.opts.metatile_size,
                                                   tile_size)
                     initial_metatiles.append(metatile)
                     count += 1
