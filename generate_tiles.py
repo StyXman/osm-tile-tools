@@ -490,7 +490,7 @@ class Master:
             time_per_tile = self.median.median()
             eta = ( (self.tiles_to_render - self.tiles_rendered - self.tiles_skept) *
                     time_per_tile ) / self.opts.threads
-            info((self.start, now, time_elapsed, total_render_time, time_per_tile, eta))
+            debug((self.start, now, time_elapsed, total_render_time, time_per_tile, eta))
 
             format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %d:%02d:%06.3f, ETA: %d:%02d:%06.3f, Total: %d:%02d:%02d]"
             info(format, self.tiles_rendered, self.tiles_skept, self.tiles_to_render,
