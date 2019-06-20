@@ -115,16 +115,6 @@ class Tile:
         return "Tile(%d, %d, %d, %r)" % (self.z, self.x, self.y, self.meta_index)
 
 
-    @property
-    def is_empty(self):
-        if self._is_empty is None:
-            # TODO: this is *completely* style dependent!
-            self._is_empty = ( len(self.data) == 103 and
-                               self.data[41:44] == b'\xb5\xd0\xd0' )
-
-        return self._is_empty
-
-
     def __iter__(self):
         return self.iter()
 

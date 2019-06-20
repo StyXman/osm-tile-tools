@@ -418,6 +418,10 @@ class StormBringer:
                            self.opts.tile_size,   self.opts.tile_size)
         tile.data = img.tostring('png256')
 
+        debug((len(tile.data), tile.data[41:44]))
+        tile.is_empty = (len(tile.data) == 103 and
+                         tile.data[41:44] == self.opts.empty_color)
+
         if not tile.is_empty or self.opts.empty == 'write':
             self.backend.store(tile)
         elif tile.is_empty and self.opts.empty == 'link':
@@ -822,6 +826,8 @@ def parse_args():
                         type=float, metavar='DAYS')
     parser.add_argument(      '--missing-as-new',  dest='missing_as_new', default=False,
                         action='store_true', help="missing tiles in a meta tile count as newer, so we don't re-render metatiles with empty tiles.")
+    parser.add_argument('-e', '--empty-color',     dest='empty_color', metavar='[#]RRGGBB',
+                        help='Define the color of empty space (usually sea/ocean color) for empty tile detection.')
     parser.add_argument('-E', '--empty',           dest='empty',     default='skip',
                         choices=('skip', 'link', 'write'))
 
@@ -960,6 +966,18 @@ def parse_args():
     elif opts.parallel == 'threads':
         debug('th.Thread()')
         opts.parallel_factory = threading.Thread
+
+    # TODO: accept other formats
+    try:
+        # cut the leading #
+        if len(opts.empty_color) == 7 and opts.empty_color[0] == '#':
+            opts.empty_color = opts.empty_color[1:]
+
+        opts.empty_color = bytes([ int(opts.empty_color[index:index + 2], 16)
+                                   for index in (0, 2, 4) ])
+    except ValueError:
+        parser.print_help()
+        sys.exit(1)
 
     # semantic opts
     opts.single_tiles = opts.tiles is not None
