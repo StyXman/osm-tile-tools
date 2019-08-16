@@ -397,7 +397,6 @@ class StormBringer:
 
                     child.render = False
 
-            # TODO: handle empty and link or write; pyramid stuff
             metatile.deserializing_time = mid - start
             metatile.saving_time = end - mid
         else:
@@ -798,7 +797,8 @@ def parse_args():
                        help="Render this list of [meta]tiles.")
     group.add_argument('-c', '--coords',        dest='coords',    default=None, nargs='+',
                        metavar='[Lat,Lon|Lat/Lon]', help="Render this exact coords as the center of the [meta]tile.")
-    group.add_argument('-L', '--longlat',        dest='longlat',    default=None, nargs=2, metavar=('LONG', 'LAT'))
+    group.add_argument('-L', '--longlat',        dest='longlat',    default=None, nargs=2,
+                       metavar=('LONG', 'LAT'))
 
     parser.add_argument('-n', '--min-zoom',      dest='min_zoom',  default=0, type=int)
     parser.add_argument('-x', '--max-zoom',      dest='max_zoom',  default=18, type=int)

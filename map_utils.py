@@ -41,6 +41,9 @@ class GoogleProjection:
 
     For information about the formulas in lon_lat2pixel() and pixel2lon_lat(), see
     https://en.wikipedia.org/wiki/Mercator_projection#Mathematics_of_the_Mercator_projection"""
+
+    # see also https://alastaira.wordpress.com/2011/01/23/the-google-maps-bing-maps-spherical-mercator-projection/
+
     def __init__(self, levels:int=18) -> None:
         self.pixels_per_degree:List[float] = []
         self.pixels_per_radian:List[float] = []  # pixels per radian
@@ -53,9 +56,9 @@ class GoogleProjection:
             self.pixels_per_degree.append(world_size / 360.0)
             self.pixels_per_radian.append(world_size / (2 * pi))
             self.center_pixel.append((center, center))
-            # self.world_size.append(c)
-            # the world doubels in size on each zoom level
+            # the world doubles in size on each zoom level
             world_size *= 2
+
 
     # it's LonLat! (lon, lat)
     def lon_lat2pixel(self, lon_lat:Tuple[float, float], zoom:int) -> Tuple[int, int]:
@@ -71,6 +74,7 @@ class GoogleProjection:
 
         return (x, y)
 
+
     def pixel2lon_lat(self, px:Tuple[int, int], zoom:int) -> Tuple[float,float]:
         x, y = px
         center_x, center_y = self.center_pixel[zoom]
@@ -82,6 +86,7 @@ class GoogleProjection:
         lat = RAD_TO_DEG * (2 * atan(exp(angle)) - 0.5 * pi)
 
         return (lon, lat)
+
 
 class Tile:
     # def __init__(self, z:int, x:int, y:int, metatile:Optional[MetaTile]=None) -> None:
@@ -456,7 +461,7 @@ class MBTilesBackend:
 
 
 def coord_range(mn, mx, zoom):
-    return ( coord for coord in range(mn, mx+1)
+    return ( coord for coord in range(mn, mx + 1)
                    if coord >= 0 and coord < 2**zoom )
 
 
