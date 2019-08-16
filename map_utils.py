@@ -567,6 +567,10 @@ class PixelTile:
         yield self.y
 
 
+    def times(self):
+        return (self.render_time, self.serializing_time, self.deserializing_time,
+                self.saving_time)
+
 # TODO: MetaTile factory
 
 # Children = List[MetaTile]
