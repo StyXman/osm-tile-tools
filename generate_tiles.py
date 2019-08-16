@@ -509,7 +509,8 @@ class Master:
     def render_tiles(self) -> None:
         debug("render_tiles(%s)", self.opts)
 
-        self.backend = backends[self.opts.format](self.opts.tile_dir, self.opts.bbox)
+        self.backend = backends[self.opts.format](self.opts.tile_dir, self.opts.bbox,
+                                                  **self.opts.more_opts)
 
         # Launch rendering threads
         if self.opts.parallel != 'single':
@@ -807,6 +808,8 @@ def parse_args():
     parser.add_argument('-f', '--format',        dest='format',    default='tiles',
                         choices=('tiles', 'mbtiles', 'mod_tile', 'test'))
     parser.add_argument('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
+    parser.add_argument(      '--filename-pattern', dest='filename_pattern', default=None,
+                        help="Pattern may include {base_dir}, {x}, {y} and {z}.")
 
     # TODO: check it's a power of 2
     parser.add_argument('-m', '--metatile-size', dest='metatile_size', default=1, type=int,
@@ -978,6 +981,10 @@ def parse_args():
     except ValueError:
         parser.print_help()
         sys.exit(1)
+
+    opts.more_opts = {}
+    if opts.filename_pattern is not None:
+        opts.more_opts['filename_pattern'] = opts.filename_pattern
 
     # semantic opts
     opts.single_tiles = opts.tiles is not None

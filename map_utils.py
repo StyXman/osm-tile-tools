@@ -132,15 +132,18 @@ TileOrTuple = Union[Tile, Tuple[int, int, int]]
 class DiskBackend:
     fs_based = True
 
-    def __init__(self, base:str, *more):
+    def __init__(self, base:str, *more, **even_more):
         self.base_dir = base
+        self.filename_pattern = even_more.get('filename_pattern',
+                                              '{base_dir}/{z}/{x}/{y}.png')
 
 
     def tile_uri(self, tile: TileOrTuple) -> str:
         # this works because I made Tile iterable
         z, x, y = ( str(i) for i in tile )
+        base_dir = self.base_dir
 
-        return os.path.join(self.base_dir, z, x, y + '.png')
+        return self.filename_pattern.format(**locals())
 
 
     def store(self, tile: Tile):
@@ -223,10 +226,10 @@ class ModTileBackend(DiskBackend):
 
 
 class TestBackend(DiskBackend):
-    def tile_uri(self, tile):
-        z, x, y = ( str(i) for i in tile )
-
-        return os.path.join(self.base_dir, '-'.join([ z, x, y + '.png' ]))
+    def __init__(self, base:str, *more, **even_more):
+        self.base_dir = base
+        self.filename_pattern = even_more.get('filename_pattern',
+                                              '{base_dir}/{z}-{x}-{y}.png')
 
 
 # https://github.com/mapbox/node-mbtiles/blob/master/lib/schema.sql
