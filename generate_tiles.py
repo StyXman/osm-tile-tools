@@ -930,32 +930,39 @@ def parse_args():
         opts.tile_size = 1024
 
         if opts.coords is not None:
-            # input is Lat,Lon but tileproj works with Lon,Lat
-            data = opts.coords.split('/')
+            new_coords = []
 
-            if len(data) == 3:
-                # it has a zoom level spec too, use that as min_zoom, max_zoom
-                zoom, lat, long = data
-                opts.min_zoom = int(zoom)
-                opts.max_zoom = opts.min_zoom
-            else:
-                lat, long = data
+            for coord in opts.coords:
+                # input is Lat,Lon but tileproj works with Lon,Lat
+                data = coord.split('/')
 
-            opts.coords = (float(long), float(lat))
+                if len(data) == 3:
+                    # it has a zoom level spec too, use that as min_zoom, max_zoom
+                    zoom, lat, long = data
+                    opts.min_zoom = int(zoom)
+                    opts.max_zoom = opts.min_zoom
+                else:
+                    lat, long = data
+
+                new_coords.append( (float(long), float(lat)) )
+
+            opts.coords = new_coords
+
         elif opts.longlat is not None:
             # input is Lon,Lat already
             long, lat = opts.longlat
-            opts.coords = (float(long), float(lat))
+            opts.coords = [ (float(long), float(lat)) ]
 
         debug(opts.coords)
 
         metatiles = []
 
-        for z in range(opts.min_zoom, opts.max_zoom + 1):
-            # TODO: maybe move this conversion to PixelTile
-            x, y = map_utils.tileproj.lon_lat2pixel(opts.coords, z)
-            tile = map_utils.PixelTile(z, x, y, 1024)
-            metatiles.append(tile)
+        for coord in opts.coords:
+            for z in range(opts.min_zoom, opts.max_zoom + 1):
+                # TODO: maybe move this conversion to PixelTile
+                x, y = map_utils.tileproj.lon_lat2pixel(coord, z)
+                tile = map_utils.PixelTile(z, x, y, 1024)
+                metatiles.append(tile)
 
         opts.tiles = metatiles
 
