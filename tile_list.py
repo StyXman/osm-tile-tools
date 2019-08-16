@@ -16,20 +16,22 @@ gprj = map_utils.GoogleProjection(maxZoom+1)
 ll0 = (bbox[0],bbox[3])
 ll1 = (bbox[2],bbox[1])
 
-image_size=256.0
+image_size = 256.0
 
-for z in range(minZoom,maxZoom + 1):
-    px0 = gprj.fromLLtoPixel(ll0,z)
-    px1 = gprj.fromLLtoPixel(ll1,z)
+for z in range(minZoom, maxZoom + 1):
+    px0 = gprj.lon_lat2pixel(ll0, z)
+    px1 = gprj.lon_lat2pixel(ll1, z)
 
-    for x in range(int(px0[0]/image_size),int(px1[0]/image_size)+1):
+    for x in range(int(px0[0] / image_size),
+                   int(px1[0] / image_size) + 1):
         # Validate x co-ordinate
         if (x < 0) or (x >= 2**z):
             continue
 
-        for y in range(int(px0[1]/image_size),int(px1[1]/image_size)+1):
+        for y in range(int(px0[1] / image_size),
+                       int(px1[1] / image_size) + 1):
             # Validate x co-ordinate
             if (y < 0) or (y >= 2**z):
                 continue
 
-            print "%d/%d/%d.png" % (z, x, y)
+            print("%d/%d/%d.png" % (z, x, y))
