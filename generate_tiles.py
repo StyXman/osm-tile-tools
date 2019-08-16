@@ -795,8 +795,8 @@ def parse_args():
     group.add_argument('-B', '--bbox-name',     dest='bbox_name', default=None)
     group.add_argument('-T', '--tiles',         dest='tiles',     default= None, nargs='+', metavar='[Z,X,Y|Z/X/Y]',
                        help="Render this list of [meta]tiles.")
-    group.add_argument('-c', '--coords',        dest='coords',    default=None,
-                       help="COORDS can be in form 'Lat,Lon', ´Lat/Lon'.")
+    group.add_argument('-c', '--coords',        dest='coords',    default=None, nargs='+',
+                       metavar='[Lat,Lon|Lat/Lon]', help="Render this exact coords as the center of the [meta]tile.")
     group.add_argument('-L', '--longlat',        dest='longlat',    default=None, nargs=2, metavar=('LONG', 'LAT'))
 
     parser.add_argument('-n', '--min-zoom',      dest='min_zoom',  default=0, type=int)
