@@ -793,8 +793,8 @@ def parse_args():
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-b', '--bbox',          dest='bbox',      default='-180,-85,180,85', metavar='W,S,E,N')
     group.add_argument('-B', '--bbox-name',     dest='bbox_name', default=None)
-    group.add_argument('-T', '--tiles',         dest='tiles',     default= None, nargs='+', metavar='METATILE',
-                       help="METATILE can be in the form Z,X,Y or Z/X/Y.")
+    group.add_argument('-T', '--tiles',         dest='tiles',     default= None, nargs='+', metavar='[Z,X,Y|Z/X/Y]',
+                       help="Render this list of [meta]tiles.")
     group.add_argument('-c', '--coords',        dest='coords',    default=None,
                        help="COORDS can be in form 'Lat,Lon', ´Lat/Lon'.")
     group.add_argument('-L', '--longlat',        dest='longlat',    default=None, nargs=2, metavar=('LONG', 'LAT'))
