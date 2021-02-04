@@ -421,6 +421,9 @@ class StormBringer:
         tile.is_empty = (len(tile.data) == self.opts.empty_size and
                          tile.data[41:44] == self.opts.empty_color)
 
+        if tile.is_empty:
+            debug('Skipping empty tile')
+
         if not tile.is_empty or self.opts.empty == 'write':
             self.backend.store(tile)
         elif tile.is_empty and self.opts.empty == 'link':
