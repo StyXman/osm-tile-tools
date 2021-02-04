@@ -831,7 +831,7 @@ def parse_args():
                         action='store_true', help="missing tiles in a meta tile count as newer, so we don't re-render metatiles with empty tiles.")
     parser.add_argument('-e', '--empty-color',     dest='empty_color', metavar='[#]RRGGBB',
                         help='Define the color of empty space (usually sea/ocean color) for empty tile detection.')
-    parser.add_argument('-e', '--empty-size',     dest='empty_size', default=103,
+    parser.add_argument('-s', '--empty-size',     dest='empty_size', default=103,
                         help='The byte size of empty tiles.')
     parser.add_argument('-E', '--empty',           dest='empty',     default='skip',
                         choices=('skip', 'link', 'write'))
