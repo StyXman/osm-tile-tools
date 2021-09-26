@@ -27,7 +27,7 @@ import map_utils
 
 
 import logging
-from logging import debug, info, exception
+from logging import debug, info, exception, warning
 long_format = "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
 short_format = "%(asctime)s %(message)s"
 
@@ -206,7 +206,11 @@ class RenderThread:
 
         start = time.perf_counter()
         if not self.opts.dry_run:
-            im = mapnik.Image(image_size, image_size)
+            if opts.format == 'svg':
+                im = cairo.SVGSurface(f"{opts.tile_dir}/{opts.coords[0][0]}-{opts.coords[0][1]}.svg", opts.tile_size, opts.tile_size)
+            else:
+                im = mapnik.Image(image_size, image_size)
+
             # Render image with default Agg renderer
             debug('[%s] rende...', self.name)
             # TODO: handle exception, send back into queue
@@ -320,6 +324,9 @@ backends = dict(
     mbtiles= map_utils.MBTilesBackend,
     mod_tile=map_utils.ModTileBackend,
     test=    map_utils.TestBackend,
+    # SVGs are saved by the renderer itself
+    # but we still need to provide a callable
+    svg=     lambda *more, **even_more: None,
     )
 
 
@@ -409,25 +416,28 @@ class StormBringer:
 
 
     def store_tile(self, tile, image):
-        i, j = tile.meta_index
+        # SVG is stored by the renderer
+        if opts.format != 'svg':
+            i, j = tile.meta_index
 
-        # TODO: Tile.meta_pixel_coords
-        # TODO: pass tile_size to MetaTile and Tile
-        img = image.view(i*self.opts.tile_size, j*self.opts.tile_size,
-                           self.opts.tile_size,   self.opts.tile_size)
-        tile.data = img.tostring('png256')
+            # TODO: Tile.meta_pixel_coords
+            # TODO: pass tile_size to MetaTile and Tile
+            img = image.view(i*self.opts.tile_size, j*self.opts.tile_size,
+                            self.opts.tile_size,   self.opts.tile_size)
+            # BUG: is this duplicated work?
+            tile.data = img.tostring('png256')
 
-        debug((len(tile.data), tile.data[41:44]))
-        tile.is_empty = (len(tile.data) == 103 and
-                         tile.data[41:44] == self.opts.empty_color)
+            debug((len(tile.data), tile.data[41:44]))
+            tile.is_empty = (len(tile.data) == 103 and
+                            tile.data[41:44] == self.opts.empty_color)
 
-        if not tile.is_empty or self.opts.empty == 'write':
-            self.backend.store(tile)
-        elif tile.is_empty and self.opts.empty == 'link':
-            # TODO
-            pass
+            if not tile.is_empty or self.opts.empty == 'write':
+                self.backend.store(tile)
+            elif tile.is_empty and self.opts.empty == 'link':
+                # TODO
+                pass
 
-        self.backend.commit()
+            self.backend.commit()
 
 
 class Master:
@@ -806,7 +816,7 @@ def parse_args():
     parser.add_argument('-i', '--input-file',    dest='mapfile',   default='osm.xml',
                         help="MapnikXML format.")
     parser.add_argument('-f', '--format',        dest='format',    default='tiles',
-                        choices=('tiles', 'mbtiles', 'mod_tile', 'test'))
+                        choices=('tiles', 'mbtiles', 'mod_tile', 'test', 'svg'))
     parser.add_argument('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
     parser.add_argument(      '--filename-pattern', dest='filename_pattern', default=None,
                         help="Pattern may include {base_dir}, {x}, {y} and {z}.")
@@ -925,6 +935,25 @@ def parse_args():
                 metatiles.append(metatile)
 
             opts.tiles = metatiles
+
+    # TODO: svg is too special?
+    if opts.format == 'svg':
+        if opts.coords is None and opts.longlat is None:
+            warning('SVG format only works with --coords or --longlat.')
+            sys.exit(1)
+
+        if opts.parallel != 'single':
+            warning('SVG format. Forcing single thread.')
+            opts.parallel = 'single'
+
+        if opts.store_thread:
+            warning('SVG format. Forcing no store thread.')
+            opts.store_thread = false
+
+        # lazy import
+        debug('loading cairo for SVG')
+        global cairo
+        import cairo
 
     if opts.coords is not None or opts.longlat is not None:
         opts.tile_size = 1024
