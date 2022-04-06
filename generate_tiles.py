@@ -208,6 +208,8 @@ class RenderThread:
         if not self.opts.dry_run:
             if opts.format == 'svg':
                 im = cairo.SVGSurface(f"{opts.tile_dir}/{opts.coords[0][0]}-{opts.coords[0][1]}.svg", opts.tile_size, opts.tile_size)
+            elif opts.format == 'pdf':
+                im = cairo.PDFSurface(f"{opts.tile_dir}/{opts.coords[0][0]}-{opts.coords[0][1]}.pdf", opts.tile_size, opts.tile_size)
             else:
                 im = mapnik.Image(image_size, image_size)
 
@@ -332,10 +334,11 @@ backends = dict(
     mbtiles= map_utils.MBTilesBackend,
     mod_tile=map_utils.ModTileBackend,
     test=    map_utils.TestBackend,
-    # SVGs are saved by the renderer itself
+    # SVGs and PDFs are saved by the renderer itself
     # but we still need to provide a callable
     svg=     lambda *more, **even_more: None,
-    )
+    pdf=     lambda *more, **even_more: None,
+)
 
 
 class StormBringer:
@@ -425,7 +428,7 @@ class StormBringer:
 
     def store_tile(self, tile, image):
         # SVG is stored by the renderer
-        if opts.format != 'svg':
+        if opts.format not in ('svg', 'pdf'):
             i, j = tile.meta_index
 
             # TODO: Tile.meta_pixel_coords
@@ -827,7 +830,7 @@ def parse_args():
     parser.add_argument('-i', '--input-file',    dest='mapfile',   default='osm.xml',
                         help="MapnikXML format.")
     parser.add_argument('-f', '--format',        dest='format',    default='tiles',
-                        choices=('tiles', 'mbtiles', 'mod_tile', 'test', 'svg'))
+                        choices=('tiles', 'mbtiles', 'mod_tile', 'test', 'svg', 'pdf'))
     parser.add_argument('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
     parser.add_argument(      '--filename-pattern', dest='filename_pattern', default=None,
                         help="Pattern may include {base_dir}, {x}, {y} and {z}.")
@@ -950,21 +953,21 @@ def parse_args():
             opts.tiles = metatiles
 
     # TODO: svg is too special?
-    if opts.format == 'svg':
+    if opts.format in ('svg', 'pdf'):
         if opts.coords is None and opts.longlat is None:
-            warning('SVG format only works with --coords or --longlat.')
+            warning('SVG/PDF formats only work with --coords or --longlat.')
             sys.exit(1)
 
         if opts.parallel != 'single':
-            warning('SVG format. Forcing single thread.')
+            warning('SVG/PDF formats. Forcing single thread.')
             opts.parallel = 'single'
 
         if opts.store_thread:
-            warning('SVG format. Forcing no store thread.')
+            warning('SVG/PDF formats. Forcing no store thread.')
             opts.store_thread = false
 
         # lazy import
-        debug('loading cairo for SVG')
+        debug('loading cairo for SVG/PDF')
         global cairo
         import cairo
 
