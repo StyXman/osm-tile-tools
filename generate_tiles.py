@@ -23,6 +23,8 @@ try:
 except:
     import mapnik
 
+import pyproj
+
 import map_utils
 
 
@@ -181,19 +183,19 @@ class RenderThread:
 
     def render_metatile(self, metatile:map_utils.MetaTile) -> Dict[map_utils.Tile, bool]:
         # get LatLong (EPSG:4326)
-        l0 = metatile.coords[0]
-        l1 = metatile.coords[1]
+        nw_lonlat = metatile.coords[0]
+        se_lonlat = metatile.coords[1]
+        debug("%d %d %d %d", *nw_lonlat, *se_lonlat)
 
-        # this is the only time where we convert manually into WebMerc
-        # Convert to map projection (e.g. mercator co-ords EPSG:900913)
-        c0 = self.prj.forward(mapnik.Coord(l0[0], l0[1]))
-        c1 = self.prj.forward(mapnik.Coord(l1[0], l1[1]))
+        nw_webmerc = self.transformer.transform(*nw_lonlat)
+        se_webmerc = self.transformer.transform(*se_lonlat)
+        debug("%d %d %d %d", *nw_webmerc, *se_webmerc)
 
         # Bounding box for the tile
         if hasattr(mapnik, 'mapnik_version') and mapnik.mapnik_version() >= 800:
-            bbox = mapnik.Box2d(c0.x, c0.y, c1.x, c1.y)
+            bbox = mapnik.Box2d(*nw_webmerc, *se_webmerc)
         else:
-            bbox = mapnik.Envelope(c0.x, c0.y, c1.x, c1.y)
+            bbox = mapnik.Envelope(*nw_webmerc, *se_webmerc)
 
         image_size = self.opts.tile_size * min(self.metatile_size, 2**metatile.z)
         self.m.resize(image_size, image_size)
@@ -282,9 +284,10 @@ class RenderThread:
         end = time.perf_counter()
         info('[%s] Map loading took %.6fs', self.name, end - start)
 
-        # Obtain <Map> projection
-        self.prj = mapnik.Projection(self.m.srs)
+        self.transformer = pyproj.Transformer.from_crs('epsg:4326', pyproj.CRS.from_proj4(self.m.srs))
+
         # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
+        # this is *not* the same as EPSG:3857 because every zoom level has its own pixel space
         self.tileproj = map_utils.GoogleProjection(opts.max_zoom + 1)
 
         return True
