@@ -206,9 +206,6 @@ class RenderThread:
         if self.m.buffer_size < 128:
             self.m.buffer_size = 128
 
-        bail_out = True
-
-
         start = time.perf_counter()
         if not self.opts.dry_run:
             if opts.format == 'svg':
@@ -221,7 +218,17 @@ class RenderThread:
             # Render image with default Agg renderer
             debug('[%s] rende...', self.name)
             # TODO: handle exception, send back into queue
-            mapnik.render(self.m, im)
+            try:
+                debug(mapnik.render(self.m, im))
+            except Exception as e:
+                debug(e)
+
+                mid = time.perf_counter()
+                metatile.render_time = mid - start
+                metatile.serializing_time = 0
+
+                return False
+
             debug('[%s] ...ring!', self.name)
             mid = time.perf_counter()
 
@@ -258,7 +265,6 @@ class RenderThread:
 
         metatile.render_time = mid - start
         metatile.serializing_time = end - mid
-        bail_out = False
 
         debug("[%s] putting %r", self.name, metatile)
         self.output.put(metatile)
@@ -269,7 +275,7 @@ class RenderThread:
             # the solutions are ugly, so I'm leaving it as that
             self.store_thread.single_step()
 
-        return bail_out
+        return True
 
 
     def load_map(self):
@@ -324,15 +330,14 @@ class RenderThread:
         debug("[%s] got! %r", self.name, metatile)
 
         if metatile is None:
-            # send the storage thread a message
+            # it's the end; send the storage thread a message and finish
             debug("[%s] putting %r", self.name, None)
             self.output.put(None)
             debug("[%s] put! (%d)", self.name, self.output.qsize())
+
             return False
 
-        bail_out = self.render_metatile(metatile)
-
-        return not bail_out
+        return self.render_metatile(metatile)
 
 
 # backends:Dict[str,Any] = dict(
@@ -381,7 +386,7 @@ class StormBringer:
         if metatile is not None:
             debug('[%s] sto...', self.name)
             self.store_metatile(metatile)
-            debug('[%s] ...re!', self.name)
+            debug('[%s] ...red!', self.name)
             # we don't need it anymore and *.Queue complains that
             # mapnik._mapnik.Image is not pickle()'able
             metatile.im = None
