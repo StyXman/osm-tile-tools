@@ -1,4 +1,6 @@
-#!/usr/bin/env python3
+#! /usr/bin/env python3
+
+# https://github.com/openstreetmap/mapnik-stylesheets/blob/master/generate_tiles.py with *LOTS* of enhancements
 
 from subprocess import call
 import sys, os, os.path
