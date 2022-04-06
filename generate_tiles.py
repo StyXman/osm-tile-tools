@@ -271,7 +271,11 @@ class RenderThread:
         self.m  = mapnik.Map(0, 0)
         # Load style XML
         if not self.opts.dry_run:
-            mapnik.load_map(self.m, self.opts.mapfile, self.opts.mapnik_strict)
+            try:
+                mapnik.load_map(self.m, self.opts.mapfile, self.opts.mapnik_strict)
+            except RuntimeError as e:
+                print(f"Error loading map: {e.args[0]}")
+                return False
 
         end = time.perf_counter()
         info('[%s] Map loading took %.6fs', self.name, end - start)
@@ -281,13 +285,17 @@ class RenderThread:
         # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
         self.tileproj = map_utils.GoogleProjection(opts.max_zoom + 1)
 
+        return True
+
 
     def loop(self):
         # disable SIGINT so C-c/KeyboardInterrupt is handled by Master
         # even in the case of multiprocessing
         sig = signal(SIGINT, SIG_IGN)
 
-        self.load_map()
+        if not self.load_map():
+            # TODO: send a ready/failed message to the Master
+            return
 
         info("[%s]: starting...", self.name)
         debug('[%s] looping the loop', self.name)
