@@ -183,19 +183,22 @@ class RenderThread:
 
     def render_metatile(self, metatile:map_utils.MetaTile) -> Dict[map_utils.Tile, bool]:
         # get LatLong (EPSG:4326)
-        nw_lonlat = metatile.coords[0]
-        se_lonlat = metatile.coords[1]
-        debug("%d %d %d %d", *nw_lonlat, *se_lonlat)
+        w, n = metatile.coords[0]
+        e, s = metatile.coords[1]
+        # debug("lonlat: %r %r %r %r", w, s, e, n)
 
-        nw_webmerc = self.transformer.transform(*nw_lonlat)
-        se_webmerc = self.transformer.transform(*se_lonlat)
-        debug("%d %d %d %d", *nw_webmerc, *se_webmerc)
+        w, n = ( int(x) for x in self.transformer.transform(n, w) )
+        e, s = ( int(x) for x in self.transformer.transform(s, e) )
+        # debug("webmerc: %r %r %r %r", w, s, e, n)
 
         # Bounding box for the tile
         if hasattr(mapnik, 'mapnik_version') and mapnik.mapnik_version() >= 800:
-            bbox = mapnik.Box2d(*nw_webmerc, *se_webmerc)
+            # lower left and upper right corner points.
+            bbox = mapnik.Box2d(w, s, e, n)
         else:
-            bbox = mapnik.Envelope(*nw_webmerc, *se_webmerc)
+            bbox = mapnik.Envelope(w, s, e, n)
+
+        # debug("bbox: %r", bbox)
 
         image_size = self.opts.tile_size * min(self.metatile_size, 2**metatile.z)
         self.m.resize(image_size, image_size)
@@ -284,7 +287,8 @@ class RenderThread:
         end = time.perf_counter()
         info('[%s] Map loading took %.6fs', self.name, end - start)
 
-        self.transformer = pyproj.Transformer.from_crs('epsg:4326', pyproj.CRS.from_proj4(self.m.srs))
+        # self.transformer = pyproj.Transformer.from_crs('epsg:4326', pyproj.CRS.from_proj4(self.m.srs))
+        self.transformer = pyproj.Transformer.from_crs('epsg:4326', 'EPSG:3857')
 
         # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
         # this is *not* the same as EPSG:3857 because every zoom level has its own pixel space
@@ -594,14 +598,14 @@ class Master:
             # debug(bbox.upper_right)
             w, s = map_utils.tileproj.lon_lat2pixel(bbox.lower_left, min_zoom)
             e, n = map_utils.tileproj.lon_lat2pixel(bbox.upper_right, min_zoom)
-            # debug("%r, %r, %r, %r", w, s, e, n)
+            # debug("pixel ZL%r: %r, %r, %r, %r", min_zoom, w, s, e, n)
             # debug("%d", 2**min_zoom)
 
             w =  w // metatile_pixel_size      * metatile_size
             s = (s // metatile_pixel_size + 1) * metatile_size
             e = (e // metatile_pixel_size + 1) * metatile_size
             n =  n // metatile_pixel_size      * metatile_size
-            # debug("%r, %r, %r, %r", w, s, e, n)
+            # debug("tiles: %r, %r, %r, %r", w, s, e, n)
             # debug("%sx%s", list(range(w, e, metatile_size)), list(range(n, s, metatile_size)))
 
             count = 0
@@ -614,6 +618,7 @@ class Master:
                     count += 1
                     if count % 1000 == 0:
                         info('%d...' % count)
+
             info("%d initial metatiles created." % count)
         else:
             # TODO: if possible, order them in depth first/proximity? fashion.
@@ -763,7 +768,7 @@ class Master:
 
         if metatiles_rendered != 0:
             info("%8.3f s/metatile", total_time / metatiles_rendered)
-        info("%8.3f metatile/s", metatiles_rendered / total_time)
+            info("%8.3f metatile/s", metatiles_rendered / total_time * opts.threads)
 
         debug('loop() out!')
 
