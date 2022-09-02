@@ -35,6 +35,9 @@ from logging import debug, info, exception, warning
 long_format = "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
 short_format = "%(asctime)s %(message)s"
 
+# EPSGs
+WebMerc = 3857
+LonLat = 4326
 
 from typing import Optional, List, Set, Dict, Any
 
@@ -296,7 +299,7 @@ class RenderThread:
         info('[%s] Map loading took %.6fs', self.name, end - start)
 
         # self.transformer = pyproj.Transformer.from_crs('epsg:4326', pyproj.CRS.from_proj4(self.m.srs))
-        self.transformer = pyproj.Transformer.from_crs('epsg:4326', 'EPSG:3857')
+        self.transformer = pyproj.Transformer.from_crs(f'EPSG:{LonLat}', f'EPSG:{WebMerc}')
 
         # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
         # this is *not* the same as EPSG:3857 because every zoom level has its own pixel space
