@@ -259,7 +259,7 @@ class RenderThread:
                 # metatile will go in a non-marshaling queue, no need tostring() it
                 metatile.im = im
             else:
-                metatile.im = im.tostring('png256')
+                metatile.im = im.tostring('png256')  # here it's converted only for serializattion reasons
 
             end = time.perf_counter()
         else:
@@ -369,6 +369,11 @@ class StormBringer:
         self.writers = opts.threads
         self.done_writers = 0
 
+        if   self.opts.tile_file_format == 'png':
+            self.tile_file_format = 'png256'
+        elif self.opts.tile_file_format == 'jpeg':
+            self.tile_file_format = 'jpeg:quality=50'
+
 
     def loop(self):
         # disable SIGINT so C-c/KeyboardInterrupt is handled by Master
@@ -451,11 +456,13 @@ class StormBringer:
             # TODO: Tile.meta_pixel_coords
             # TODO: pass tile_size to MetaTile and Tile
             img = image.view(i*self.opts.tile_size, j*self.opts.tile_size,
-                            self.opts.tile_size,   self.opts.tile_size)
-            # BUG: is this duplicated work?
-            tile.data = img.tostring('png256')
+                               self.opts.tile_size,   self.opts.tile_size)
 
-            debug((len(tile.data), tile.data[41:44]))
+            # this seems like duplicated work, but we need one looseless format for serializing
+            # and another format for the final tile
+            tile.data = img.tostring(self.tile_file_format)
+
+            # debug((len(tile.data), tile.data[41:44]))
             tile.is_empty = (len(tile.data) == self.opts.empty_size and
                             tile.data[41:44] == self.opts.empty_color)
 
@@ -845,11 +852,13 @@ def parse_args():
     parser.add_argument('-n', '--min-zoom',      dest='min_zoom',  default=0, type=int)
     parser.add_argument('-x', '--max-zoom',      dest='max_zoom',  default=18, type=int)
 
-    parser.add_argument('-i', '--input-file',    dest='mapfile',   default='osm.xml',
+    parser.add_argument('-i', '--input-file',       dest='mapfile',          default='osm.xml',
                         help="MapnikXML format.")
-    parser.add_argument('-f', '--format',        dest='format',    default='tiles',
+    parser.add_argument('-f', '--format',           dest='format',           default='tiles',
                         choices=('tiles', 'mbtiles', 'mod_tile', 'test', 'svg', 'pdf'))
-    parser.add_argument('-o', '--output-dir',    dest='tile_dir',  default='tiles/')
+    parser.add_argument('-F', '--tile-file-format', dest='tile_file_format', default='png',
+                        choices=('png', 'jpeg', 'svg', 'pdf'))
+    parser.add_argument('-o', '--output-dir',       dest='tile_dir',         default='tiles/')
     parser.add_argument(      '--filename-pattern', dest='filename_pattern', default=None,
                         help="Pattern may include {base_dir}, {x}, {y} and {z}.")
 
