@@ -232,6 +232,7 @@ class RenderThread:
                 metatile.render_time = mid - start
                 metatile.serializing_time = 0
 
+                # render errors are quite bad, bailout
                 return False
 
             debug('[%s] ...ring!', self.name)
@@ -945,6 +946,7 @@ def parse_args():
         opts.bbox = map_utils.BBox([ float(s) for s in opts.bbox.split(',') ], opts.max_zoom)
 
     if opts.format in ('mod_tile', 'test'):
+        # TODO: all this //= 8 is a little bit confusing
         opts.tile_size = 8 * 256
         if opts.metatile_size < 8:
             opts.metatile_size = 8
@@ -991,7 +993,7 @@ def parse_args():
 
         if opts.store_thread:
             warning('SVG/PDF formats. Forcing no store thread.')
-            opts.store_thread = false
+            opts.store_thread = False
 
         if opts.tile_file_format != opts.format:
             warning('SVG/PDF formats. Forcing file format.')
