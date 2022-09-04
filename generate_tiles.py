@@ -982,7 +982,7 @@ def parse_args():
     # TODO: svg is too special?
     if opts.format in ('svg', 'pdf'):
         if opts.coords is None and opts.longlat is None:
-            warning('SVG/PDF formats only work with --coords or --longlat.')
+            error('SVG/PDF formats only work with --coords or --longlat.')
             sys.exit(1)
 
         if opts.parallel != 'single':
