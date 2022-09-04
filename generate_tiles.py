@@ -373,7 +373,10 @@ class StormBringer:
         if   self.opts.tile_file_format == 'png':
             self.tile_file_format = 'png256'
         elif self.opts.tile_file_format == 'jpeg':
-            self.tile_file_format = 'jpeg:quality=50'
+            self.tile_file_format = 'jpeg'
+
+        if self.tile_file_format_options != '':
+            self.tile_file_format += f":{self.tile_file_format_options}"
 
 
     def loop(self):
@@ -859,6 +862,8 @@ def parse_args():
                         choices=('tiles', 'mbtiles', 'mod_tile', 'test', 'svg', 'pdf'))
     parser.add_argument('-F', '--tile-file-format', dest='tile_file_format', default='png',
                         choices=('png', 'jpeg', 'svg', 'pdf'))
+    parser.add_argument('-O', '--tile-file-format-options', dest='tile_file_format_options', default='',
+                        help='Check https://github.com/mapnik/mapnik/wiki/')
     parser.add_argument('-o', '--output-dir',       dest='tile_dir',         default='tiles/')
     parser.add_argument(      '--filename-pattern', dest='filename_pattern', default=None,
                         help="Pattern may include {base_dir}, {x}, {y} and {z}.")
