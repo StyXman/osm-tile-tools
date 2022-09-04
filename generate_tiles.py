@@ -993,6 +993,10 @@ def parse_args():
             warning('SVG/PDF formats. Forcing no store thread.')
             opts.store_thread = false
 
+        if opts.tile_file_format != opts.format:
+            warning('SVG/PDF formats. Forcing file format.')
+            opts.tile_file_format = opts.format
+
         # lazy import
         debug('loading cairo for SVG/PDF')
         global cairo
