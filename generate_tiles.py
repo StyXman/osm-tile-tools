@@ -1049,6 +1049,9 @@ def parse_args():
 
         opts.tiles = metatiles
 
+    if opts.threads == 1:
+        opts.parallel == 'single'
+
     # I need this for ... what?
     if opts.parallel == 'single':
         opts.threads = 1
