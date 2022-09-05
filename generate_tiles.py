@@ -299,7 +299,6 @@ class RenderThread:
         end = time.perf_counter()
         info('[%s] Map loading took %.6fs', self.name, end - start)
 
-        # self.transformer = pyproj.Transformer.from_crs('epsg:4326', pyproj.CRS.from_proj4(self.m.srs))
         self.transformer = pyproj.Transformer.from_crs(f'EPSG:{LonLat}', f'EPSG:{WebMerc}')
 
         # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
