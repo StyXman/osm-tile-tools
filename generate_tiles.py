@@ -358,6 +358,11 @@ backends = dict(
     pdf=     lambda *more, **even_more: None,
 )
 
+default_options = dict(
+    png256='t=0',
+    jpeg='quality=50',
+)
+
 
 class StormBringer:
     def __init__(self, opts, backend, input, output):
@@ -375,8 +380,10 @@ class StormBringer:
         elif self.opts.tile_file_format == 'jpeg':
             self.tile_file_format = 'jpeg'
 
-        if self.tile_file_format_options != '':
-            self.tile_file_format += f":{self.tile_file_format_options}"
+        if self.opts.tile_file_format_options == '':
+            self.opts.tile_file_format_options = default_options[self.tile_file_format]
+
+        self.tile_file_format += f":{self.opts.tile_file_format_options}"
 
 
     def loop(self):
