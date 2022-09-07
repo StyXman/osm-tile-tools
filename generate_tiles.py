@@ -956,6 +956,10 @@ def parse_args():
     else:
         opts.bbox = map_utils.BBox([ float(s) for s in opts.bbox.split(',') ], opts.max_zoom)
 
+    if opts.format == 'mod_tile' and opts.tile_file_format != 'png':
+        warning(f"mod_tile format doesnt support '{opts.tile_file_format}'. Forcing 'png'.")
+        opts.tile_file_format = 'png'
+
     if opts.format in ('mod_tile', 'test'):
         # TODO: all this //= 8 is a little bit confusing
         opts.tile_size = 8 * 256
