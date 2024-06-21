@@ -74,12 +74,15 @@ def pyramid_count(min_zoom, max_zoom):
     return sum([ 4**i for i in range(max_zoom - min_zoom + 1) ])
 
 
-def time2hms(t):
-    h = int(t / 3600.0)
-    m = int((t - h * 3600) / 60)
-    s = t % 60
+def time2hms(seconds: float):
+    '''Converts time t in seconds into H/M/S.'''
+    raw_seconds = int(seconds)
+    hours, raw_seconds = divmod(raw_seconds, 3600)
+    minutes, seconds = divmod(raw_seconds, 60)
 
-    return (h, m, s)
+    return (hours, minutes, seconds)
+
+
 
 
 class RenderStack:
