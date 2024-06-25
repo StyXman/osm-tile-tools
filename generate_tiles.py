@@ -49,11 +49,13 @@ except NotImplementedError:
 
 
 class MedianTracker:
+    '''A statistics class '''
     def __init__(self):
         self.items = []
 
 
     def add(self, item):
+        # TODO: why do they have to be in order?
         index = bisect.bisect(self.items, item)
         self.items.insert(index, item)
 
@@ -66,11 +68,21 @@ class MedianTracker:
 
 
 def floor(i: int, base: int=1) -> int:
-    """Round down i to the closest multiple of base."""
+    '''Round i down to the closest multiple of base.'''
     return base * (i // base)
 
 
+# TODO: this gives very bad numbers because if we start from a low enough ZL many tiles will be discarded
+# replace it with an algorithm that precounts all the tiles that are really going to be rendered
+# down there there m,ust be a part of the algo that gets all the tiles for ZL x that match the original bbox
+# TODO: check whether if it's a generator
+# TODO: or replace with something that simultaes going down the pyramid; in fact, it could be a dry run version
+# of the actual rendering algo
+
+
 def pyramid_count(min_zoom, max_zoom):
+    '''Return the amount of tiles of the pyramid between ZLs min and max.'''
+    # each pyramid level (ZL) i has 4**i tiles
     return sum([ 4**i for i in range(max_zoom - min_zoom + 1) ])
 
 
@@ -86,27 +98,27 @@ def time2hms(seconds: float):
 
 
 class RenderStack:
-    """A render stack implemented with a list... and more.
+    '''A render stack implemented with a list... and more.
 
     Although this is implemented with a list, I prefer the semantic of these
     methods and the str() representation given by the list being pop from/push
     into the left.
 
     The stack has a first element, which is the one ready to be pop()'ed.
-    Because this element might need to be returned, there's the confirm()
+    Because this element might need to be returned into the stack, there's the confirm()
     method which actually pops it and replaces it with the next one.
 
     The stack also autofills with children when we pop an element. Because
     these children might not be needed to be rendered, they're stored in
     another list, to_validate. Once we know the tile is not empty or any
-    other reason to skip it, we notify() it."""
+    other reason to skip it, we notify() it.'''
     def __init__(self, max_zoom:int) -> None:
         # I don't need order here, it's (probably) better if I validate tiles
         # as soon as possible
-        # self.first:Optional[map_utils.MetaTile] = None
-        # self.ready:List[map_utils.Tile] = []
-        self.first = None
-        self.ready = []
+        self.first:Optional[map_utils.MetaTile] = None
+        self.ready:List[map_utils.MetaTile] = []
+        # self.first = None
+        # self.ready = []
         self.max_zoom = max_zoom
 
 
@@ -118,12 +130,12 @@ class RenderStack:
         self.first = metatile
 
 
-    def pop(self) -> map_utils.MetaTile:
+    def pop(self) -> Optional[map_utils.MetaTile]:
         return self.first
 
 
     def confirm(self) -> None:
-        """Mark the top of the stack as sent to render, factually pop()'ing it."""
+        '''Mark the top of the stack as sent to render, factually pop()'ing it.'''
         if self.first is not None:
             # metatile:map_utils.MetaTile = self.first
             metatile = self.first
@@ -654,6 +666,7 @@ class Master:
                 for y in range(n, s, metatile_size):
                     metatile = map_utils.MetaTile(min_zoom, x, y, self.opts.metatile_size,
                                                   tile_size)
+                    # TODO: convert this into a generator
                     initial_metatiles.append(metatile)
                     count += 1
                     if count % 1000 == 0:
@@ -691,13 +704,14 @@ class Master:
         # skip:bool
         if metatile in self.opts.bbox:
             if self.opts.skip_existing or self.opts.skip_newer is not None:
-                debug('skip test existing:%s, newer:%s', self.opts.skip_existing,
+                debug('skip test existing: %s; newer: %s', self.opts.skip_existing,
                     self.opts.skip_newer)
                 skip = True
 
                 for tile in metatile.tiles: # type: map_utils.Tile
                     if self.opts.skip_existing:
                         # TODO: missing as present?
+                        # NOTE: it's called missing_as_new
                         skip = skip and self.backend.exists(tile)
                         # debug('skip: %s', skip)
                         message = "present, skipping"
@@ -841,7 +855,7 @@ class Master:
                 self.new_work.put(None)
 
             while self.went_out > self.came_back:
-                debug("%d <-> %d", self.went_out, self.came_back)
+                debug("sent: %d; returned: %d", self.went_out, self.came_back)
                 data = self.info.get()  # type: str, Any
                 debug("<-- %s", data)
 
@@ -903,9 +917,9 @@ def parse_args():
     # TODO: newer than input_file
     parser.add_argument('-N', '--skip-newer',      dest='skip_newer', default=None,
                         type=float, metavar='DAYS')
-    parser.add_argument(      '--missing-as-new',  dest='missing_as_new', default=False,
+    parser.add_argument('-M', '--missing-as-new',  dest='missing_as_new', default=False,
                         action='store_true', help="missing tiles in a meta tile count as newer, so we don't re-render metatiles with empty tiles.")
-    parser.add_argument('-e', '--empty-color',     dest='empty_color', metavar='[#]RRGGBB',
+    parser.add_argument('-e', '--empty-color',     dest='empty_color', metavar='[#]RRGGBB', required=True,
                         help='Define the color of empty space (usually sea/ocean color) for empty tile detection.')
     parser.add_argument('-s', '--empty-size',     dest='empty_size', type=int, default=103,
                         help='The byte size of empty tiles.')
