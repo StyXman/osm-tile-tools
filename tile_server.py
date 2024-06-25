@@ -21,7 +21,7 @@ class TileServer(SimpleHTTPRequestHandler):
         try:
             _, z, x, y_ext = self.path.split('/')
         except ValueError:
-            self.send_error(HTTPStatus.NOT_FOUND, 'Tile not found.')
+            self.send_error(HTTPStatus.BAD_REQUEST, f"bad tile spec '{self.path}' .")
         else:
             y, ext = os.path.splitext(y_ext)
 
