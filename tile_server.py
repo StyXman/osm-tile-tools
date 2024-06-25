@@ -1,12 +1,12 @@
 #! /usr/bin/env python3
 
-from http.server import HTTPServer, SimpleHTTPRequestHandler
-import sys
-import re
-import os.path
-import os
-import stat
 from http import HTTPStatus
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+import os
+import os.path
+import re
+import stat
+import sys
 
 import map_utils
 
