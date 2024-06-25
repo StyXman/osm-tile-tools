@@ -13,8 +13,8 @@
 import os.path
 import sys
 
-from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, status
+from fastapi.responses import FileResponse, JSONResponse
 
 app = FastAPI()
 # app.root_dir = '.'
@@ -31,6 +31,9 @@ async def get_tile(z: int, x: int, y: int, ext: str):
     if os.path.exists(tile_path):
         return FileResponse(tile_path)
 
+    # beh, it doesn't 404's
+    # return FileResponse(tile_path)
+    return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=None)
 
 if __name__ == '__main__':
     app.root_dir = sys.argv[1]
