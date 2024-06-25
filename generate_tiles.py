@@ -110,8 +110,7 @@ class RenderStack:
 
     The stack also autofills with children when we pop an element. Because
     these children might not be needed to be rendered, they're stored in
-    another list, to_validate. Once we know the tile is not empty or any
-    other reason to skip it, we notify() it.'''
+    another list, to_validate.'''
     def __init__(self, max_zoom:int) -> None:
         # I don't need order here, it's (probably) better if I validate tiles
         # as soon as possible
