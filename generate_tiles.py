@@ -98,7 +98,8 @@ def time2hms(seconds: float):
 
 
 class RenderStack:
-    '''A render stack implemented with a list... and more.
+    '''
+    A render stack implemented with a list... and more.
 
     Although this is implemented with a list, I prefer the semantic of these
     methods and the str() representation given by the list being pop from/push
@@ -106,11 +107,16 @@ class RenderStack:
 
     The stack has a first element, which is the one ready to be pop()'ed.
     Because this element might need to be returned into the stack, there's the confirm()
-    method which actually pops it and replaces it with the next one.
+    method which actually pops it, leaving the next one ready.
 
     The stack also autofills with children when we pop an element. Because
     these children might not be needed to be rendered, they're stored in
-    another list, to_validate.'''
+    another list, to_validate.
+
+    stack.push(e)
+    e = stack.pop()
+    stack.confirm()
+    '''
     def __init__(self, max_zoom:int) -> None:
         # I don't need order here, it's (probably) better if I validate tiles
         # as soon as possible
