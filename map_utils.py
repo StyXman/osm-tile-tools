@@ -36,11 +36,13 @@ def constrain(lower_limit:float, x:float, upper_limit:float) -> float:
 
 
 class GoogleProjection:
-    """This class converts from LonLat to pixel and vice versa. For that, it pre
+    """
+    This class converts from LonLat to pixel and vice versa. For that, it pre
     calculates some values for each zoom level, which are store in 3 arrays.
 
     For information about the formulas in lon_lat2pixel() and pixel2lon_lat(), see
-    https://en.wikipedia.org/wiki/Mercator_projection#Mathematics_of_the_Mercator_projection"""
+    https://en.wikipedia.org/wiki/Mercator_projection#Mathematics_of_the_Mercator_projection
+    """
 
     # see also https://alastaira.wordpress.com/2011/01/23/the-google-maps-bing-maps-spherical-mercator-projection/
 
@@ -255,6 +257,7 @@ class MBTilesBackend:
     # .sqlitedb 'cause I'll use it primarily for OsmAnd
     def __init__(self, path, bounds, min_zoom=0, max_zoom=18, center=None, ro=False):
         self.path = path
+
         if ro:
             spec = 'file:' + self.path + '?mode=ro'
             # print(spec)
@@ -324,7 +327,7 @@ class MBTilesBackend:
                 map.zoom_level    AS z,
                 map.tile_column   AS x,
                 map.tile_row      AS y,
-                0                 AS s,  -- TODO: check where does this s come from
+                0                 AS s,  -- TODO: check where does this 's' come from
                 images.tile_data  AS image
             FROM
                 map JOIN images
@@ -346,7 +349,7 @@ class MBTilesBackend:
             format ='png',
             bounds =','.join([ str(i) for i in bounds ]),
             attribution ='Map data © OpenStreetMap CC-BY-SA; NASA SRTM',
-            )
+        )
 
         for k, v in metadata.items():
             try:

@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-# I would like to use FastAPI, but this is not really an API ... isn't it?
+# I would like to use FastAPI, but this is not really an API ... is it?
 # yes! you can say
 # @app.get("/{z}/{x}/{y}.{ext}")
 # and FastAPI will resolve it for you!

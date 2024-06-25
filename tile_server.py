@@ -19,10 +19,13 @@ class TileServer(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         try:
+            # _ gets '' because self.path is absolute
             _, z, x, y_ext = self.path.split('/')
         except ValueError:
             self.send_error(HTTPStatus.BAD_REQUEST, f"bad tile spec '{self.path}' .")
         else:
+            # TODO: make sure ext matches the file type we return
+            # TODO: support JPEG
             y, ext = os.path.splitext(y_ext)
 
             tile = map_utils.Tile(*[ int(i) for i in (z, x, y) ])
