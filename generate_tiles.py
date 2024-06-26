@@ -519,7 +519,7 @@ class Master:
 
         # counters
         self.went_out = self.came_back = 0
-        self.tiles_to_render = self.tiles_rendered = self.tiles_skept = 0
+        self.tiles_to_render = self.tiles_rendered = self.tiles_skipped = 0
 
         # statistics
         self.median = MedianTracker()
@@ -605,7 +605,7 @@ class Master:
 
 
     def progress(self, metatile, *args, format='%s'):
-        percentage = ( (self.tiles_rendered + self.tiles_skept) /
+        percentage = ( (self.tiles_rendered + self.tiles_skipped) /
                        self.tiles_to_render * 100 )
 
         now = time.perf_counter()
@@ -618,23 +618,23 @@ class Master:
 
         if self.tiles_rendered > 0:
             time_per_tile_median = self.median.median()
-            time_per_tile_all_tiles = time_elapsed / (self.tiles_rendered + self.tiles_skept)
+            time_per_tile_all_tiles = time_elapsed / (self.tiles_rendered + self.tiles_skipped)
             time_per_tile_rendered_tiles = time_elapsed / self.tiles_rendered
             time_per_tile = (time_per_tile_all_tiles + time_per_tile_rendered_tiles) / 2
             debug("times: median: %10.6f; all: %10.6f; rendered: %10.6f; calculated: %10.6f",
                   time_per_tile_median, time_per_tile_all_tiles, time_per_tile_rendered_tiles, time_per_tile)
 
-            eta = ( (self.tiles_to_render - self.tiles_rendered - self.tiles_skept) *
+            eta = ( (self.tiles_to_render - self.tiles_rendered - self.tiles_skipped) *
                     time_per_tile ) / self.opts.threads
             debug((self.start, now, time_elapsed, metatile_render_time, time_per_tile, eta))
 
             format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %d:%02d:%06.3f, ETA: %d:%02d:%06.3f, Total: %d:%02d:%06.3f]"
-            info(format, self.tiles_rendered, self.tiles_skept, self.tiles_to_render,
+            info(format, self.tiles_rendered, self.tiles_skipped, self.tiles_to_render,
                  percentage, metatile, *args, *time2hms(time_elapsed),
                  *time2hms(eta), *time2hms(time_elapsed + eta))
         else:
             format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %d:%02d:%06.3f, ETA: ∞, Total: ∞]"
-            info(format, self.tiles_rendered, self.tiles_skept, self.tiles_to_render,
+            info(format, self.tiles_rendered, self.tiles_skipped, self.tiles_to_render,
                  percentage, metatile, *args, *time2hms(time_elapsed))
 
 
@@ -721,15 +721,15 @@ class Master:
                         # debug('skip: %s', skip)
                         message = "present, skipping"
                     else:
-                        skip= ( skip and
-                                self.backend.newer_than(tile, self.opts.skip_newer,
-                                                        self.opts.missing_as_new) )
+                        skip = ( skip and
+                                 self.backend.newer_than(tile, self.opts.skip_newer,
+                                                         self.opts.missing_as_new) )
                         # debug('skip: %s', skip)
                         message = "too new, skipping"
 
                 if skip:
                     self.work_stack.confirm()
-                    self.tiles_skept += len(metatile.tiles)
+                    self.tiles_skipped += len(metatile.tiles)
                     self.progress(metatile, message)
 
                     # notify the children, so they get a chance to be rendered
@@ -742,9 +742,9 @@ class Master:
             skip = True
             self.work_stack.confirm()
 
-            # we count this one and all it descendents as skept
-            self.tiles_skept += ( len(metatile.tiles) *
-                                  pyramid_count(metatile.z, opts.max_zoom) )
+            # we count this one and all it descendents as skipped
+            self.tiles_skipped += ( len(metatile.tiles) *
+                                    pyramid_count(metatile.z, opts.max_zoom) )
             self.progress(metatile, "out of bbox")
 
         return not skip
@@ -770,7 +770,7 @@ class Master:
         # keep the probing version
         while ( self.work_stack.size() > 0 or
                 self.went_out > self.came_back or
-                self.tiles_to_render > self.tiles_rendered + self.tiles_skept ):
+                self.tiles_to_render > self.tiles_rendered + self.tiles_skipped ):
 
             tight_loop = True
 
@@ -841,8 +841,8 @@ class Master:
                 if child.render:
                     self.work_stack.push(child)
                 elif child.is_empty:
-                    self.tiles_skept += ( len(child.tiles) *
-                                          pyramid_count(child.z, opts.max_zoom) )
+                    self.tiles_skipped += ( len(child.tiles) *
+                                            pyramid_count(child.z, opts.max_zoom) )
                     self.progress(child, format="empty")
 
         self.tiles_rendered += len(metatile.tiles)
