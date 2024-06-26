@@ -638,46 +638,54 @@ class Master:
                  percentage, metatile, *args, *time2hms(time_elapsed))
 
 
+    def metatiles_for_bbox(self):
+        result = []
+
+        # attributes used a lot, so hold them in local vars
+        bbox = self.opts.bbox
+        min_zoom = self.opts.min_zoom
+        tile_size = self.opts.tile_size
+        metatile_size = min(self.opts.metatile_size, 2**min_zoom)
+        metatile_pixel_size = metatile_size * tile_size
+
+        debug('rendering bbox %s: %s', self.opts.bbox_name, bbox)
+        # debug(bbox.lower_left)
+        # debug(bbox.upper_right)
+        w, s = map_utils.tileproj.lon_lat2pixel(bbox.lower_left, min_zoom)
+        e, n = map_utils.tileproj.lon_lat2pixel(bbox.upper_right, min_zoom)
+        # debug("pixel ZL%r: %r, %r, %r, %r", min_zoom, w, s, e, n)
+        # debug("%d", 2**min_zoom)
+
+        w =  w // metatile_pixel_size      * metatile_size
+        s = (s // metatile_pixel_size + 1) * metatile_size
+        e = (e // metatile_pixel_size + 1) * metatile_size
+        n =  n // metatile_pixel_size      * metatile_size
+        # debug("tiles: %r, %r, %r, %r", w, s, e, n)
+        # debug("%sx%s", list(range(w, e, metatile_size)), list(range(n, s, metatile_size)))
+
+        count = 0
+        info('Creating initial metatiles...')
+        for x in range(w, e, metatile_size):
+            for y in range(n, s, metatile_size):
+                metatile = map_utils.MetaTile(min_zoom, x, y, self.opts.metatile_size,
+                                                tile_size)
+                # TODO: convert this into a generator
+                # for that we will need to modify the RenderStack so we have 2 sections, one the generator,
+                # another for the chidren stacked on top
+                result.append(metatile)
+                count += 1
+                if count % 1000 == 0:
+                    info('%d...' % count)
+
+        info("%d initial metatiles created." % count)
+
+
     def render_tiles(self) -> None:
         debug("render_tiles(%s)", self.opts)
 
         initial_metatiles = []
         if not self.opts.single_tiles:
-            # attributes used a lot, so hold them in local vars
-            bbox = self.opts.bbox
-            min_zoom = self.opts.min_zoom
-            tile_size = self.opts.tile_size
-            metatile_size = min(self.opts.metatile_size, 2**min_zoom)
-            metatile_pixel_size = metatile_size * tile_size
-
-            debug('rendering bbox %s: %s', self.opts.bbox_name, bbox)
-            # debug(bbox.lower_left)
-            # debug(bbox.upper_right)
-            w, s = map_utils.tileproj.lon_lat2pixel(bbox.lower_left, min_zoom)
-            e, n = map_utils.tileproj.lon_lat2pixel(bbox.upper_right, min_zoom)
-            # debug("pixel ZL%r: %r, %r, %r, %r", min_zoom, w, s, e, n)
-            # debug("%d", 2**min_zoom)
-
-            w =  w // metatile_pixel_size      * metatile_size
-            s = (s // metatile_pixel_size + 1) * metatile_size
-            e = (e // metatile_pixel_size + 1) * metatile_size
-            n =  n // metatile_pixel_size      * metatile_size
-            # debug("tiles: %r, %r, %r, %r", w, s, e, n)
-            # debug("%sx%s", list(range(w, e, metatile_size)), list(range(n, s, metatile_size)))
-
-            count = 0
-            info('Creating initial metatiles...')
-            for x in range(w, e, metatile_size):
-                for y in range(n, s, metatile_size):
-                    metatile = map_utils.MetaTile(min_zoom, x, y, self.opts.metatile_size,
-                                                  tile_size)
-                    # TODO: convert this into a generator
-                    initial_metatiles.append(metatile)
-                    count += 1
-                    if count % 1000 == 0:
-                        info('%d...' % count)
-
-            info("%d initial metatiles created." % count)
+            initial_metatiles = self.metatiles_for_bbox()
         else:
             # TODO: if possible, order them in depth first/proximity? fashion.
             debug('rendering individual tiles')
