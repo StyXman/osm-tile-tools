@@ -530,9 +530,13 @@ class Master:
     def create_infra(self):
         if self.opts.parallel == 'fork':
             debug('forks, using mp.Queue()')
-            # work_out queue is size 1, so higher zoom level tiles don't pile up
-            # there if there are lower ZL tiles ready in the work_stack.
+            # work_out queue is size 1, so initial metatiles don't clog it at the beginning
+            # because we need to be able to replace the top with its children to drill down
+            # and 'reuse' cache before moving to another area.
             self.new_work = multiprocessing.Queue(1)
+
+            # store_queue needs enough space to hold the four children of the metatiles being returned by all threads
+            # and more just in case, otherwise the queue blocks and we get a deadlock
             if not self.opts.store_thread:
                 debug('SimpleQueue')
                 self.store_queue = SimpleQueue(5*self.opts.threads)
