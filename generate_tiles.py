@@ -122,8 +122,6 @@ class RenderStack:
         # as soon as possible
         self.first:Optional[map_utils.MetaTile] = None
         self.ready:List[map_utils.MetaTile] = []
-        # self.first = None
-        # self.ready = []
         self.max_zoom = max_zoom
 
 
