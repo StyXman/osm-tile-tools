@@ -305,6 +305,7 @@ class RenderThread:
     def load_map(self):
         start = time.perf_counter()
 
+        # don't worry about the size, we're going to change it later
         self.m  = mapnik.Map(0, 0)
         # Load style XML
         if not self.opts.dry_run:
@@ -526,6 +527,7 @@ class Master:
 
 
     def create_infra(self):
+        # this creates a queue that's not used for on-demand usage, but it's not much, so we don't care
         if self.opts.parallel == 'fork':
             debug('forks, using mp.Queue()')
             # work_out queue is size 1, so initial metatiles don't clog it at the beginning
@@ -533,9 +535,11 @@ class Master:
             # and 'reuse' cache before moving to another area.
             self.new_work = multiprocessing.Queue(1)
 
-            # store_queue needs enough space to hold the four children of the metatiles being returned by all threads
-            # and more just in case, otherwise the queue blocks and we get a deadlock
+            # store_queue and info need enough space to hold the four children of the metatiles
+            # returned by all threads and more just in case, otherwise the queue blocks and we get a deadlock
             if not self.opts.store_thread:
+                # BUG: why do we still use a queue when we're storing the tiles
+                # in the same thread as the one rendering them?
                 debug('SimpleQueue')
                 self.store_queue = SimpleQueue(5*self.opts.threads)
             else:
@@ -780,6 +784,15 @@ class Master:
         # I could get to the pipes used for the Queues, but it's useless, as
         # they're constantly ready, so select()ing on them leads to a tight loop
         # keep the probing version
+        # TODO: explain the above better
+
+        # we have two Queues to manage, new_work and info
+        # neither new_work.push() nor info.pop() should block, but luckily we're the only thread
+        # writing on the former and reading from the latter
+
+        # so we simply test-and-write and test-and-read, but if there's nothing to do,
+        # we take a 1/10th second nap
+
         while ( self.work_stack.size() > 0 or
                 self.went_out > self.came_back or
                 self.tiles_to_render > self.tiles_rendered + self.tiles_skipped ):
@@ -789,18 +802,17 @@ class Master:
             # the doc says this is unreliable, but we don't care
             # full() can be inconsistent only if when we test is false
             # and when we put() is true, but only the master is writing
-            # so this cannot happen
+            # so no other thread can fill the queue
             while not self.new_work.full():
                 tight_loop = False
 
-                # pop from there,
                 metatile = self.work_stack.pop()  # map_utils.MetaTile
                 if metatile is not None:
                     # TODO: move to another thread
                     if not self.should_render(metatile):
                         continue
 
-                    # push in the writer
+                    # because we're the only writer, and it's not full, this can't block
                     self.new_work.put(metatile, True, .1)  # 1/10s timeout
                     self.work_stack.confirm()
                     self.went_out += 1
@@ -816,11 +828,9 @@ class Master:
                     tight_loop = True
                     break
 
-            # pop from the reader,
             while not self.info.empty():
                 tight_loop = False
 
-                # 1/10s timeout
                 data = self.info.get(block=True, timeout=0.1)  # type: Tuple[str, Any]
                 debug("<-- %s", data)
 
