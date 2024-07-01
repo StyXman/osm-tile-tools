@@ -681,6 +681,8 @@ class Master:
 
         info("%d initial metatiles created." % count)
 
+        return result
+
 
     def render_tiles(self) -> None:
         debug("render_tiles(%s)", self.opts)
