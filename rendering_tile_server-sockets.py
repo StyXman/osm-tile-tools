@@ -10,6 +10,7 @@ def main():
     listener.listen(32)
 
     listener.setblocking(False)
+    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
 
     selector = Selector()
     selector.register(listener, EVENT_READ)
