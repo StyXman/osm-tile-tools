@@ -2,6 +2,7 @@
 
 import socket
 from  selectors import DefaultSelector as Selector, EVENT_READ, EVENT_WRITE
+import re
 
 
 def main():
@@ -16,6 +17,11 @@ def main():
     selector.register(listener, EVENT_READ)
 
     clients = set()
+
+    # b'GET /12/2111/1500.png HTTP/1.1\r\nHost: ioniq:8080\r\nConnection: Keep-Alive\r\nAccept-Encoding: gzip\r\nUser-Agent: okhttp/3.12.2\r\n\r\n'
+    # but we only care about the first line, so
+    # GET /12/2111/1500.png HTTP/1.1
+    request_re = re.compile(r'(?P<method>[A-Z]+) (?P<url>.*) (?P<version>.*)')
 
     while True:
         for key, events in selector.select():
@@ -40,6 +46,14 @@ def main():
                         print(f"client {client.getpeername()} disconnected!")
                         client.close()
                         selector.unregister(client)
+                    else:
+                        # splitlines() already handles any type of separators
+                        lines = data.decode().splitlines()
+                        request_line = lines[0]
+                        match = request_re.match(request_line)
+                        if match is None:
+                            client.close()
+                            selector.unregister(client)
 
 
 if __name__ == '__main__':
