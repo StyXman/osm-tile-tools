@@ -339,7 +339,6 @@ class RenderThread:
         info("[%s]: starting...", self.name)
         debug('[%s] looping the loop', self.name)
 
-        finished = False
         while self.single_step():
             pass
 
