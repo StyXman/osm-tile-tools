@@ -16,8 +16,6 @@ from random import randint, random
 from os import getpid
 import math
 from signal import signal, SIGINT, SIG_IGN
-import bisect
-import statistics
 
 
 try:
@@ -28,6 +26,7 @@ except:
 import pyproj
 
 import map_utils
+import utils
 
 
 import logging
@@ -42,61 +41,12 @@ LonLat = 4326
 from typing import Optional, List, Set, Dict, Any
 
 
-try:
-    NUM_CPUS = multiprocessing.cpu_count()
-except NotImplementedError:
-    NUM_CPUS = 1
-
-
-class MedianTracker:
-    '''A statistics class '''
-    def __init__(self):
-        self.items = []
-
-
-    def add(self, item):
-        # TODO: why do they have to be in order?
-        index = bisect.bisect(self.items, item)
-        self.items.insert(index, item)
-
-
-    def median(self):
-        if len(self.items) == 0:
-            return 0
-
-        return statistics.median(self.items)
-
-
-def floor(i: int, base: int=1) -> int:
-    '''Round i down to the closest multiple of base.'''
-    return base * (i // base)
-
-
 # TODO: this gives very bad numbers because if we start from a low enough ZL many tiles will be discarded
 # replace it with an algorithm that precounts all the tiles that are really going to be rendered
 # down there there m,ust be a part of the algo that gets all the tiles for ZL x that match the original bbox
 # TODO: check whether if it's a generator
 # TODO: or replace with something that simultaes going down the pyramid; in fact, it could be a dry run version
 # of the actual rendering algo
-
-
-def pyramid_count(min_zoom, max_zoom):
-    '''Return the amount of tiles of the pyramid between ZLs min and max.'''
-    # each pyramid level (ZL) i has 4**i tiles
-    return sum([ 4**i for i in range(max_zoom - min_zoom + 1) ])
-
-
-def time2hms(seconds: float):
-    '''Converts time t in seconds into H/M/S.'''
-    remaining_seconds = int(seconds)
-    hours, remaining_seconds = divmod(remaining_seconds, 3600)
-    # minutes, seconds = divmod(remaining_seconds, 60)
-    minutes = remaining_seconds // 60
-    _, seconds = divmod(seconds, 60)
-
-    return (hours, minutes, seconds)
-
-
 
 
 class RenderStack:
@@ -161,35 +111,6 @@ class RenderStack:
         ans = int(self.first is not None) + len(self.ready)
         # debug(ans)
         return ans
-
-
-class SimpleQueue:
-    '''Class based on a list that implements the minimum needed to look like a
-    *.Queue. The advantage is that there is no (de)serializing here.'''
-
-    def __init__(self, size):
-        self.queue = []
-
-
-    def get(self, block=True, timeout=None):
-        if block:
-            waited = 0.0
-
-            while len(self.queue) == 0 and (timeout is None or waited < timeout):
-                sleep(0.1)
-                waited += 0.1
-
-        return self.queue.pop(0)
-
-
-    def put(self, value, block=True, timeout=None):
-        # ignore block and timeout, making it a unbound queue
-        # TODO: revisit?
-        self.queue.append(value)
-
-
-    def qsize(self):
-        return len(self.queue)
 
 
 RenderChildren = Dict[map_utils.Tile, bool]
@@ -522,7 +443,7 @@ class Master:
         self.tiles_to_render = self.tiles_rendered = self.tiles_skipped = 0
 
         # statistics
-        self.median = MedianTracker()
+        self.median = utils.MedianTracker()
 
         self.create_infra()
 
@@ -541,8 +462,8 @@ class Master:
             if not self.opts.store_thread:
                 # BUG: why do we still use a queue when we're storing the tiles
                 # in the same thread as the one rendering them?
-                debug('SimpleQueue')
-                self.store_queue = SimpleQueue(5*self.opts.threads)
+                debug('utils.SimpleQueue')
+                self.store_queue = utils.SimpleQueue(5*self.opts.threads)
             else:
                 self.store_queue = multiprocessing.Queue(5*self.opts.threads)
             self.info = multiprocessing.Queue(5*self.opts.threads)
@@ -551,8 +472,8 @@ class Master:
             # TODO: warning about mapnik and multithreads
             self.new_work = queue.Queue(32)
             if not self.opts.store_thread:
-                debug('SimpleQueue')
-                self.store_queue = SimpleQueue(32)
+                debug('utils.SimpleQueue')
+                self.store_queue = utils.SimpleQueue(32)
             else:
                 self.store_queue = queue.Queue(32)
             self.info = queue.Queue(32)
@@ -560,7 +481,7 @@ class Master:
             debug('single mode, using queue.Queue()')
             self.new_work = queue.Queue(1)
             if not self.opts.store_thread:
-                self.store_queue = SimpleQueue(1)
+                self.store_queue = utils.SimpleQueue(1)
             else:
                 self.store_queue = queue.Queue(1)
             self.info = queue.Queue(1)
@@ -637,12 +558,12 @@ class Master:
 
             format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %d:%02d:%06.3f, ETA: %d:%02d:%06.3f, Total: %d:%02d:%06.3f]"
             info(format, self.tiles_rendered, self.tiles_skipped, self.tiles_to_render,
-                 percentage, metatile, *args, *time2hms(time_elapsed),
-                 *time2hms(eta), *time2hms(time_elapsed + eta))
+                 percentage, metatile, *args, *utils.time2hms(time_elapsed),
+                 *utils.time2hms(eta), *utils.time2hms(time_elapsed + eta))
         else:
             format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %d:%02d:%06.3f, ETA: ∞, Total: ∞]"
             info(format, self.tiles_rendered, self.tiles_skipped, self.tiles_to_render,
-                 percentage, metatile, *args, *time2hms(time_elapsed))
+                 percentage, metatile, *args, *utils.time2hms(time_elapsed))
 
 
     def metatiles_for_bbox(self):
@@ -761,7 +682,7 @@ class Master:
 
             # we count this one and all it descendents as skipped
             self.tiles_skipped += ( len(metatile.tiles) *
-                                    pyramid_count(metatile.z, opts.max_zoom) )
+                                    utils.pyramid_count(metatile.z, opts.max_zoom) )
             self.progress(metatile, "out of bbox")
 
         return not skip
@@ -780,7 +701,7 @@ class Master:
         else:
             # all initial_metatiles are from the same zoom level
             self.tiles_to_render = ( first_tiles * len(metatile.tiles) *
-                                     pyramid_count(opts.min_zoom, opts.max_zoom) )
+                                     utils.pyramid_count(opts.min_zoom, opts.max_zoom) )
 
         while ( self.work_stack.size() > 0 or
                 self.went_out > self.came_back or
@@ -793,7 +714,7 @@ class Master:
                 time.sleep(0.1)
 
         total_time = time.perf_counter() - self.start
-        h, m, s = time2hms(total_time)
+        h, m, s = utils.time2hms(total_time)
 
         info("total time: %3d:%02d:%02d", h, m, s)
         metatiles_rendered = self.tiles_rendered / self.opts.metatile_size**2
@@ -873,7 +794,7 @@ class Master:
                     self.work_stack.push(child)
                 elif child.is_empty:
                     self.tiles_skipped += ( len(child.tiles) *
-                                            pyramid_count(child.z, opts.max_zoom) )
+                                            utils.pyramid_count(child.z, opts.max_zoom) )
                     self.progress(child, format="empty")
 
         self.tiles_rendered += len(metatile.tiles)
@@ -941,7 +862,7 @@ def parse_args():
     parser.add_argument('-m', '--metatile-size', dest='metatile_size', default=1, type=int,
                         help='Must be a power of two.')
 
-    parser.add_argument('-t', '--threads',       dest='threads',   default=NUM_CPUS,
+    parser.add_argument('-t', '--threads',       dest='threads',   default=utils.NUM_CPUS,
                         type=int)
     parser.add_argument('-p', '--parallel-method', dest='parallel', default='fork',
                         choices=('threads', 'fork', 'single'))
