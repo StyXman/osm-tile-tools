@@ -88,9 +88,11 @@ def pyramid_count(min_zoom, max_zoom):
 
 def time2hms(seconds: float):
     '''Converts time t in seconds into H/M/S.'''
-    raw_seconds = int(seconds)
-    hours, raw_seconds = divmod(raw_seconds, 3600)
-    minutes, seconds = divmod(raw_seconds, 60)
+    remaining_seconds = int(seconds)
+    hours, remaining_seconds = divmod(remaining_seconds, 3600)
+    # minutes, seconds = divmod(remaining_seconds, 60)
+    minutes = remaining_seconds // 60
+    _, seconds = divmod(seconds, 60)
 
     return (hours, minutes, seconds)
 
