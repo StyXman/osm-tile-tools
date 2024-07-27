@@ -34,8 +34,11 @@ def main():
                 if events & EVENT_READ:
                     data = client.recv(4096)
                     print(f"read from {client.getpeername()}: {data}")
-                    client.close()
-                    selector.unregister(client)
+
+                    if len(data) == 0:
+                        print(f"client {client.getpeername()} disconnected!")
+                        client.close()
+                        selector.unregister(client)
 
 
 if __name__ == '__main__':
