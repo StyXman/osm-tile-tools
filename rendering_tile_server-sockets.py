@@ -57,8 +57,7 @@ def main():
                         request_line = lines[0]
                         match = request_re.match(request_line)
                         if match is None:
-                            client.close()
-                            selector.unregister(client)
+                            responses[client] = (b'HTTP/1.1 400 KO\r\n\r\n', True)
 
                 if events & EVENT_WRITE:
                     if client in responses:
