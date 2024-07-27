@@ -65,7 +65,12 @@ def main():
                         for data in responses[client]:
                             if len(data) > 0:
                                 print(f"serving {data} to {client.getpeername()}")
-                                    client.send(data)
+                                if isinstance(data, bytes):
+                                    sent = client.send(data)
+                                    # TODO
+                                    assert sent == len(data), f"E: Could not send all {data} to {client.getpeername()}"
+                                else:
+                                    client.sendfile(open(data, 'br'))
 
                         del responses[client]
 
