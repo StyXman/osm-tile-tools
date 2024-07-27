@@ -62,8 +62,9 @@ def main():
                 if events & EVENT_WRITE:
                     if client in responses:
                         data, close = responses[client]
-                        client.send(data)
-                        del responses[client]
+                        if len(data) > 0:
+                            client.send(data)
+                            del responses[client]
 
                         if close:
                             client.close()
