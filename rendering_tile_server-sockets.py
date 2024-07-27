@@ -55,8 +55,9 @@ def main():
                         lines = data.decode().splitlines()
                         request_line = lines[0]
                         match = request_re.match(request_line)
-                        if match is None:
+                        if match is None or match['method'] != 'GET':
                             responses[client] = (b'HTTP/1.1 400 KO\r\n\r\n', True)
+
 
                 if events & EVENT_WRITE:
                     if client in responses:
