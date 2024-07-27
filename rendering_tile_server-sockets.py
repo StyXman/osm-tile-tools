@@ -18,10 +18,24 @@ def main():
 
     while True:
         for key, events in selector.select():
-            if key.fileobj == listener:
+            ready_socket = key.fileobj
+
+            if ready_socket == listener:
                 # new client
                 client, addr = listener.accept()
                 print(f"connection from {addr}")
+
+                clients.add(client)
+                selector.register(client, EVENT_READ | EVENT_WRITE)
+
+            elif ready_socket in clients:
+                client = ready_socket
+
+                if events & EVENT_READ:
+                    data = client.recv(4096)
+                    print(f"read from {client.getpeername()}: {data}")
+                    client.close()
+                    selector.unregister(client)
 
 
 if __name__ == '__main__':
