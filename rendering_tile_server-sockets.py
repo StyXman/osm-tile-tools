@@ -49,8 +49,7 @@ def main():
                         if client in responses:
                             del responses[client]
 
-                        client.close()
-                        selector.unregister(client)
+                        responses[client] = (b'', True)
                     else:
                         # splitlines() already handles any type of separators
                         lines = data.decode().splitlines()
@@ -67,6 +66,7 @@ def main():
                             del responses[client]
 
                         if close:
+                            print(f"closing {client.getpeername()}")
                             client.close()
                             selector.unregister(client)
 
