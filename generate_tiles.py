@@ -781,64 +781,14 @@ class Master:
             self.tiles_to_render = ( first_tiles * len(metatile.tiles) *
                                      pyramid_count(opts.min_zoom, opts.max_zoom) )
 
-        # I could get to the pipes used for the Queues, but it's useless, as
-        # they're constantly ready, so select()ing on them leads to a tight loop
-        # keep the probing version
-        # TODO: explain the above better
-
-        # we have two Queues to manage, new_work and info
-        # neither new_work.push() nor info.pop() should block, but luckily we're the only thread
-        # writing on the former and reading from the latter
-
-        # so we simply test-and-write and test-and-read, but if there's nothing to do,
-        # we take a 1/10th second nap
-
         while ( self.work_stack.size() > 0 or
                 self.went_out > self.came_back or
                 self.tiles_to_render > self.tiles_rendered + self.tiles_skipped ):
 
-            tight_loop = True
-
-            # the doc says this is unreliable, but we don't care
-            # full() can be inconsistent only if when we test is false
-            # and when we put() is true, but only the master is writing
-            # so no other thread can fill the queue
-            while not self.new_work.full():
-                tight_loop = False
-
-                metatile = self.work_stack.pop()  # map_utils.MetaTile
-                if metatile is not None:
-                    # TODO: move to another thread
-                    if not self.should_render(metatile):
-                        continue
-
-                    # because we're the only writer, and it's not full, this can't block
-                    self.new_work.put(metatile, True, .1)  # 1/10s timeout
-                    self.work_stack.confirm()
-                    self.went_out += 1
-                    debug("--> %r", (metatile, ))
-
-                    if self.opts.parallel == 'single':
-                        self.renderer.single_step()
-                        # also, get out of this place, so we can clean up
-                        # in the next loop
-                        break
-                else:
-                    # no more work to do
-                    tight_loop = True
-                    break
-
-            while not self.info.empty():
-                tight_loop = False
-
-                data = self.info.get(block=True, timeout=0.1)  # type: Tuple[str, Any]
-                debug("<-- %s", data)
-
-                self.handle_new_work(data)
+            tight_loop = self.single_step()
 
             if tight_loop:
-                # we didn't do anything, so sleep for a while
-                # otherwise, this becomes a thigh loop
+                # if there's nothing to do, we take a 1/10th second nap
                 time.sleep(0.1)
 
         total_time = time.perf_counter() - self.start
@@ -850,8 +800,66 @@ class Master:
         if metatiles_rendered != 0:
             info("%8.3f s/metatile", total_time / metatiles_rendered)
             info("%8.3f metatile/s", metatiles_rendered / total_time * opts.threads)
+            info("%8.3f s/tile", total_time / self.tiles_rendered)
+            info("%8.3f tile/s", self.tiles_rendered / total_time * opts.threads)
 
         debug('loop() out!')
+
+
+    def single_step(self):
+        # I could get to the pipes used for the Queues, but it's useless, as they're constantly ready
+        # they're really controlled by the semaphores guarding those pipes
+        # so select()ing on them leads to a tight loop
+        # keep the probing version
+
+        tight_loop = True
+
+        # we have two Queues to manage, new_work and info
+        # neither new_work.push() nor info.pop() should block, but luckily we're the only thread
+        # writing on the former and reading from the latter
+
+        # so we simply test-and-write and test-and-read
+
+        # the doc says this is unreliable, but we don't care
+        # full() can be inconsistent only if when we test is false
+        # and when we put() is true, but only the master is writing
+        # so no other thread can fill the queue
+        while not self.new_work.full():
+            tight_loop = False
+
+            metatile = self.work_stack.pop()  # map_utils.MetaTile
+            if metatile is not None:
+                # TODO: move to another thread
+                if not self.should_render(metatile):
+                    continue
+
+                # self.log_grafana(str(metatile))
+
+                # because we're the only writer, and it's not full, this can't block
+                self.new_work.put(metatile)
+                self.work_stack.confirm()
+                self.went_out += 1
+                debug("--> %r", (metatile, ))
+
+                if self.opts.parallel == 'single':
+                    self.renderer.single_step()
+                    # also, get out of here, so we can clean up
+                    # in the next loop
+                    break
+            else:
+                # no more work to do
+                tight_loop = True
+                break
+
+        while not self.info.empty():
+            tight_loop = False
+
+            data = self.info.get()  # type: Tuple[str, Any]
+            debug("<-- %s", data)
+
+            self.handle_new_work(data)
+
+        return tight_loop
 
 
     def handle_new_work(self, metatile):
