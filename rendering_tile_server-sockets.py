@@ -1,8 +1,8 @@
 #! /usr/bin/env python3
 
-import socket
-from  selectors import DefaultSelector as Selector, EVENT_READ, EVENT_WRITE
 import re
+from  selectors import DefaultSelector as Selector, EVENT_READ, EVENT_WRITE
+import socket
 
 
 def main():
