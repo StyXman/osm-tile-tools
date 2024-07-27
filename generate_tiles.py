@@ -582,7 +582,7 @@ class Master:
             for i in range(self.opts.threads):
                 renderer = RenderThread(self.opts, self.new_work, self.store_queue)
 
-                render_thread = self.opts.parallel_factory(target=renderer.loop, name=f"Renderer-{i + 1:02d}")
+                render_thread = self.opts.parallel_factory(target=renderer.loop, name=f"Renderer-{i + 1:03d}")
                 renderer.name = render_thread.name
 
                 if not self.opts.store_thread:
