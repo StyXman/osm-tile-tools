@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+from collections import defaultdict
 import re
 from  selectors import DefaultSelector as Selector, EVENT_READ, EVENT_WRITE
 import socket
@@ -17,7 +18,7 @@ def main():
     selector.register(listener, EVENT_READ)
 
     clients = set()
-    responses = {}
+    responses = defaultdict(list)
 
     # b'GET /12/2111/1500.png HTTP/1.1\r\nHost: ioniq:8080\r\nConnection: Keep-Alive\r\nAccept-Encoding: gzip\r\nUser-Agent: okhttp/3.12.2\r\n\r\n'
     # but we only care about the first line, so
@@ -49,27 +50,29 @@ def main():
                         if client in responses:
                             del responses[client]
 
-                        responses[client] = (b'', True)
+                        responses[client] = []
                     else:
                         # splitlines() already handles any type of separators
                         lines = data.decode().splitlines()
                         request_line = lines[0]
                         match = request_re.match(request_line)
-                        if match is None or match['method'] != 'GET':
-                            responses[client] = (b'HTTP/1.1 400 KO\r\n\r\n', True)
 
+                        if match is None or match['method'] != 'GET':
+                            responses[client] = [ b'HTTP/1.1 405 only GETs\r\n\r\n' ]
 
                 if events & EVENT_WRITE:
                     if client in responses:
-                        data, close = responses[client]
-                        if len(data) > 0:
-                            client.send(data)
-                            del responses[client]
+                        for data in responses[client]:
+                            if len(data) > 0:
+                                print(f"serving {data} to {client.getpeername()}")
+                                    client.send(data)
 
-                        if close:
-                            print(f"closing {client.getpeername()}")
-                            client.close()
-                            selector.unregister(client)
+                        del responses[client]
+
+                        # no keep alive support
+                        print(f"closing {client.getpeername()}")
+                        client.close()
+                        selector.unregister(client)
 
 
 if __name__ == '__main__':
