@@ -57,7 +57,10 @@ def main():
                         request_line = lines[0]
                         match = request_re.match(request_line)
 
-                        if match is None or match['method'] != 'GET':
+                        if match is None:
+                            responses[client] = [ b'HTTP/1.1 400 KO\r\n\r\n' ]
+
+                        if match['method'] != 'GET':
                             responses[client] = [ b'HTTP/1.1 405 only GETs\r\n\r\n' ]
 
                 if events & EVENT_WRITE:
