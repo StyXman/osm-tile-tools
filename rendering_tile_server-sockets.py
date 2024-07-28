@@ -3,15 +3,54 @@
 from collections import defaultdict
 import os
 import os.path
+import random
 import re
 from  selectors import DefaultSelector as Selector, EVENT_READ, EVENT_WRITE
 import socket
 import sys
+import time
 
 import logging
 from logging import debug, info, exception, warning
 long_format = "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
 short_format = "%(asctime)s %(message)s"
+
+# fake multiprocessing for testing
+class RenderThread:
+    def __init__(self, opts, input, output):
+        self.input = input
+        self.output = output
+
+    def render_metatile(self, metatile):
+        seconds = random.randint(3, 90)
+        debug(f"[{self.name}]    {metatile}: sleeping for {seconds}...")
+        time.sleep(seconds)
+        debug(f"[{self.name}]    {metatile}: ... {seconds} seconds!")
+        self.output.put(metatile)
+
+        return True
+
+    def load_map(self):
+        pass
+
+    def loop(self):
+        debug(f"[{self.name}] loop")
+        while self.single_step():
+            pass
+
+        debug(f"[{self.name}] done")
+
+    def single_step(self):
+        metatile = self.input.get()
+        debug(f"[{self.name}] step")
+        if metatile is None:
+            debug(f"[{self.name}] bye!")
+            # it's the end; send the storage thread a message and finish
+            self.output.put(None)
+            return False
+
+        return self.render_metatile(metatile)
+
 
 class DoubleDict:
     def __init__(self):
