@@ -192,6 +192,8 @@ def main(root):
     # GET /12/2111/1500.png HTTP/1.1
     request_re = re.compile(r'(?P<method>[A-Z]+) (?P<url>.*) (?P<version>.*)')
 
+    master = Master(None)
+
     while True:
         for key, events in selector.select():
             ready_socket = key.fileobj
@@ -246,17 +248,7 @@ def main(root):
 
                             # o.p.join() considers path to be absolute, so it ignores root
                             tile_path = os.path.join(root, z, x, y_ext)
-                            try:
-                                # this could be considered 'blocking', but if the fs is slow, we have other problems
-                                file_attrs = os.stat(tile_path)
-                            except FileNotFoundError:
-                                responses[client] = [ f"HTTP/1.1 404 not here {tile_path}\r\n\r\n".encode() ]
-                            else:
-                                responses[client].append(b'HTTP/1.1 200 OK\r\n')
-                                responses[client].append(b'Content-Type: image/png\r\n')
-                                responses[client].append(f"Content-Length: {file_attrs.st_size}\r\n\r\n".encode())
-                                responses[client].append(tile_path)
-
+                            master.work_stack.append(tile_path)
                             queries_clients[client] = tile_path
 
                 if events & EVENT_WRITE:
@@ -281,6 +273,29 @@ def main(root):
                         selector.unregister(client)
                         clients.remove(client)
                         del queries_clients[client]
+
+        # advance the queues
+        master.single_step()
+
+        while not master.info.empty():
+            debug('info.get...')
+            data = master.info.get()
+            debug('... info.got!')
+            debug(f"[main] <-- {data}")
+
+            tile_path = data
+            client = queries_clients[tile_path]
+
+            try:
+                # this could be considered 'blocking', but if the fs is slow, we have other problems
+                file_attrs = os.stat(tile_path)
+            except FileNotFoundError:
+                responses[client] = [ f"HTTP/1.1 404 not here {tile_path}\r\n\r\n".encode() ]
+            else:
+                responses[client].append(b'HTTP/1.1 200 OK\r\n')
+                responses[client].append(b'Content-Type: image/png\r\n')
+                responses[client].append(f"Content-Length: {file_attrs.st_size}\r\n\r\n".encode())
+                responses[client].append(tile_path)
 
 
 if __name__ == '__main__':
