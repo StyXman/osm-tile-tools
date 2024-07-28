@@ -13,6 +13,36 @@ from logging import debug, info, exception, warning
 long_format = "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
 short_format = "%(asctime)s %(message)s"
 
+class DoubleDict:
+    def __init__(self):
+        self.forward = {}
+        self.backward = {}
+
+    def __getitem__(self, key):
+        if key in self.forward:
+            return self.forward[key]
+
+        return self.backward[key]
+
+    def __setitem__(self, key, value):
+        self.forward[key] = value
+        self.backward[value] = key
+
+    def __delitem__(self, key):
+        if key not in self.forward and key not in self.backward:
+            raise KeyError
+
+        if key in self.forward:
+            value = self.forward.pop(key)
+        else:
+            value = self.backward.pop(key)
+
+        if value in self.forward:
+            del self.forward[value]
+        else:
+            del self.backward[value]
+
+
 def main(root):
     listener = socket.socket()
     # before bind
@@ -28,6 +58,7 @@ def main(root):
 
     clients = set()
     responses = defaultdict(list)
+    queries_clients = DoubleDict()
 
     # canonicalize
     root = os.path.abspath(root)
@@ -102,6 +133,8 @@ def main(root):
                                 responses[client].append(f"Content-Length: {file_attrs.st_size}\r\n\r\n".encode())
                                 responses[client].append(tile_path)
 
+                            queries_clients[client] = tile_path
+
                 if events & EVENT_WRITE:
                     if client in responses:
                         for data in responses[client]:
@@ -123,6 +156,7 @@ def main(root):
                         # bookkeeping
                         selector.unregister(client)
                         clients.remove(client)
+                        del queries_clients[client]
 
 
 if __name__ == '__main__':
