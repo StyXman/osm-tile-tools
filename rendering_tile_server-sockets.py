@@ -218,7 +218,14 @@ def main(root):
                         if client in responses:
                             del responses[client]
 
+                        # clean up trailing queries from the work_stack
                         query = queries_clients[client]
+                        try:
+                            master.work_stack.remove(query)
+                        except ValueError:
+                            # already being rendered, ignore
+                            pass
+
                         debug(f"client {client.getpeername()} disconnected, was waiting for {query}")
 
                         responses[client] = []
