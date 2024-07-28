@@ -17,6 +17,8 @@ import stat
 from shapely.geometry import Polygon
 from shapely import wkt
 
+from tiles import GoogleProjection, Tile, MetaTile, PixelTile
+
 from logging import debug
 from typing import List, Tuple, Dict, Optional, Any, Union
 
@@ -33,104 +35,6 @@ def constrain(lower_limit:float, x:float, upper_limit:float) -> float:
     ans = min(ans, upper_limit)
 
     return ans
-
-
-class GoogleProjection:
-    """
-    This class converts from LonLat to pixel and vice versa. For that, it pre
-    calculates some values for each zoom level, which are store in 3 arrays.
-
-    For information about the formulas in lon_lat2pixel() and pixel2lon_lat(), see
-    https://en.wikipedia.org/wiki/Mercator_projection#Mathematics_of_the_Mercator_projection
-    """
-
-    # see also https://alastaira.wordpress.com/2011/01/23/the-google-maps-bing-maps-spherical-mercator-projection/
-
-    def __init__(self, levels:int=18) -> None:
-        self.pixels_per_degree:List[float] = []
-        self.pixels_per_radian:List[float] = []  # pixels per radian
-        self.center_pixel:List[Tuple[int, int]] = []  # pixel for (0, 0)
-        # self.world_size:List[int] = []  # world size in pixels
-
-        world_size:int = 256  # size in pixels of the image representing the whole world
-        for d in range(levels + 1): # type: int
-            center:int = world_size // 2
-            self.pixels_per_degree.append(world_size / 360.0)
-            self.pixels_per_radian.append(world_size / (2 * pi))
-            self.center_pixel.append((center, center))
-            # the world doubles in size on each zoom level
-            world_size *= 2
-
-
-    # it's LonLat! (lon, lat)
-    def lon_lat2pixel(self, lon_lat:Tuple[float, float], zoom:int) -> Tuple[int, int]:
-        lon, lat = lon_lat
-        center_x, center_y = self.center_pixel[zoom]
-
-        # x is easy because it's linear to the longitude
-        x = center_x + round(lon * self.pixels_per_degree[zoom])
-
-        # y is... what?
-        f = constrain(-0.9999, sin(DEG_TO_RAD * lat), 0.9999)
-        y = center_y + round(0.5 * log((1 + f) / (1 - f)) * -self.pixels_per_radian[zoom])
-
-        return (x, y)
-
-
-    def pixel2lon_lat(self, px:Tuple[int, int], zoom:int) -> Tuple[float,float]:
-        x, y = px
-        center_x, center_y = self.center_pixel[zoom]
-
-        # longitude is linear to x
-        lon = (x - center_x) / self.pixels_per_degree[zoom]
-
-        angle = (y - center_y) / -self.pixels_per_radian[zoom]  # angle in radians
-        lat = RAD_TO_DEG * (2 * atan(exp(angle)) - 0.5 * pi)
-
-        return (lon, lat)
-
-
-class Tile:
-    # def __init__(self, z:int, x:int, y:int, metatile:Optional[MetaTile]=None) -> None:
-    def __init__(self, z:int, x:int, y:int, metatile=None) -> None:
-        self.z = z
-        self.x = x
-        self.y = y
-
-        # self.meta_index:Optional[Tuple[int, int]] = None
-        self.meta_index = None
-        self.meta_pixel_coords = None
-        if metatile is not None:
-            self.meta_index = (x - metatile.x, y - metatile.y)
-            self.meta_pixel_coords = ()
-            self.tile_size = metatile.tile_size
-        else:
-            # TODO: guessed
-            self.tile_size = 256
-
-        self.pixel_pos = (self.x * self.tile_size, self.y * self.tile_size)
-        self.image_size = (self.tile_size, self.tile_size)
-        self.data: Optional[bytes] = None
-        self._is_empty = None  # Optional[bool]
-
-
-    def __eq__(self, other):
-        return ( self.z == other.z and self.x == other.x and self.y == other.y )
-
-
-    def __repr__(self):
-        return "Tile(%d, %d, %d, %r)" % (self.z, self.x, self.y, self.meta_index)
-
-
-    def __iter__(self):
-        return self.iter()
-
-
-    def iter(self):
-        """Returns a generator over the 'coords'."""
-        yield self.z
-        yield self.x
-        yield self.y
 
 
 # helper types
