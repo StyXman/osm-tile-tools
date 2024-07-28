@@ -5,6 +5,10 @@ import re
 from  selectors import DefaultSelector as Selector, EVENT_READ, EVENT_WRITE
 import socket
 
+import logging
+from logging import debug, info, exception, warning
+long_format = "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
+short_format = "%(asctime)s %(message)s"
 
 def main():
     listener = socket.socket()
@@ -32,7 +36,7 @@ def main():
             if ready_socket == listener:
                 # new client
                 client, addr = listener.accept()
-                print(f"connection from {addr}")
+                debug(f"connection from {addr}")
 
                 clients.add(client)
                 selector.register(client, EVENT_READ | EVENT_WRITE)
@@ -42,13 +46,15 @@ def main():
 
                 if events & EVENT_READ:
                     data = client.recv(4096)
-                    print(f"read from {client.getpeername()}: {data}")
+                    debug(f"read from {client.getpeername()}: {data}")
 
                     if len(data) == 0:
-                        print(f"client {client.getpeername()} disconnected!")
                         # remove any trailing data
                         if client in responses:
                             del responses[client]
+
+                        query = queries_clients[client]
+                        debug(f"client {client.getpeername()} disconnected, was waiting for {query}")
 
                         responses[client] = []
                     else:
@@ -67,7 +73,7 @@ def main():
                     if client in responses:
                         for data in responses[client]:
                             if len(data) > 0:
-                                print(f"serving {data} to {client.getpeername()}")
+                                debug(f"serving {data} to {client.getpeername()}")
                                 if isinstance(data, bytes):
                                     sent = client.send(data)
                                     # TODO
@@ -78,7 +84,7 @@ def main():
                         del responses[client]
 
                         # no keep alive support
-                        print(f"closing {client.getpeername()}")
+                        debug(f"closing {client.getpeername()}")
                         client.close()
                         selector.unregister(client)
 
