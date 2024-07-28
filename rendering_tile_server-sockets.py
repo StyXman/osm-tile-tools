@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
-from collections import defaultdict
+from collections import defaultdict, deque
+import multiprocessing
 import os
 import os.path
 import random
@@ -50,6 +51,90 @@ class RenderThread:
             return False
 
         return self.render_metatile(metatile)
+
+
+class Master:
+    def __init__(self, opts):
+        self.renderers = {}
+
+        self.work_stack = deque(maxlen=4096)
+        self.new_work = multiprocessing.Queue(1)
+        # self.store_queue = SimpleQueue(1)
+        self.info = multiprocessing.Queue(5*8)
+
+        for i in range(8):
+            # renderer = RenderThread(None, self.new_work, self.store_queue)
+            renderer = RenderThread(None, self.new_work, self.info)
+            render_thread = multiprocessing.Process(target=renderer.loop, name=f"Renderer-{i+1:03d}")
+            renderer.name = render_thread.name
+
+            render_thread.start()
+            self.renderers[i] = render_thread
+
+    def render_tiles(self):
+        try:
+            self.loop([])
+        except KeyboardInterrupt:
+            print('C-c detected, exiting')
+        except Exception as e:
+            print(f"Unknown exception {e}")
+        finally:
+            print('finishing!')
+            self.finish()
+
+    def loop(self, initial_metatiles):
+        while True:
+            self.single_step()
+
+    def single_step(self):
+        # TODO: similar to generate_tiles'
+
+        # I could get to the pipes used for the Queues, but it's useless, as they're constantly ready
+        # they're really controlled by the semaphores guarding those pipes
+        # so select()ing on them leads to a tight loop
+        # keep the probing version
+
+        tight_loop = True
+
+        # we have two Queues to manage, new_work and info
+        # neither new_work.push() nor info.pop() should block, but luckily we're the only thread
+        # writing on the former and reading from the latter
+
+        # so we simply test-and-write and test-and-read
+
+        # the doc says this is unreliable, but we don't care
+        # full() can be inconsistent only if when we test is false
+        # and when we put() is true, but only the master is writing
+        # so no other thread can fill the queue
+        while not self.new_work.full() and len(self.work_stack) > 0:
+            tight_loop = False
+
+            metatile = self.work_stack.popleft()  # map_utils.MetaTile
+            if metatile is not None:
+                # because we're the only writer, and it's not full, this can't block
+                debug('[Master] new_work.put...')
+                self.new_work.put(metatile)
+                debug('[Master] ... new_work.put!')
+                debug(f"[Master] --> {metatile}")
+            else:
+                # no more work to do
+                tight_loop = True
+                break
+
+        return tight_loop
+
+    def finish(self):
+        for i in range(8):
+            self.new_work.put(None)
+
+        while not self.info.empty():
+            data = self.info.get()
+            debug(f"[Master] <-- {data}")
+
+        self.new_work.join()
+        for i in range(8):
+            self.renderers[i].join()
+        debug('finished')
 
 
 class DoubleDict:
