@@ -16,6 +16,8 @@ from logging import debug, info, exception, warning
 long_format = "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
 short_format = "%(asctime)s %(message)s"
 
+logging.basicConfig(level=logging.DEBUG, format=long_format)
+
 # fake multiprocessing for testing
 class RenderThread:
     def __init__(self, opts, input, output):
