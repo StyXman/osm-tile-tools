@@ -15,11 +15,13 @@ short_format = "%(asctime)s %(message)s"
 
 def main(root):
     listener = socket.socket()
+    # before bind
+    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
+    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+
     listener.bind( ('', 8080) )
     listener.listen(32)
-
     listener.setblocking(False)
-    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
 
     selector = Selector()
     selector.register(listener, EVENT_READ)
