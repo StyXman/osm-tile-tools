@@ -117,7 +117,10 @@ def main(root):
                         # no keep alive support
                         debug(f"closing {client.getpeername()}")
                         client.close()
+
+                        # bookkeeping
                         selector.unregister(client)
+                        clients.remove(client)
 
 
 if __name__ == '__main__':
