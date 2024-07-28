@@ -195,7 +195,7 @@ def main(root):
     master = Master(None)
 
     while True:
-        for key, events in selector.select():
+        for key, events in selector.select(0.1):
             ready_socket = key.fileobj
 
             if ready_socket == listener:
