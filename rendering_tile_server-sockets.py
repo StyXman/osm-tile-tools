@@ -123,7 +123,18 @@ class Master:
                 tight_loop = True
                 break
 
-        return tight_loop
+        result = []
+        while not self.info.empty():
+            tight_loop = False
+
+            debug('info.get...')
+            data = self.info.get()
+            debug('... info.got!')
+            debug(f"[main] <-- {data}")
+
+            result.append(data)
+
+        return tight_loop, result
 
     def finish(self):
         for i in range(8):
@@ -287,15 +298,9 @@ def main(root):
                         del queries_clients[client]
 
         # advance the queues
-        master.single_step()
+        _, tile_paths = master.single_step()
 
-        while not master.info.empty():
-            debug('info.get...')
-            data = master.info.get()
-            debug('... info.got!')
-            debug(f"[main] <-- {data}")
-
-            tile_path = data
+        for tile_path in tile_paths:
             client = queries_clients[tile_path]
 
             try:
