@@ -89,6 +89,24 @@ class Tile:
 
         # pixel_pos is based on (z,),x,y; it's relative to the world at this ZL and also grows downwards
         self.pixel_pos = (self.x * self.size, self.y * self.size)
+
+        # corners are another way to express pixel_pos; same direction
+        # ((x0, y0), (x1, y1))
+        self.corners = ( self.pixel_pos,
+                         (self.pixel_pos[0] + self.size,
+                          self.pixel_pos[1] + self.size) )
+
+        # but coords are LongLat, and Lat grows upwards, so wehn calling these functions,
+        # we have to swap the lat's
+        long0, lat1 = tileproj.pixel2lon_lat(self.corners[0], self.z)
+        long1, lat0 = tileproj.pixel2lon_lat(self.corners[1], self.z)
+        self.coords = ( (long0, lat0), (long1, lat1) )
+
+        polygon_points = [ (self.coords[i][0], self.coords[j][1])
+                           for i, j in ((0, 0), (1, 0), (1, 1), (0, 1), (0, 0)) ]
+
+        self.polygon = Polygon(polygon_points)
+
         self.image_size = (self.size, self.size)
         self.data: Optional[bytes] = None
         self._is_empty = None  # Optional[bool]
