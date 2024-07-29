@@ -65,6 +65,9 @@ class GoogleProjection:
 
         return (lon, lat)
 
+# enough ZLs for a lifetime
+tileproj = GoogleProjection(30)
+
 
 class Tile:
     # def __init__(self, z:int, x:int, y:int, metatile:Optional[MetaTile]=None) -> None:
@@ -129,24 +132,6 @@ class Tile:
         yield self.z
         yield self.x
         yield self.y
-
-
-def tile_spec2zxy(tile_spec):  # str -> Tuple[int, int, int]
-    try:
-        if ',' in tile_spec:
-            data = tile_spec.split(',')
-        elif '/' in tile_spec:
-            data = tile_spec.split('/')
-        else:
-            raise ValueError
-    except ValueError:
-        raise ValueError("METATILE not in form Z,X,Y or Z/X/Y.")
-    else:
-        z, x, y = map(int, data)
-        return (z, x, y)
-
-
-tileproj = GoogleProjection(30)
 
 
 class PixelTile:
@@ -333,3 +318,16 @@ class MetaTile:
     def times(self):
         return (self.render_time, self.serializing_time, self.deserializing_time,
                 self.saving_time)
+
+
+def tile_spec2zxy(tile_spec):  # str -> Tuple[int, int, int]
+    if ',' in tile_spec:
+        data = tile_spec.split(',')
+    elif '/' in tile_spec:
+        data = tile_spec.split('/')
+    else:
+        raise ValueError("METATILE not in form Z,X,Y or Z/X/Y.")
+
+    z, x, y = map(int, data)
+
+    return (z, x, y)
