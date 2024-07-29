@@ -27,6 +27,7 @@ import pyproj
 
 import map_utils
 import utils
+import tiles
 
 
 import logging
@@ -72,12 +73,12 @@ class RenderStack:
     def __init__(self, max_zoom:int) -> None:
         # I don't need order here, it's (probably) better if I validate tiles
         # as soon as possible
-        self.first:Optional[map_utils.MetaTile] = None
-        self.ready:List[map_utils.MetaTile] = []
+        self.first:Optional[tiles.MetaTile] = None
+        self.ready:List[tiles.MetaTile] = []
         self.max_zoom = max_zoom
 
 
-    def push(self, metatile:map_utils.MetaTile) -> None:
+    def push(self, metatile:tiles.MetaTile) -> None:
         # debug("%s, %s, %s", self.first, self.ready, self.to_validate)
         if self.first is not None:
             self.ready.insert(0, self.first)
@@ -85,17 +86,17 @@ class RenderStack:
         self.first = metatile
 
 
-    def pop(self) -> Optional[map_utils.MetaTile]:
+    def pop(self) -> Optional[tiles.MetaTile]:
         return self.first
 
 
     def confirm(self) -> None:
         '''Mark the top of the stack as sent to render, factually pop()'ing it.'''
         if self.first is not None:
-            # metatile:map_utils.MetaTile = self.first
+            # metatile:tiles.MetaTile = self.first
             metatile = self.first
 
-        # t:Optional[map_utils.Tile] = None
+        # t:Optional[tiles.Tile] = None
         t = None
         if len(self.ready) > 0:
             t = self.ready.pop(0)
@@ -113,7 +114,7 @@ class RenderStack:
         return ans
 
 
-RenderChildren = Dict[map_utils.Tile, bool]
+RenderChildren = Dict[tiles.Tile, bool]
 class RenderThread:
     def __init__(self, opts, input, output) -> None:
         self.opts = opts
@@ -127,7 +128,7 @@ class RenderThread:
         self.store_thread = None
 
 
-    def render_metatile(self, metatile:map_utils.MetaTile) -> Dict[map_utils.Tile, bool]:
+    def render_metatile(self, metatile:tiles.MetaTile) -> Dict[tiles.Tile, bool]:
         # get LatLong (EPSG:4326)
         w, n = metatile.coords[0]
         e, s = metatile.coords[1]
@@ -245,7 +246,7 @@ class RenderThread:
 
         # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
         # this is *not* the same as EPSG:3857 because every zoom level has its own pixel space
-        self.tileproj = map_utils.GoogleProjection(opts.max_zoom + 1)
+        self.tileproj = tiles.GoogleProjection(opts.max_zoom + 1)
 
         return True
 
@@ -271,7 +272,7 @@ class RenderThread:
     def single_step(self):
         # Fetch a tile from the queue and render it
         debug("[%s] get..", self.name)
-        # metatile:Optional[map_utils.MetaTile] = self.input.get()
+        # metatile:Optional[tiles.MetaTile] = self.input.get()
         metatile = self.input.get()
         debug("[%s] got! %r", self.name, metatile)
 
@@ -579,8 +580,8 @@ class Master:
         debug('rendering bbox %s: %s', self.opts.bbox_name, bbox)
         # debug(bbox.lower_left)
         # debug(bbox.upper_right)
-        w, s = map_utils.tileproj.lon_lat2pixel(bbox.lower_left, min_zoom)
-        e, n = map_utils.tileproj.lon_lat2pixel(bbox.upper_right, min_zoom)
+        w, s = tiles.tileproj.lon_lat2pixel(bbox.lower_left, min_zoom)
+        e, n = tiles.tileproj.lon_lat2pixel(bbox.upper_right, min_zoom)
         # debug("pixel ZL%r: %r, %r, %r, %r", min_zoom, w, s, e, n)
         # debug("%d", 2**min_zoom)
 
@@ -595,7 +596,7 @@ class Master:
         info('Creating initial metatiles...')
         for x in range(w, e, metatile_size):
             for y in range(n, s, metatile_size):
-                metatile = map_utils.MetaTile(min_zoom, x, y, self.opts.metatile_size,
+                metatile = tiles.MetaTile(min_zoom, x, y, self.opts.metatile_size,
                                                 tile_size)
                 # TODO: convert this into a generator
                 # for that we will need to modify the RenderStack so we have 2 sections, one the generator,
@@ -651,7 +652,7 @@ class Master:
                     self.opts.skip_newer)
                 skip = True
 
-                for tile in metatile.tiles: # type: map_utils.Tile
+                for tile in metatile.tiles: # type: tiles.Tile
                     if self.opts.skip_existing:
                         # TODO: missing as present?
                         # NOTE: it's called missing_as_new
@@ -749,7 +750,7 @@ class Master:
         while not self.new_work.full():
             tight_loop = False
 
-            metatile = self.work_stack.pop()  # map_utils.MetaTile
+            metatile = self.work_stack.pop()  # tiles.MetaTile
             if metatile is not None:
                 # TODO: move to another thread
                 if not self.should_render(metatile):
@@ -956,14 +957,13 @@ def parse_args():
             metatiles = []
 
             for tile_spec in opts.tiles:
-                z, x, y = map_utils.tile_spec2zxy(tile_spec)
+                z, x, y = tiles.tile_spec2zxy(tile_spec)
 
                 # normalize
                 x //= 8
                 y //= 8
 
-                metatile = map_utils.MetaTile(z, x, y, opts.metatile_size,
-                                              opts.tile_size)
+                metatile = tiles.MetaTile(z, x, y, opts.metatile_size, opts.tile_size)
                 metatiles.append(metatile)
 
             opts.tiles = metatiles
@@ -974,9 +974,8 @@ def parse_args():
             metatiles = []
 
             for tile_spec in opts.tiles:
-                z, x, y = map_utils.tile_spec2zxy(tile_spec)
-                metatile = map_utils.MetaTile(z, x, y, opts.metatile_size,
-                                              opts.tile_size)
+                z, x, y = tiles.tile_spec2zxy(tile_spec)
+                metatile = tiles.MetaTile(z, x, y, opts.metatile_size, opts.tile_size)
                 metatiles.append(metatile)
 
             opts.tiles = metatiles
@@ -1038,8 +1037,8 @@ def parse_args():
         for coord in opts.coords:
             for z in range(opts.min_zoom, opts.max_zoom + 1):
                 # TODO: maybe move this conversion to PixelTile
-                x, y = map_utils.tileproj.lon_lat2pixel(coord, z)
-                tile = map_utils.PixelTile(z, x, y, 1024)
+                x, y = tiles.tileproj.lon_lat2pixel(coord, z)
+                tile = tiles.PixelTile(z, x, y, opts.tile_size)
                 metatiles.append(tile)
 
         opts.tiles = metatiles
