@@ -31,7 +31,7 @@ class GoogleProjection:
 
     def __init__(self, levels:int=18) -> None:
         self.pixels_per_degree:List[float] = []
-        self.pixels_per_radian:List[float] = []  # pixels per radian
+        self.pixels_per_radian:List[float] = []
         self.center_pixel:List[Tuple[int, int]] = []  # pixel for (0, 0)
         # self.world_size:List[int] = []  # world size in pixels
 
@@ -41,7 +41,7 @@ class GoogleProjection:
             center:int = world_size // 2
             self.pixels_per_degree.append(world_size / 360.0)
             self.pixels_per_radian.append(world_size / (2 * pi))
-            self.center_pixel.append((center, center))
+            self.center_pixel.append( (center, center) )
             # the world doubles in size on each zoom level
             world_size *= 2
 
@@ -146,9 +146,11 @@ class PixelTile:
     """It's a (meta) tile with arbitrary pixel bounds."""
     def __init__(self, z, center_x, center_y, size):
         self.z = z
+        # keep the original coords, mostly for printing; meta_index is used for cutting
         self.x = center_x
         self.y = center_y
 
+        # make sure it's rendered
         self.is_empty = False
         self.render = True
 

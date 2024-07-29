@@ -898,6 +898,7 @@ def parse_args():
     # TODO: buffer size (256?)
     opts = parser.parse_args()
 
+    ## verboseness
     if opts.debug:
         logging.basicConfig(level=logging.DEBUG, format=long_format)
     else:
@@ -908,6 +909,7 @@ def parse_args():
 
     debug(opts)
 
+    ## log outputs
     if opts.log_file is not None:
         root = logging.getLogger()
         file_handler = logging.FileHandler(opts.log_file)
@@ -925,6 +927,7 @@ def parse_args():
 
         root.addHandler(file_handler)
 
+    ## tile_dir
     if opts.format == 'tiles' and opts.tile_dir[-1] != '/':
         # we need the trailing /, it's actually a series of BUG s in render_tiles()
         opts.tile_dir += '/'
@@ -934,6 +937,7 @@ def parse_args():
         opts.skip_newer = ( datetime.datetime.now() -
                             datetime.timedelta(days=opts.skip_newer) )
 
+    ## bbox
     if opts.bbox_name is not None:
         # pick bbox from bboxes.ini
         atlas = map_utils.Atlas([ opts.bbox_name ])
@@ -946,13 +950,15 @@ def parse_args():
         opts.tile_file_format = 'png'
 
     if opts.format in ('mod_tile', 'test'):
-        # TODO: all this //= 8 is a little bit confusing
+        # mod_tile's tiles are really metatiles, 8x8
+        # so we make the tile size 8 times a tile, and the metatile size is divided by 8
         opts.tile_size = 8 * 256
-        if opts.metatile_size < 8:
-            opts.metatile_size = 8
 
         # normalize values
+        if opts.metatile_size < 8:
+            opts.metatile_size = 8
         opts.metatile_size //= 8
+
         if opts.tiles is not None:
             metatiles = []
 
@@ -1003,14 +1009,15 @@ def parse_args():
         global cairo
         import cairo
 
+    ## convert coordinates
     if opts.coords is not None or opts.longlat is not None:
         opts.tile_size = 1024
 
         if opts.coords is not None:
+            # input is Lat,Long, but tileproj works with Lon,Lat; convert
             new_coords = []
 
             for coord in opts.coords:
-                # input is Lat,Lon but tileproj works with Lon,Lat
                 data = coord.split('/')
 
                 if len(data) == 3:
@@ -1026,7 +1033,7 @@ def parse_args():
             opts.coords = new_coords
 
         elif opts.longlat is not None:
-            # input is Lon,Lat already
+            # input is Long Lat already
             long, lat = opts.longlat
             opts.coords = [ (float(long), float(lat)) ]
 
@@ -1043,6 +1050,7 @@ def parse_args():
 
         opts.tiles = metatiles
 
+    ## parallel + threads
     if opts.threads == 1:
         opts.parallel == 'single'
 
@@ -1057,6 +1065,7 @@ def parse_args():
         debug('th.Thread()')
         opts.parallel_factory = threading.Thread
 
+    ## empty_color
     # TODO: accept other formats
     try:
         # cut the leading #
@@ -1069,6 +1078,7 @@ def parse_args():
         parser.print_help()
         sys.exit(1)
 
+    ## more_opts, for tile backends
     opts.more_opts = {}
     if opts.filename_pattern is not None:
         opts.more_opts['filename_pattern'] = opts.filename_pattern
