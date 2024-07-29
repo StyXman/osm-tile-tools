@@ -398,9 +398,9 @@ class BBox:
         self.lower_right = (self.e, self.s)
 
         # in degrees
-        self.boundary = Polygon([ self.upper_left, self.lower_left,
-                                  self.lower_right, self.upper_right,
-                                  self.upper_left])
+        self.boundary = Polygon([ self.lower_left, self.lower_right,
+                                  self.upper_right, self.upper_left,
+                                  self.lower_left ])
 
 
     def __contains__(self, tile):
