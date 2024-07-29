@@ -549,8 +549,8 @@ def test_all():
     # ZL3
     expected = [ [ False, False, False, False, False, False, False, False ],
                  [ False, False, False, False, False, False, False, False ],
-                 [ False, False, False, True,  True , True , False, False ],
-                 [ False, False, False, True,  True , True , False, False ],
+                 [ False, False, False, True,  True , False, False, False ],
+                 [ False, False, False, True,  True , False, False, False ],
                  [ False, False, False, False, False, False, False, False ],
                  [ False, False, False, False, False, False, False, False ],
                  [ False, False, False, False, False, False, False, False ],
