@@ -109,7 +109,7 @@ class Tile:
 
         self.image_size = (self.size, self.size)
         self.data: Optional[bytes] = None
-        self._is_empty = None  # Optional[bool]
+        self.is_empty = None  # Optional[bool]
 
 
     def __eq__(self, other):
