@@ -10,6 +10,14 @@ DEG_TO_RAD = pi / 180
 RAD_TO_DEG = 180 / pi
 
 
+def constrain(lower_limit:float, x:float, upper_limit:float) -> float:
+    """Constrains x to the [lower_limit, upper_limit] segment."""
+    ans = max(lower_limit, x)
+    ans = min(ans, upper_limit)
+
+    return ans
+
+
 class GoogleProjection:
     """
     This class converts from LonLat to pixel and vice versa. For that, it pre

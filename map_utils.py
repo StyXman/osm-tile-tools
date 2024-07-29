@@ -23,14 +23,6 @@ from logging import debug
 from typing import List, Tuple, Dict, Optional, Any, Union
 
 
-def constrain(lower_limit:float, x:float, upper_limit:float) -> float:
-    """Constrains x to the [lower_limit, upper_limit] segment."""
-    ans = max(lower_limit, x)
-    ans = min(ans, upper_limit)
-
-    return ans
-
-
 # helper types
 TileOrTuple = Union[Tile, Tuple[int, int, int]]
 
