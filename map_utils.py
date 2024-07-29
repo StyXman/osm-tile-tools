@@ -564,6 +564,22 @@ def test_all():
         assert lon == 0
         assert lat == 0
 
+
+    tile = Tile(0, 0, 0)
+    assert MetaTile.from_tile(tile, 8) == MetaTile(0, 0, 0, 8, 256)
+
+    tile = Tile(1, 1, 0)
+    assert MetaTile.from_tile(tile, 8) == MetaTile(1, 0, 0, 8, 256)
+
+    tile = Tile(2, 2, 1)
+    assert MetaTile.from_tile(tile, 8) == MetaTile(2, 0, 0, 8, 256)
+
+    tile = Tile(3, 4, 2)
+    assert MetaTile.from_tile(tile, 8) == MetaTile(3, 0, 0, 8, 256)
+
+    tile = Tile(4, 7, 8)
+    assert MetaTile.from_tile(tile, 8) == MetaTile(4, 0, 8, 8, 256)
+
     print('A-OK')
 
 

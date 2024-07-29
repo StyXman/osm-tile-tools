@@ -269,6 +269,14 @@ class MetaTile:
         self.deserializing_time = 0
         self.saving_time = 0
 
+    @staticmethod
+    def from_tile(tile: Tile, wanted_size):
+        size = min(2**tile.z, wanted_size)
+        x = tile.x // size * size
+        y = tile.y // size * size
+
+        return MetaTile(tile.z, x, y, wanted_size, tile.size)
+
 
     # see https://github.com/python/mypy/issues/2783#issuecomment-276596902
     # def __eq__(self, other:MetaTile) -> bool:  # type: ignore
