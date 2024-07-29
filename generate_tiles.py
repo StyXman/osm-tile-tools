@@ -840,9 +840,11 @@ def parse_args():
     group.add_argument('-T', '--tiles',         dest='tiles',     default= None, nargs='+', metavar='[Z,X,Y|Z/X/Y]',
                        help="Render this list of [meta]tiles.")
     group.add_argument('-c', '--coords',        dest='coords',    default=None, nargs='+',
-                       metavar='[Lat,Lon|Lat/Lon]', help="Render this exact coords as the center of the [meta]tile.")
+                       metavar='[Lat,Long|Lat/Long]',
+                       help="Render this exact coords as the center of the [meta]tile. Order is LatLong, like in 31˚S, 64°W")
     group.add_argument('-L', '--longlat',        dest='longlat',    default=None, nargs=2,
-                       metavar=('LONG', 'LAT'))
+                       metavar=('LONG', 'LAT'),
+                       help='Render this exact coords as the center of the [meta]tile. Order is LongLat as in X,Y')
 
     parser.add_argument('-n', '--min-zoom',      dest='min_zoom',  default=0, type=int)
     parser.add_argument('-x', '--max-zoom',      dest='max_zoom',  default=18, type=int)
