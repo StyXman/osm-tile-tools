@@ -945,10 +945,12 @@ def parse_args():
     else:
         opts.bbox = map_utils.BBox([ float(s) for s in opts.bbox.split(',') ], opts.max_zoom)
 
+    ## tile_file_format
     if opts.format == 'mod_tile' and opts.tile_file_format != 'png':
         warning(f"mod_tile format doesnt support '{opts.tile_file_format}'. Forcing 'png'.")
         opts.tile_file_format = 'png'
 
+    ## misc stuff for certain formats
     if opts.format in ('mod_tile', 'test'):
         # mod_tile's tiles are really metatiles, 8x8
         # so we make the tile size 8 times a tile, and the metatile size is divided by 8
