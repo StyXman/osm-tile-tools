@@ -1,6 +1,8 @@
 from math import pi, cos, sin, log, exp, atan
 from typing import List, Tuple, Dict, Optional, Any, Union
 
+from shapely.geometry import Polygon
+
 
 # DEG_TO_RAD:float = pi / 180
 # RAD_TO_DEG:float = 180 / pi
@@ -155,10 +157,8 @@ class PixelTile:
 
         polygon_points = [ (self.coords[i][0], self.coords[j][1])
                            for i, j in ((0, 0), (1, 0), (1, 1), (0, 1), (0, 0)) ]
-        coords_wkt = ", ".join([ "%s %s" % point for point in polygon_points ])
-        polygon_wkt = 'POLYGON ((%s))' % coords_wkt
 
-        self.polygon = wkt.loads(polygon_wkt)
+        self.polygon = Polygon(polygon_points)
 
         # times
         self.render_time = 0
@@ -240,10 +240,8 @@ class MetaTile:
 
         polygon_points = [ (self.coords[i][0], self.coords[j][1])
                            for i, j in ((0, 0), (1, 0), (1, 1), (0, 1), (0, 0)) ]
-        coords_wkt = ", ".join([ "%s %s" % point for point in polygon_points ])
-        polygon_wkt = 'POLYGON ((%s))' % coords_wkt
 
-        self.polygon = wkt.loads(polygon_wkt)
+        self.polygon = Polygon(polygon_points)
 
         # times
         self.render_time:float = 0
