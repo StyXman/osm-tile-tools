@@ -508,7 +508,7 @@ class Atlas:
                     yield y
 
 
-def run_tests():
+def test_all():
     # import logging
     # logging.basicConfig(level=logging.DEBUG)
 
@@ -576,4 +576,4 @@ def run_tests():
 
 
 if __name__ == '__main__':
-    run_tests()
+    test_all()
