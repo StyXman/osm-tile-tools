@@ -68,6 +68,9 @@ class GoogleProjection:
 class Tile:
     # def __init__(self, z:int, x:int, y:int, metatile:Optional[MetaTile]=None) -> None:
     def __init__(self, z:int, x:int, y:int, metatile=None) -> None:
+        # NOTE: there are 3 sets of coordinates and their vertical component grow in different directions
+
+        # (z,),x,y are tile coords, relative to the upper left corner, so y grows downwards
         self.z = z
         self.x = x
         self.y = y
@@ -83,6 +86,7 @@ class Tile:
             # TODO: guessed
             self.tile_size = 256
 
+        # pixel_pos is based on (z,),x,y; it's relative to the world at this ZL and also grows downwards
         self.pixel_pos = (self.x * self.tile_size, self.y * self.tile_size)
         self.image_size = (self.tile_size, self.tile_size)
         self.data: Optional[bytes] = None
