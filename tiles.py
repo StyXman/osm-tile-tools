@@ -27,6 +27,7 @@ class GoogleProjection:
         self.center_pixel:List[Tuple[int, int]] = []  # pixel for (0, 0)
         # self.world_size:List[int] = []  # world size in pixels
 
+        # NOTE: no support for high res tiles
         world_size:int = 256  # size in pixels of the image representing the whole world
         for d in range(levels + 1): # type: int
             center:int = world_size // 2
@@ -83,7 +84,7 @@ class Tile:
             self.meta_pixel_coords = ()
             self.tile_size = metatile.tile_size
         else:
-            # TODO: guessed
+            # TODO: no support for hi res tiles
             self.tile_size = 256
 
         # pixel_pos is based on (z,),x,y; it's relative to the world at this ZL and also grows downwards

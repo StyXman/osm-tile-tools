@@ -968,6 +968,7 @@ def parse_args():
 
             opts.tiles = metatiles
     else:
+        # NOTE: no high res support
         opts.tile_size = 256
         if opts.tiles is not None:
             metatiles = []
