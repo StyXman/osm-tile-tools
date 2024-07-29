@@ -174,9 +174,10 @@ class PixelTile:
                          (self.pixel_pos[0] + self.image_size[0],
                           self.pixel_pos[1] + self.image_size[1]) )
 
-        # ((lon0, lat0), (lon1, lat1))
-        self.coords = ( tileproj.pixel2lon_lat(self.corners[0], self.z),
-                        tileproj.pixel2lon_lat(self.corners[1], self.z) )
+        # we have to swap the lat's
+        long0, lat1 = tileproj.pixel2lon_lat(self.corners[0], self.z)
+        long1, lat0 = tileproj.pixel2lon_lat(self.corners[1], self.z)
+        self.coords = ( (long0, lat0), (long1, lat1) )
 
         polygon_points = [ (self.coords[i][0], self.coords[j][1])
                            for i, j in ((0, 0), (1, 0), (1, 1), (0, 1), (0, 0)) ]
@@ -257,9 +258,10 @@ class MetaTile:
                          (self.pixel_pos[0] + self.image_size[0],
                           self.pixel_pos[1] + self.image_size[1]) )
 
-        # ((lon0, lat0), (lon1, lat1))
-        self.coords = ( tileproj.pixel2lon_lat(self.corners[0], self.z),
-                        tileproj.pixel2lon_lat(self.corners[1], self.z) )
+        # we have to swap the lat's
+        long0, lat1 = tileproj.pixel2lon_lat(self.corners[0], self.z)
+        long1, lat0 = tileproj.pixel2lon_lat(self.corners[1], self.z)
+        self.coords = ( (long0, lat0), (long1, lat1) )
 
         polygon_points = [ (self.coords[i][0], self.coords[j][1])
                            for i, j in ((0, 0), (1, 0), (1, 1), (0, 1), (0, 0)) ]
