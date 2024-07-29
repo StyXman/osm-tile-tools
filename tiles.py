@@ -82,14 +82,14 @@ class Tile:
         if metatile is not None:
             self.meta_index = (x - metatile.x, y - metatile.y)
             self.meta_pixel_coords = ()
-            self.tile_size = metatile.tile_size
+            self.size = metatile.tile_size
         else:
             # TODO: no support for hi res tiles
-            self.tile_size = 256
+            self.size = 256
 
         # pixel_pos is based on (z,),x,y; it's relative to the world at this ZL and also grows downwards
-        self.pixel_pos = (self.x * self.tile_size, self.y * self.tile_size)
-        self.image_size = (self.tile_size, self.tile_size)
+        self.pixel_pos = (self.x * self.size, self.y * self.size)
+        self.image_size = (self.size, self.size)
         self.data: Optional[bytes] = None
         self._is_empty = None  # Optional[bool]
 
