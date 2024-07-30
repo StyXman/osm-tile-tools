@@ -290,8 +290,8 @@ def main(root):
                 debug(f"connection from {addr}")
 
                 clients.add(client)
-                selector.register(client, EVENT_READ | EVENT_WRITE)
                 client_for_peer[client.getpeername()] = client
+                selector.register(client, EVENT_READ)
 
             elif ready_socket in clients:
                 client = ready_socket
@@ -319,6 +319,10 @@ def main(root):
                             debug(f"client {client.getpeername()} disconnected, didn't made any query yet.")
 
                         responses[client] = []
+
+                        # now we need to wait for client to be ready to write
+                        selector.unregister(client)
+                        selector.register(client, EVENT_WRITE)
                     else:
                         # splitlines() already handles any type of separators
                         lines = data.decode().splitlines()
@@ -400,6 +404,10 @@ def main(root):
                     responses[client].append(b'Content-Type: image/png\r\n')
                     responses[client].append(f"Content-Length: {file_attrs.st_size}\r\n\r\n".encode())
                     responses[client].append(tile_path)
+
+                    # now we need to wait for client to be ready to write
+                    selector.unregister(client)
+                    selector.register(client, EVENT_WRITE)
 
 
 if __name__ == '__main__':
