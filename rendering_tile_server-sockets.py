@@ -379,7 +379,11 @@ def main(root):
                         # bookkeeping
                         selector.unregister(client)
                         clients.remove(client)
-                        del queries_clients[client]
+                        try:
+                            del queries_clients[client]
+                        except KeyError:
+                            # might not have sent any queries; that's OK
+                            pass
 
         # advance the queues
         _, jobs = master.single_step()
