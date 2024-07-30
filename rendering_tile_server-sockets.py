@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 from collections import defaultdict, deque
+from dataclasses import dataclass
 import multiprocessing
 import os
 import os.path
@@ -178,6 +179,18 @@ class DoubleDict:
             del self.forward[value]
         else:
             del self.backward[value]
+
+@dataclass
+class Work:
+    metatile: MetaTile
+    # TODO: maybe a set?
+    clients: list[(socket.socket, str)]
+
+    def __eq__(self, other):
+        return self.metatile == other.metatile
+
+    def __hash__(self):
+        return hash(self.metatile)
 
 
 def main(root):
