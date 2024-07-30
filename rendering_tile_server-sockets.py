@@ -268,6 +268,7 @@ def main(root):
     clients = set()
     responses = defaultdict(list)
     queries_clients = DoubleDict()
+    client_for_peer = {}
 
     # canonicalize
     root = os.path.abspath(root)
@@ -290,6 +291,7 @@ def main(root):
 
                 clients.add(client)
                 selector.register(client, EVENT_READ | EVENT_WRITE)
+                client_for_peer[client.getpeername()] = client
 
             elif ready_socket in clients:
                 client = ready_socket
