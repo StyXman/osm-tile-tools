@@ -12,6 +12,8 @@ import socket
 import sys
 import time
 
+from tiles import Tile, MetaTile
+
 import logging
 from logging import debug, info, exception, warning
 long_format = "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
@@ -341,7 +343,13 @@ def main(root):
 
                             # o.p.join() considers path to be absolute, so it ignores root
                             tile_path = os.path.join(root, z, x, y_ext)
-                            master.work_stack.append(tile_path)
+
+                            tile = Tile(*[ int(coord) for coord in (z, x, y) ])
+                            metatile = MetaTile.from_tile(tile, 8)
+                            debug(f"{client.getpeername()}: {metatile!r}")
+                            # work = Work(metatile, [ (client.getpeername(), tile_path) ])  # BUG: ugh
+
+                            master.append(metatile, client.getpeername(), tile_path)
                             queries_clients[client] = tile_path
 
                 if events & EVENT_WRITE:
