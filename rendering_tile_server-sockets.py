@@ -25,12 +25,12 @@ class RenderThread:
         self.input = input
         self.output = output
 
-    def render_metatile(self, metatile):
-        seconds = random.randint(3, 90)
-        debug(f"[{self.name}]    {metatile}: sleeping for {seconds}...")
+    def render_metatile(self, work):
+        seconds = random.randint(3, 75)
+        debug(f"[{self.name}]    {work.metatile}: sleeping for {seconds}...")
         time.sleep(seconds)
-        debug(f"[{self.name}]    {metatile}: ... {seconds} seconds!")
-        self.output.put(metatile)
+        debug(f"[{self.name}]    {work.metatile}: ... {seconds} seconds!")
+        self.output.put(work)
 
         return True
 
@@ -45,34 +45,79 @@ class RenderThread:
         debug(f"[{self.name}] done")
 
     def single_step(self):
-        metatile = self.input.get()
+        work = self.input.get()
         debug(f"[{self.name}] step")
-        if metatile is None:
+        if work is None:
             debug(f"[{self.name}] bye!")
             # it's the end; send the storage thread a message and finish
             self.output.put(None)
             return False
 
-        return self.render_metatile(metatile)
+        return self.render_metatile(work)
 
 
 class Master:
     def __init__(self, opts):
         self.renderers = {}
 
+        # we have several data structures here
+        # work_for_metatile maps MetaTiles to Works, so we can:
+        # * know if we have it either queued or rendering
+        # * find it again so we can add more clients
+        self.work_for_metatile = {}
+        # work_for_client maps clients to Works, so we can remove the client from the work if needed
+        self.work_for_client = {}
+        # the Work queue
         self.work_stack = deque(maxlen=4096)
+        # the Work being rendered
+        self.in_flight = set()
+
         self.new_work = multiprocessing.Queue(1)
-        # self.store_queue = SimpleQueue(1)
         self.info = multiprocessing.Queue(5*8)
 
         for i in range(8):
-            # renderer = RenderThread(None, self.new_work, self.store_queue)
             renderer = RenderThread(None, self.new_work, self.info)
             render_thread = multiprocessing.Process(target=renderer.loop, name=f"Renderer-{i+1:03d}")
             renderer.name = render_thread.name
 
             render_thread.start()
             self.renderers[i] = render_thread
+
+    def append(self, metatile, client, tile_path):
+        if metatile not in self.work_for_metatile:
+            debug(f"[Master]: new  work for {metatile!r}: {client}")
+            new_work = Work(metatile, [ (client, tile_path) ])
+
+            self.work_stack.append(new_work)
+            self.work_for_metatile[metatile] = new_work
+            self.work_for_client[client] = new_work
+        else:
+            old_work = self.work_for_metatile[metatile]
+            old_work.clients.append( (client, tile_path) )
+            self.work_for_client[client] = old_work
+            debug(f"[Master]: more work for {old_work.metatile!r}: {old_work.clients}")
+
+    def remove(self, client_to_remove):
+        work = work_for_client[client_to_remove]
+
+        # now, this might seem dangerous, but all these structures are handled on the main thread
+        # so there is no danger of race conditions
+
+        # search for the client because we don't have query information
+        for client, tile_path in work.clients:
+            if client == client_to_remove:
+                debug(f"found {client_to_remove} in {work.metatile!r}")
+                work.clients.remove( (client, tile_path) )
+
+        # if this work ends without clients, remove it
+        if len(work.clients) == 0:
+            # no need to remove it from in_flight; all will be handled when the MetaTile has finished being rendered
+            # TODO: explain why
+            if work not in self.in_flight:
+                debug(f"work for {work.metatile!r} empty, removing before it's sent for rendering")
+                self.work_stack.remove(work)
+                del self.work_for_metatile[work.metatile]
+                del self.work_for_client[client_to_remove]
 
     def render_tiles(self):
         try:
@@ -112,13 +157,18 @@ class Master:
         while not self.new_work.full() and len(self.work_stack) > 0:
             tight_loop = False
 
-            metatile = self.work_stack.popleft()  # map_utils.MetaTile
-            if metatile is not None:
+            work = self.work_stack.popleft()  # Work
+
+            if work is not None:
                 # because we're the only writer, and it's not full, this can't block
                 debug('[Master] new_work.put...')
-                self.new_work.put(metatile)
+                self.new_work.put(work)
                 debug('[Master] ... new_work.put!')
-                debug(f"[Master] --> {metatile}")
+                debug(f"[Master] --> {work.metatile!r}")
+                debug(f"[Master] --> {work.clients}")
+
+                # moving from work_stack to in_flight
+                self.in_flight.add(work)
             else:
                 # no more work to do
                 tight_loop = True
@@ -129,11 +179,18 @@ class Master:
             tight_loop = False
 
             debug('info.get...')
-            data = self.info.get()
+            work = self.info.get()
             debug('... info.got!')
-            debug(f"[main] <-- {data}")
+            debug(f"[Master] <-- {work.metatile!r}")
+            debug(f"[Master] <-- {work.clients}")
 
-            result.append(data)
+            # bookkeeping
+            self.in_flight.remove(work)
+            del self.work_for_metatile[work.metatile]
+            for client, _ in work.clients:
+                del self.work_for_client[client]
+
+            result.append(work)
 
         return tight_loop, result
 
