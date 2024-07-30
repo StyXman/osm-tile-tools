@@ -378,21 +378,28 @@ def main(root):
                         del queries_clients[client]
 
         # advance the queues
-        _, tile_paths = master.single_step()
+        _, jobs = master.single_step()
 
-        for tile_path in tile_paths:
-            client = queries_clients[tile_path]
+        for work in jobs:
+            debug(f"{work=}")
+            for client_peer, tile_path in work.clients:
+                client = client_for_peer[client_peer]
 
-            try:
-                # this could be considered 'blocking', but if the fs is slow, we have other problems
-                file_attrs = os.stat(tile_path)
-            except FileNotFoundError:
-                responses[client] = [ f"HTTP/1.1 404 not here {tile_path}\r\n\r\n".encode() ]
-            else:
-                responses[client].append(b'HTTP/1.1 200 OK\r\n')
-                responses[client].append(b'Content-Type: image/png\r\n')
-                responses[client].append(f"Content-Length: {file_attrs.st_size}\r\n\r\n".encode())
-                responses[client].append(tile_path)
+                debug(f"answering {client.getpeername()} for {tile_path} ")
+                try:
+                    # this could be considered 'blocking', but if the fs is slow, we have other problems
+                    debug(f"find me {tile_path}...")
+                    file_attrs = os.stat(tile_path)
+                    debug('... stat!')
+                except FileNotFoundError:
+                    debug(f"not found {tile_path}...")
+                    responses[client] = [ f"HTTP/1.1 404 not here {tile_path}\r\n\r\n".encode() ]
+                else:
+                    debug(f"found {tile_path}...")
+                    responses[client].append(b'HTTP/1.1 200 OK\r\n')
+                    responses[client].append(b'Content-Type: image/png\r\n')
+                    responses[client].append(f"Content-Length: {file_attrs.st_size}\r\n\r\n".encode())
+                    responses[client].append(tile_path)
 
 
 if __name__ == '__main__':
