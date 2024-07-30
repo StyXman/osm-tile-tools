@@ -239,6 +239,20 @@ class DoubleDict:
         else:
             del self.backward[value]
 
+    def __contains__(self, key):
+        return key in self.forward or key in self.backward
+
+    def get(self, key, default=None):
+        if key in self.forward:
+            value = self.forward.pop(key)
+        elif key in self.backward:
+            value = self.backward.pop(key)
+        else:
+            value = default
+
+        return value
+
+
 @dataclass
 class Work:
     metatile: MetaTile
