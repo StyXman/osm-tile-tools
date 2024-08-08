@@ -253,6 +253,10 @@ class DoubleDict:
         return value
 
 
+class Options:
+    pass
+
+
 def main(root):
     listener = socket.socket()
     # before bind
@@ -279,7 +283,35 @@ def main(root):
     # GET /12/2111/1500.png HTTP/1.1
     request_re = re.compile(r'(?P<method>[A-Z]+) (?P<url>.*) (?P<version>.*)')
 
-    master = Master(None)
+    opts = Options()
+
+    # alphabetical order
+    opts.bbox = None
+    opts.coords = None
+    opts.dry_run = False
+    opts.empty = 'skip'
+    opts.empty_color = '#aad3df'
+    opts.empty_size = 103
+    opts.format = 'tiles'  # TODO?
+    opts.mapfile = 'Elevation.xml'
+    opts.mapnik_strict = False
+    opts.max_zoom = 21  # deep enough
+    opts.metatile_size = 8
+    opts.more_opts = {}
+    opts.parallel = 'fork'
+    opts.parallel_factory = None  # TODO
+    opts.single_tiles = False
+    opts.store_thread = False
+    opts.threads = 8  # TODO
+    # TODO:
+    # opts.tile_dir = app.root_dir
+    opts.tile_dir = 'Elevation/'
+    opts.tile_file_format = 'png'
+    opts.tile_file_format_options = ''
+    # TODO: no support for hi-res tiles (512)
+    opts.tile_size = 256
+
+    master = Master(opts)
 
     while True:
         for key, events in selector.select(0.1):
