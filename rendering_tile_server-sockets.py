@@ -261,36 +261,181 @@ class DoubleDict:
         return value
 
 
+class Server:
+    def __init__(self, opts):
+        self.opts = opts
+
+        self.listener = socket.socket()
+        # before bind
+        self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
+        self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
+
+        self.listener.bind( ('', 8080) )
+        self.listener.listen(32)
+        self.listener.setblocking(False)
+
+        self.selector = Selector()
+        self.selector.register(self.listener, EVENT_READ)
+
+        self.clients = set()
+        self.responses = defaultdict(list)
+        self.queries_clients = DoubleDict()
+        self.client_for_peer = {}
+
+        # canonicalize
+        # root = os.path.abspath(root)
+
+        # b'GET /12/2111/1500.png HTTP/1.1\r\nHost: ioniq:8080\r\nConnection: Keep-Alive\r\nAccept-Encoding: gzip\r\nUser-Agent: okhttp/3.12.2\r\n\r\n'
+        # but we only care about the first line, so
+        # GET /12/2111/1500.png HTTP/1.1
+        self.request_re = re.compile(r'(?P<method>[A-Z]+) (?P<url>.*) (?P<version>.*)')
+
+        self.master = Master(self.opts)
+
+
+    def loop(self):
+        while True:
+            debug(f"select... [{len(self.master.work_stack)=}; {self.master.new_work.qsize()=}; {self.master.store_queue.qsize()=}; {self.master.info.qsize()=}]")
+            for key, events in self.selector.select(1):
+                debug('...ed!')
+                ready_socket = key.fileobj
+
+                if ready_socket == self.listener:
+                    # new client
+                    debug('accept..')
+                    client, addr = self.listener.accept()
+                    debug('...ed!')
+                    debug(f"connection from {addr}")
+
+                    self.clients.add(client)
+                    self.client_for_peer[client.getpeername()] = client
+                    self.selector.register(client, EVENT_READ)
+
+                elif ready_socket in self.clients:
+                    client = ready_socket
+
+                    if events & EVENT_READ:
+                        data = client.recv(4096)
+                        debug(f"read from {client.getpeername()}: {data}")
+
+                        if len(data) == 0:
+                            # remove any trailing data
+                            if client in self.responses:
+                                del self.responses[client]
+
+                            # clean up trailing queries from the work_stack
+                            query = self.queries_clients.get(client, None)
+                            if query is not None:
+                                try:
+                                    self.master.work_stack.remove(query)
+                                except ValueError:
+                                    # already being rendered, ignore
+                                    pass
+
+                                debug(f"client {client.getpeername()} disconnected, was waiting for {query}")
+                            else:
+                                debug(f"client {client.getpeername()} disconnected, didn't made any query yet.")
+
+                            self.responses[client] = []
+
+                            # now we need to wait for client to be ready to write
+                            self.selector.unregister(client)
+                            self.selector.register(client, EVENT_WRITE)
+                        else:
+                            # splitlines() already handles any type of separators
+                            lines = data.decode().splitlines()
+                            request_line = lines[0]
+                            match = self.request_re.match(request_line)
+
+                            if match is None:
+                                self.responses[client] = [ b'HTTP/1.1 400 KO\r\n\r\n' ]
+
+                            if match['method'] != 'GET':
+                                self.responses[client] = [ b'HTTP/1.1 405 only GETs\r\n\r\n' ]
+
+                            path = match['url']
+
+                            # TODO: similar code is in tile_server. try to refactor
+                            try:
+                                # _ gets '' because path is absolute
+                                _, z, x, y_ext = path.split('/')
+                            except ValueError:
+                                self.responses[client] = [ f"HTTP/1.1 400 bad tile spec {path}\r\n\r\n".encode() ]
+                            else:
+                                # TODO: make sure ext matches the file type we return
+                                y, ext = os.path.splitext(y_ext)
+
+                                # o.p.join() considers path to be absolute, so it ignores root
+                                tile_path = os.path.join(self.opts.tile_dir, z, x, y_ext)
+
+                                tile = Tile(*[ int(coord) for coord in (z, x, y) ])
+                                metatile = MetaTile.from_tile(tile, 8)
+                                debug(f"{client.getpeername()}: {metatile!r}")
+                                # work = Work(metatile, [ (client.getpeername(), tile_path) ])  # BUG: ugh
+
+                                self.master.append(metatile, client.getpeername(), tile_path)
+                                self.queries_clients[client] = tile_path
+
+                    if events & EVENT_WRITE:
+                        if client in self.responses:
+                            for data in self.responses[client]:
+                                if len(data) > 0:
+                                    debug(f"serving {data} to {client.getpeername()}")
+                                    if isinstance(data, bytes):
+                                        sent = client.send(data)
+                                        # TODO
+                                        assert sent == len(data), f"E: Could not send all {data} to {client.getpeername()}"
+                                    else:
+                                        client.sendfile(open(data, 'br'))
+
+                            del self.responses[client]
+
+                            # BUG: no keep alive support
+                            debug(f"closing {client.getpeername()}")
+                            client.close()
+
+                            # bookkeeping
+                            self.selector.unregister(client)
+                            self.clients.remove(client)
+                            try:
+                                del self.queries_clients[client]
+                            except KeyError:
+                                # might not have sent any queries; that's OK
+                                pass
+
+            # advance the queues
+            _, jobs = self.master.single_step()
+
+            for work in jobs:
+                debug(f"{work=}")
+                for client_peer, tile_path in work.clients:
+                    client = self.client_for_peer[client_peer]
+                    debug(f"answering {client.getpeername()} for {tile_path} ")
+                    try:
+                        # this could be considered 'blocking', but if the fs is slow, we have other problems
+                        debug(f"find me {tile_path}...")
+                        file_attrs = os.stat(tile_path)
+                        debug('... stat!')
+                    except FileNotFoundError:
+                        debug(f"not found {tile_path}...")
+                        self.responses[client] = [ f"HTTP/1.1 404 not here {tile_path}\r\n\r\n".encode() ]
+                    else:
+                        debug(f"found {tile_path}...")
+                        self.responses[client].append(b'HTTP/1.1 200 OK\r\n')
+                        self.responses[client].append(b'Content-Type: image/png\r\n')
+                        self.responses[client].append(f"Content-Length: {file_attrs.st_size}\r\n\r\n".encode())
+                        self.responses[client].append(tile_path)
+
+                        # now we need to wait for client to be ready to write
+                        self.selector.unregister(client)
+                        self.selector.register(client, EVENT_WRITE)
+
+
 class Options:
     pass
 
 
 def main(root):
-    listener = socket.socket()
-    # before bind
-    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
-    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
-
-    listener.bind( ('', 8080) )
-    listener.listen(32)
-    listener.setblocking(False)
-
-    selector = Selector()
-    selector.register(listener, EVENT_READ)
-
-    clients = set()
-    responses = defaultdict(list)
-    queries_clients = DoubleDict()
-    client_for_peer = {}
-
-    # canonicalize
-    root = os.path.abspath(root)
-
-    # b'GET /12/2111/1500.png HTTP/1.1\r\nHost: ioniq:8080\r\nConnection: Keep-Alive\r\nAccept-Encoding: gzip\r\nUser-Agent: okhttp/3.12.2\r\n\r\n'
-    # but we only care about the first line, so
-    # GET /12/2111/1500.png HTTP/1.1
-    request_re = re.compile(r'(?P<method>[A-Z]+) (?P<url>.*) (?P<version>.*)')
-
     opts = Options()
 
     # alphabetical order
@@ -319,140 +464,8 @@ def main(root):
     # TODO: no support for hi-res tiles (512)
     opts.tile_size = 256
 
-    master = Master(opts)
-
-    while True:
-        for key, events in selector.select(0.1):
-            ready_socket = key.fileobj
-
-            if ready_socket == listener:
-                # new client
-                client, addr = listener.accept()
-                debug(f"connection from {addr}")
-
-                clients.add(client)
-                client_for_peer[client.getpeername()] = client
-                selector.register(client, EVENT_READ)
-
-            elif ready_socket in clients:
-                client = ready_socket
-
-                if events & EVENT_READ:
-                    data = client.recv(4096)
-                    debug(f"read from {client.getpeername()}: {data}")
-
-                    if len(data) == 0:
-                        # remove any trailing data
-                        if client in responses:
-                            del responses[client]
-
-                        # clean up trailing queries from the work_stack
-                        query = queries_clients.get(client, None)
-                        if query is not None:
-                            try:
-                                master.work_stack.remove(query)
-                            except ValueError:
-                                # already being rendered, ignore
-                                pass
-
-                            debug(f"client {client.getpeername()} disconnected, was waiting for {query}")
-                        else:
-                            debug(f"client {client.getpeername()} disconnected, didn't made any query yet.")
-
-                        responses[client] = []
-
-                        # now we need to wait for client to be ready to write
-                        selector.unregister(client)
-                        selector.register(client, EVENT_WRITE)
-                    else:
-                        # splitlines() already handles any type of separators
-                        lines = data.decode().splitlines()
-                        request_line = lines[0]
-                        match = request_re.match(request_line)
-
-                        if match is None:
-                            responses[client] = [ b'HTTP/1.1 400 KO\r\n\r\n' ]
-
-                        if match['method'] != 'GET':
-                            responses[client] = [ b'HTTP/1.1 405 only GETs\r\n\r\n' ]
-
-                        path = match['url']
-
-                        # TODO: similar code is in tile_server. try to refactor
-                        try:
-                            # _ gets '' because self.path is absolute
-                            _, z, x, y_ext = path.split('/')
-                        except ValueError:
-                            responses[client] = [ f"HTTP/1.1 400 bad tile spec {self.path}\r\n\r\n".encode() ]
-                        else:
-                            # TODO: make sure ext matches the file type we return
-                            y, ext = os.path.splitext(y_ext)
-
-                            # o.p.join() considers path to be absolute, so it ignores root
-                            tile_path = os.path.join(root, z, x, y_ext)
-
-                            tile = Tile(*[ int(coord) for coord in (z, x, y) ])
-                            metatile = MetaTile.from_tile(tile, 8)
-                            debug(f"{client.getpeername()}: {metatile!r}")
-                            # work = Work(metatile, [ (client.getpeername(), tile_path) ])  # BUG: ugh
-
-                            master.append(metatile, client.getpeername(), tile_path)
-                            queries_clients[client] = tile_path
-
-                if events & EVENT_WRITE:
-                    if client in responses:
-                        for data in responses[client]:
-                            if len(data) > 0:
-                                debug(f"serving {data} to {client.getpeername()}")
-                                if isinstance(data, bytes):
-                                    sent = client.send(data)
-                                    # TODO
-                                    assert sent == len(data), f"E: Could not send all {data} to {client.getpeername()}"
-                                else:
-                                    client.sendfile(open(data, 'br'))
-
-                        del responses[client]
-
-                        # no keep alive support
-                        debug(f"closing {client.getpeername()}")
-                        client.close()
-
-                        # bookkeeping
-                        selector.unregister(client)
-                        clients.remove(client)
-                        try:
-                            del queries_clients[client]
-                        except KeyError:
-                            # might not have sent any queries; that's OK
-                            pass
-
-        # advance the queues
-        _, jobs = master.single_step()
-
-        for work in jobs:
-            debug(f"{work=}")
-            for client_peer, tile_path in work.clients:
-                client = client_for_peer[client_peer]
-
-                debug(f"answering {client.getpeername()} for {tile_path} ")
-                try:
-                    # this could be considered 'blocking', but if the fs is slow, we have other problems
-                    debug(f"find me {tile_path}...")
-                    file_attrs = os.stat(tile_path)
-                    debug('... stat!')
-                except FileNotFoundError:
-                    debug(f"not found {tile_path}...")
-                    responses[client] = [ f"HTTP/1.1 404 not here {tile_path}\r\n\r\n".encode() ]
-                else:
-                    debug(f"found {tile_path}...")
-                    responses[client].append(b'HTTP/1.1 200 OK\r\n')
-                    responses[client].append(b'Content-Type: image/png\r\n')
-                    responses[client].append(f"Content-Length: {file_attrs.st_size}\r\n\r\n".encode())
-                    responses[client].append(tile_path)
-
-                    # now we need to wait for client to be ready to write
-                    selector.unregister(client)
-                    selector.register(client, EVENT_WRITE)
+    server = Server(opts)
+    server.loop()
 
 
 if __name__ == '__main__':
