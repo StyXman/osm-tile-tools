@@ -11,8 +11,10 @@ import socket
 import sys
 import time
 
-from generate_tiles import Work
+from generate_tiles import StormBringer, Work
+import map_utils
 from tiles import Tile, MetaTile
+import utils
 
 import logging
 from logging import debug, info, exception, warning
@@ -75,12 +77,18 @@ class Master:
         self.in_flight = set()
 
         self.new_work = multiprocessing.Queue(1)
+        self.store_queue = utils.SimpleQueue(5*opts.threads)
         self.info = multiprocessing.Queue(5*8)
 
+        self.backend = map_utils.DiskBackend(opts.tile_dir)
+        self.store_thread = StormBringer(opts, self.backend, self.store_queue, self.info)
+        self.store_thread.name = 'store-embedded'
+
         for i in range(8):
-            renderer = RenderThread(None, self.new_work, self.info)
+            renderer = RenderThread(opts, self.new_work, self.store_queue)
             render_thread = multiprocessing.Process(target=renderer.loop, name=f"Renderer-{i+1:03d}")
             renderer.name = render_thread.name
+            renderer.store_thread = self.store_thread
 
             render_thread.start()
             self.renderers[i] = render_thread
