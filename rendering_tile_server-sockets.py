@@ -313,7 +313,7 @@ def main(root):
     opts.threads = 8  # TODO
     # TODO:
     # opts.tile_dir = app.root_dir
-    opts.tile_dir = 'Elevation/'
+    opts.tile_dir = root
     opts.tile_file_format = 'png'
     opts.tile_file_format_options = ''
     # TODO: no support for hi-res tiles (512)
