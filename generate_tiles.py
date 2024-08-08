@@ -218,10 +218,11 @@ class RenderThread:
             # but bz2 compresses the best, 52714 png vs 49876 bzip vs 70828 gzip vs 53032 lzma
 
             if not self.opts.store_thread:
-                # metatile will go in a non-marshaling queue, no need tostring() it
+                # if there is not a separate store thread, the metatile will go in a non-marshaling queue,
+                # so no need tostring() it
                 metatile.im = im
             else:
-                metatile.im = im.tostring('png256')  # here it's converted only for serializattion reasons
+                metatile.im = im.tostring('png256')  # here it's converted only for serialization reasons
 
             end = time.perf_counter()
         else:
@@ -405,9 +406,7 @@ class StormBringer:
             for child in metatile.children():
                 # don't render child if: empty; or single tile mode; or too deep
                 debug((child.is_empty, self.opts.single_tiles, tile.z, self.opts.max_zoom))
-                if ( child.is_empty or self.opts.single_tiles or
-                     metatile.z == self.opts.max_zoom ):
-
+                if child.is_empty or self.opts.single_tiles or metatile.z == self.opts.max_zoom:
                     child.render = False
 
             metatile.deserializing_time = mid - start
@@ -415,10 +414,9 @@ class StormBringer:
         else:
             for child in metatile.children():
                 rand = random()
-                child.is_empty = (rand >= 0.95 and
-                                  2**metatile.z >= self.opts.metatile_size)
-                child.render = not (child.is_empty or self.opts.single_tiles or
-                                    metatile.z == self.opts.max_zoom)
+                # 5% are fake empties
+                child.is_empty = (rand <= 0.05 and 2**metatile.z >= self.opts.metatile_size)
+                child.render = not (child.is_empty or self.opts.single_tiles or metatile.z == self.opts.max_zoom)
 
 
     def store_tile(self, tile, image):
@@ -436,8 +434,7 @@ class StormBringer:
             tile.data = img.tostring(self.tile_file_format)
 
             # debug((len(tile.data), tile.data[41:44]))
-            tile.is_empty = (len(tile.data) == self.opts.empty_size and
-                            tile.data[41:44] == self.opts.empty_color)
+            tile.is_empty = len(tile.data) == self.opts.empty_size and tile.data[41:44] == self.opts.empty_color
 
             if tile.is_empty:
                 debug('Skipping empty tile')
@@ -618,7 +615,7 @@ class Master:
         for x in range(w, e, metatile_size):
             for y in range(n, s, metatile_size):
                 metatile = tiles.MetaTile(min_zoom, x, y, self.opts.metatile_size,
-                                                tile_size)
+                                          tile_size)
                 # TODO: convert this into a generator
                 # for that we will need to modify the RenderStack so we have 2 sections, one the generator,
                 # another for the chidren stacked on top
