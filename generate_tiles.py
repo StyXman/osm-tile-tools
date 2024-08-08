@@ -2,6 +2,7 @@
 
 # https://github.com/openstreetmap/mapnik-stylesheets/blob/master/generate_tiles.py with *LOTS* of enhancements
 
+from dataclasses import dataclass
 from subprocess import call
 import sys, os, os.path
 import queue
@@ -112,6 +113,20 @@ class RenderStack:
         ans = int(self.first is not None) + len(self.ready)
         # debug(ans)
         return ans
+
+
+@dataclass
+class Work:
+    metatile: tiles.MetaTile
+    # TODO: maybe a set?
+    #              (('127.0.0.1', 51390), 'Elevation/15/16868/12011.png')
+    clients: list[ ((str, int), str) ]
+
+    def __eq__(self, other):
+        return self.metatile == other.metatile
+
+    def __hash__(self):
+        return hash(self.metatile)
 
 
 RenderChildren = Dict[tiles.Tile, bool]
