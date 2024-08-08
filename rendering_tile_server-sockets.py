@@ -27,7 +27,7 @@ class RenderThread:
         self.input = input
         self.output = output
 
-    def render_metatile(self, work):
+    def render(self, work):
         seconds = random.randint(3, 75)
         debug(f"[{self.name}]    {work.metatile}: sleeping for {seconds}...")
         time.sleep(seconds)
@@ -55,7 +55,7 @@ class RenderThread:
             self.output.put(None)
             return False
 
-        return self.render_metatile(work)
+        return self.render(work)
 
 
 class Master:

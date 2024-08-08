@@ -143,7 +143,7 @@ class RenderThread:
         self.store_thread = None
 
 
-    def render_metatile(self, metatile:tiles.MetaTile) -> Dict[tiles.Tile, bool]:
+    def render(self, metatile:tiles.MetaTile) -> Dict[tiles.Tile, bool]:
         # get LatLong (EPSG:4326)
         w, n = metatile.coords[0]
         e, s = metatile.coords[1]
@@ -299,7 +299,7 @@ class RenderThread:
 
             return False
 
-        return self.render_metatile(metatile)
+        return self.render(metatile)
 
 
 # backends:Dict[str,Any] = dict(
