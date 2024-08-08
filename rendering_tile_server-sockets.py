@@ -410,25 +410,28 @@ class Server:
                 debug(f"{work=}")
                 for client_peer, tile_path in work.clients:
                     client = self.client_for_peer[client_peer]
-                    debug(f"answering {client.getpeername()} for {tile_path} ")
-                    try:
-                        # this could be considered 'blocking', but if the fs is slow, we have other problems
-                        debug(f"find me {tile_path}...")
-                        file_attrs = os.stat(tile_path)
-                        debug('... stat!')
-                    except FileNotFoundError:
-                        debug(f"not found {tile_path}...")
-                        self.responses[client] = [ f"HTTP/1.1 404 not here {tile_path}\r\n\r\n".encode() ]
-                    else:
-                        debug(f"found {tile_path}...")
-                        self.responses[client].append(b'HTTP/1.1 200 OK\r\n')
-                        self.responses[client].append(b'Content-Type: image/png\r\n')
-                        self.responses[client].append(f"Content-Length: {file_attrs.st_size}\r\n\r\n".encode())
-                        self.responses[client].append(tile_path)
+                    self.answer(client, tile_path)
 
-                        # now we need to wait for client to be ready to write
-                        self.selector.unregister(client)
-                        self.selector.register(client, EVENT_WRITE)
+    def answer(self, client, tile_path):
+        debug(f"answering {client.getpeername()} for {tile_path} ")
+        try:
+            # this could be considered 'blocking', but if the fs is slow, we have other problems
+            debug(f"find me {tile_path}...")
+            file_attrs = os.stat(tile_path)
+            debug('... stat!')
+        except FileNotFoundError:
+            debug(f"not found {tile_path}...")
+            self.responses[client] = [ f"HTTP/1.1 404 not here {tile_path}\r\n\r\n".encode() ]
+        else:
+            debug(f"found {tile_path}...")
+            self.responses[client].append(b'HTTP/1.1 200 OK\r\n')
+            self.responses[client].append(b'Content-Type: image/png\r\n')
+            self.responses[client].append(f"Content-Length: {file_attrs.st_size}\r\n\r\n".encode())
+            self.responses[client].append(tile_path)
+
+            # now we need to wait for client to be ready to write
+            self.selector.unregister(client)
+            self.selector.register(client, EVENT_WRITE)
 
 
 class Options:
