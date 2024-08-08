@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 
 from collections import defaultdict, deque
-from dataclasses import dataclass
 import multiprocessing
 import os
 import os.path
@@ -12,6 +11,7 @@ import socket
 import sys
 import time
 
+from generate_tiles import Work
 from tiles import Tile, MetaTile
 
 import logging
@@ -251,19 +251,6 @@ class DoubleDict:
             value = default
 
         return value
-
-
-@dataclass
-class Work:
-    metatile: MetaTile
-    # TODO: maybe a set?
-    clients: list[(socket.socket, str)]
-
-    def __eq__(self, other):
-        return self.metatile == other.metatile
-
-    def __hash__(self):
-        return hash(self.metatile)
 
 
 def main(root):
