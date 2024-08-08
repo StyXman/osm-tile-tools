@@ -172,10 +172,12 @@ class RenderThread:
 
         start = time.perf_counter()
         if not self.opts.dry_run:
-            if opts.format == 'svg':
-                im = cairo.SVGSurface(f"{opts.tile_dir}/{opts.coords[0][0]}-{opts.coords[0][1]}.svg", opts.tile_size, opts.tile_size)
-            elif opts.format == 'pdf':
-                im = cairo.PDFSurface(f"{opts.tile_dir}/{opts.coords[0][0]}-{opts.coords[0][1]}.pdf", opts.tile_size, opts.tile_size)
+            if self.opts.format == 'svg':
+                im = cairo.SVGSurface(f"{self.opts.tile_dir}/{self.opts.coords[0][0]}-{self.opts.coords[0][1]}.svg",
+                                      self.opts.tile_size, self.opts.tile_size)
+            elif self.opts.format == 'pdf':
+                im = cairo.PDFSurface(f"{self.opts.tile_dir}/{self.opts.coords[0][0]}-{self.opts.coords[0][1]}.pdf",
+                                      self.opts.tile_size, self.opts.tile_size)
             else:
                 im = mapnik.Image(image_size, image_size)
 
@@ -263,7 +265,7 @@ class RenderThread:
 
         # Projects between tile pixel co-ordinates and LatLong (EPSG:4326)
         # this is *not* the same as EPSG:3857 because every zoom level has its own pixel space
-        self.tileproj = tiles.GoogleProjection(opts.max_zoom + 1)
+        self.tileproj = tiles.GoogleProjection(self.opts.max_zoom + 1)
 
         return True
 
@@ -330,7 +332,7 @@ class StormBringer:
         self.output = output
         # the amount of threads writing on input
         # this is needed so we can stop only after all the writers sent their last jobs
-        self.writers = opts.threads
+        self.writers = self.opts.threads
         self.done_writers = 0
 
         if   self.opts.tile_file_format == 'png':
@@ -421,7 +423,7 @@ class StormBringer:
 
     def store_tile(self, tile, image):
         # SVG is stored by the renderer
-        if opts.format not in ('svg', 'pdf'):
+        if self.opts.format not in ('svg', 'pdf'):
             i, j = tile.meta_index
 
             # TODO: Tile.meta_pixel_coords
