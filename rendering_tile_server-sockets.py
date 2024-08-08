@@ -11,7 +11,7 @@ import socket
 import sys
 import time
 
-from generate_tiles import StormBringer, Work
+from generate_tiles import RenderThread, StormBringer, Work
 import map_utils
 from tiles import Tile, MetaTile
 import utils
@@ -24,7 +24,7 @@ short_format = "%(asctime)s %(message)s"
 logging.basicConfig(level=logging.DEBUG, format=long_format)
 
 # fake multiprocessing for testing
-class RenderThread:
+class FakeRenderThread:
     def __init__(self, opts, input, output):
         self.input = input
         self.output = output
