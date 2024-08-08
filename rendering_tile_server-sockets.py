@@ -368,13 +368,15 @@ class Server:
                                 # o.p.join() considers path to be absolute, so it ignores root
                                 tile_path = os.path.join(self.opts.tile_dir, z, x, y_ext)
 
-                                tile = Tile(*[ int(coord) for coord in (z, x, y) ])
-                                metatile = MetaTile.from_tile(tile, 8)
-                                debug(f"{client.getpeername()}: {metatile!r}")
-                                # work = Work(metatile, [ (client.getpeername(), tile_path) ])  # BUG: ugh
+                                # try to send tyhe tile first, but do not send 404s
+                                if not self.answer(client, tile_path, send_404=False):
+                                    tile = Tile(*[ int(coord) for coord in (z, x, y) ])
+                                    metatile = MetaTile.from_tile(tile, 8)
+                                    debug(f"{client.getpeername()}: {metatile!r}")
+                                    # work = Work(metatile, [ (client.getpeername(), tile_path) ])  # BUG: ugh
 
-                                self.master.append(metatile, client.getpeername(), tile_path)
-                                self.queries_clients[client] = tile_path
+                                    self.master.append(metatile, client.getpeername(), tile_path)
+                                    self.queries_clients[client] = tile_path
 
                     if events & EVENT_WRITE:
                         if client in self.responses:
@@ -412,7 +414,7 @@ class Server:
                     client = self.client_for_peer[client_peer]
                     self.answer(client, tile_path)
 
-    def answer(self, client, tile_path):
+    def answer(self, client, tile_path, send_404=True):
         debug(f"answering {client.getpeername()} for {tile_path} ")
         try:
             # this could be considered 'blocking', but if the fs is slow, we have other problems
@@ -421,7 +423,11 @@ class Server:
             debug('... stat!')
         except FileNotFoundError:
             debug(f"not found {tile_path}...")
-            self.responses[client] = [ f"HTTP/1.1 404 not here {tile_path}\r\n\r\n".encode() ]
+
+            if send_404:
+                self.responses[client] = [ f"HTTP/1.1 404 not here {tile_path}\r\n\r\n".encode() ]
+
+            return False
         else:
             debug(f"found {tile_path}...")
             self.responses[client].append(b'HTTP/1.1 200 OK\r\n')
@@ -432,6 +438,8 @@ class Server:
             # now we need to wait for client to be ready to write
             self.selector.unregister(client)
             self.selector.register(client, EVENT_WRITE)
+
+        return True
 
 
 class Options:
