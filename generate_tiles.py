@@ -338,7 +338,7 @@ class StormBringer:
 
         if   self.opts.tile_file_format == 'png':
             self.tile_file_format = 'png256'
-        elif self.opts.tile_file_format == 'jpeg':
+        elif self.opts.tile_file_format == 'jpg':
             self.tile_file_format = 'jpeg'
 
         if self.opts.tile_file_format_options == '':
