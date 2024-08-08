@@ -143,7 +143,7 @@ class RenderThread:
         self.store_thread = None
 
 
-    def render(self, work:Work) -> Dict[tiles.Tile, bool]:
+    def render(self, work:Work) -> bool:
         metatile = work.metatile
 
         # get LatLong (EPSG:4326)
