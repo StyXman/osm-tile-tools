@@ -517,7 +517,7 @@ class Master:
                 self.store_thread.start()
                 debug("Started store thread %s", self.store_thread.name)
             else:
-                sb.name = 'store-emb'
+                sb.name = 'store-embedded'
                 self.store_thread = sb
 
             for i in range(self.opts.threads):
