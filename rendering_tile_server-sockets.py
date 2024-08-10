@@ -12,7 +12,7 @@ import sys
 import time
 import traceback
 
-from generate_tiles import RenderThread, StormBringer, Work
+from generate_tiles import RenderThread, StormBringer
 import map_utils
 from tiles import Tile, MetaTile
 import utils
@@ -66,15 +66,15 @@ class Master:
         self.renderers = {}
 
         # we have several data structures here
-        # work_for_metatile maps MetaTiles to Works, so we can:
+        # clients_for_metatile maps MetaTiles to Clients, so we can:
         # * know if we have it either queued or rendering
         # * find it again so we can add more clients
-        self.work_for_metatile = {}
-        # work_for_client maps clients to Works, so we can remove the client from the work if needed
-        self.work_for_client = {}
-        # the Work queue
+        self.clients_for_metatile = defaultdict(set)
+        # metatile_for_client maps Clients to MetaTiles, so we can remove the Client from the MT's client list
+        self.metatile_for_client = {}
+        # the MetaTile queue
         self.work_stack = deque(maxlen=4096)
-        # the Work being rendered
+        # the MetaTile being rendered
         self.in_flight = set()
 
         self.new_work = multiprocessing.Queue(1)
@@ -95,40 +95,35 @@ class Master:
             self.renderers[i] = render_thread
 
     def append(self, metatile, client, tile_path):
-        if metatile not in self.work_for_metatile:
-            debug(f"[Master]: new  work for {metatile!r}: {client}")
-            new_work = Work(metatile, [ (client, tile_path) ])
+        if metatile not in self.clients_for_metatile:
+            debug(f"[Master]: first Client for {metatile!r}: {client}")
 
-            self.work_stack.append(new_work)
-            self.work_for_metatile[metatile] = new_work
-            self.work_for_client[client] = new_work
+            self.work_stack.append(metatile)
+            self.clients_for_metatile[metatile].add(client)
+            self.metatile_for_client[client] = metatile
         else:
-            old_work = self.work_for_metatile[metatile]
-            old_work.clients.append( (client, tile_path) )
-            self.work_for_client[client] = old_work
-            debug(f"[Master]: more work for {old_work.metatile!r}: {old_work.clients}")
+            clients = self.clients_for_metatile[metatile]
+            clients.add(client)
+            self.metatile_for_client[client] = metatile
+            debug(f"[Master]: new Client for {metatile!r}: {clients}")
 
     def remove(self, client_to_remove):
-        work = work_for_client[client_to_remove]
+        metatile = self.metatile_for_client[client_to_remove]
 
         # now, this might seem dangerous, but all these structures are handled on the main thread
         # so there is no danger of race conditions
+        clients = self.clients_for_metatile[metatile]
+        clients.remove(client)
 
-        # search for the client because we don't have query information
-        for client, tile_path in work.clients:
-            if client == client_to_remove:
-                debug(f"found {client_to_remove} in {work.metatile!r}")
-                work.clients.remove( (client, tile_path) )
-
-        # if this work ends without clients, remove it
-        if len(work.clients) == 0:
+        # if this metatile ends without clients, remove it
+        if len(clients) == 0:
             # no need to remove it from in_flight; all will be handled when the MetaTile has finished being rendered
             # TODO: explain why
-            if work not in self.in_flight:
-                debug(f"work for {work.metatile!r} empty, removing before it's sent for rendering")
-                self.work_stack.remove(work)
-                del self.work_for_metatile[work.metatile]
-                del self.work_for_client[client_to_remove]
+            if metatile not in self.in_flight:
+                debug(f"clients for {metatile!r} empty, removing before it's sent for rendering")
+                self.work_stack.remove(metatile)
+                del self.clients_for_metatile[metatile]
+                del self.metatile_for_client[client_to_remove]
 
     def render_tiles(self):
         try:
@@ -168,18 +163,18 @@ class Master:
         while not self.new_work.full() and len(self.work_stack) > 0:
             tight_loop = False
 
-            work = self.work_stack.popleft()  # Work
+            metatile = self.work_stack.popleft()  # tiles.MetaTile
 
-            if work is not None:
+            if metatile is not None:
                 # because we're the only writer, and it's not full, this can't block
                 debug('[Master] new_work.put...')
-                self.new_work.put(work)
+                self.new_work.put(metatile)
                 debug('[Master] ... new_work.put!')
-                debug(f"[Master] --> {work.metatile!r}")
-                debug(f"[Master] --> {work.clients}")
+                debug(f"[Master] --> {metatile!r}")
+                debug(f"[Master] --> {clients}")
 
                 # moving from work_stack to in_flight
-                self.in_flight.add(work)
+                self.in_flight.add(metatile)
             else:
                 # no more work to do
                 tight_loop = True
@@ -190,18 +185,20 @@ class Master:
             tight_loop = False
 
             debug('info.get...')
-            work = self.info.get()
+            metatile = self.info.get()
+            clients = self.clients_for_metatile[metatile]
+
             debug('... info.got!')
-            debug(f"[Master] <-- {work.metatile!r}")
-            debug(f"[Master] <-- {work.clients}")
+            debug(f"[Master] <-- {metatile!r}")
+            debug(f"[Master] <-- {clients=}")
 
             # bookkeeping
-            self.in_flight.remove(work)
-            del self.work_for_metatile[work.metatile]
-            for client, _ in work.clients:
-                del self.work_for_client[client]
+            self.in_flight.remove(metatile)
+            del self.clients_for_metatile[metatile]
+            for client in clients:
+                del self.metatile_for_client[client]
 
-            result.append(work)
+            result.append(metatile)
 
         return tight_loop, result
 
@@ -339,6 +336,9 @@ class Server:
         self.queries_clients = DoubleDict()
         self.client_for_peer = {}
 
+        # this looks like dupe'd from Master, but they have slightly different life cycles
+        self.clients_for_metatile = defaultdict(set)
+
         # canonicalize
         # root = os.path.abspath(root)
 
@@ -424,9 +424,12 @@ class Server:
                             tile = Tile(*[ int(coord) for coord in (z, x, y) ])
                             metatile = MetaTile.from_tile(tile, 8)
                             debug(f"{client.getpeername()}: {metatile!r}")
-                            # work = Work(metatile, [ (client.getpeername(), tile_path) ])  # BUG: ugh
 
-                            self.master.append(metatile, client.getpeername(), tile_path)
+                            client.metatile = metatile
+                            client.tile_path = tile_path
+
+                            self.clients_for_metatile[metatile].add(client, tile_path)
+                            self.master.append(metatile, client.getpeername())
                             self.queries_clients[client] = tile_path
 
     def client_write(self, client):
@@ -463,11 +466,17 @@ class Server:
                 # advance the queues
                 _, jobs = self.master.single_step()
 
-                for work in jobs:
-                    debug(f"{work=}")
-                    for client_peer, tile_path in work.clients:
-                        client = self.client_for_peer[client_peer]
-                        self.answer(client, tile_path)
+                for metatile in jobs:
+                    debug(f"{metatile=}")
+                    # BUG: ugh, shouldn't be touching master's internals like this
+                    clients = self.clients_for_metatile[metatile]
+                    debug(f"{clients=}")
+
+                    for client in clients:
+                        self.answer(client, client.tile_path)
+
+                    # bookkeeping
+                    del self.clients_for_metatile[metatile]
             except Exception as e:
                 if isinstance(e, KeyboardInterrupt):
                     raise
