@@ -262,6 +262,63 @@ class DoubleDict:
         return value
 
 
+class Client:
+    def __init__(self, socket):
+        self.socket = socket
+
+        # to support short reads we will be using a buffer and an offset that will point to the first free byte
+        self.read_buffer = memoryview(bytearray(4096))  # we really don't need much, since requests are quite small
+        self.read_buffer_offset = 0
+        self.request_read = False
+
+        self.write_data = []
+        self.write_file = None
+
+    def recv(self):
+        # if the last time we finished reading the request, we have to start from 0
+        if self.request_read:
+            self.request_read = False
+            self.read_buffer_offset = 0
+
+        read = self.socket.recv_into(self.read_buffer[self.read_buffer_offset:])  # the size is automatic
+        if read > 0:
+            self.read_buffer_offset += read
+
+        # ugh that bytes(), I hope it's cheap
+        if b'\r\n\r\n' in bytes(self.read_buffer[:self.read_buffer_offset]):
+            self.request_read = True
+
+        return self.read_buffer[:self.read_buffer_offset]
+
+    def send(self, data):
+        if isinstance(data, bytes):
+            # textual data
+            self.write_data.append(data)
+        else:
+            self.write_file = data
+
+    def flush(self):
+        for data in self.write_data:
+            sent = self.socket.send(data)
+            # TODO implement handling of short writes
+            assert sent == len(data)
+
+        if self.write_file is not None:
+            self.socket.sendfile(open(self.write_file, 'br'))
+
+    def close(self):
+        self.socket.close()
+
+    def fileno(self):
+        return self.socket.fileno()
+
+    def getpeername(self):
+        return self.socket.getpeername()
+
+    def __hash__(self):
+        return hash(self.socket)
+
+
 class Server:
     def __init__(self, opts):
         self.opts = opts
