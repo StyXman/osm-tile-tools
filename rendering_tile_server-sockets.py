@@ -433,6 +433,8 @@ class Server:
                             self.clients_for_metatile[metatile].add(client)
                             self.master.append(metatile, client.getpeername())
                             self.queries_clients[client] = tile_path
+        else:
+            debug(f"short read from {client.getpeername()}")
 
     def client_write(self, client):
         client.flush()
