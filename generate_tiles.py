@@ -2,7 +2,6 @@
 
 # https://github.com/openstreetmap/mapnik-stylesheets/blob/master/generate_tiles.py with *LOTS* of enhancements
 
-from dataclasses import dataclass
 from subprocess import call
 import sys, os, os.path
 import queue
