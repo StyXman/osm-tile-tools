@@ -336,7 +336,6 @@ class Server:
         self.selector.register(self.listener, EVENT_READ)
 
         self.clients = set()
-        self.responses = defaultdict(list)
         self.queries_clients = DoubleDict()
         self.client_for_peer = {}
 
@@ -353,23 +352,22 @@ class Server:
     def accept(self):
         # new client
         # debug('accept..')
-        client, addr = self.listener.accept()
+        client_socket, addr = self.listener.accept()
         # debug('...ed!')
         debug(f"connection from {addr}")
+
+        client = Client(client_socket)
 
         self.clients.add(client)
         self.client_for_peer[client.getpeername()] = client
         self.selector.register(client, EVENT_READ)
 
     def client_read(self, client):
-        data = client.recv(4096)
+        data = bytes(client.recv())
         debug(f"read from {client.getpeername()}: {data}")
 
         if len(data) == 0:
             debug(f"client {client.getpeername()} disconnected")
-            # remove any trailing data
-            if client in self.responses:
-                del self.responses[client]
 
             # clean up trailing queries from the work_stack
             query = self.queries_clients.get(client, None)
@@ -385,74 +383,63 @@ class Server:
                 # debug(f"client {client.getpeername()} disconnected, didn't made any query yet.")
                 pass
 
-            self.responses[client] = []
+            # TODO:
+            # self.responses[client] = []
 
             # now we need to wait for client to be ready to write
             self.selector.unregister(client)
             self.selector.register(client, EVENT_WRITE)
-        else:
+        elif client.request_read:
+            # we finish reading from this one for now
+            self.selector.unregister(client)
+
             # splitlines() already handles any type of separators
             lines = data.decode().splitlines()
             request_line = lines[0]
             match = self.request_re.match(request_line)
 
             if match is None:
-                self.responses[client] = [ b'HTTP/1.1 400 KO\r\n\r\n' ]
-
-            if match['method'] != 'GET':
-                self.responses[client] = [ b'HTTP/1.1 405 only GETs\r\n\r\n' ]
-
-            path = match['url']
-
-            # TODO: similar code is in tile_server. try to refactor
-            try:
-                # _ gets '' because path is absolute
-                _, z, x, y_ext = path.split('/')
-            except ValueError:
-                self.responses[client] = [ f"HTTP/1.1 400 bad tile spec {path}\r\n\r\n".encode() ]
+                client.send(b'HTTP/1.1 400 KO\r\n\r\n')
             else:
-                # TODO: make sure ext matches the file type we return
-                y, ext = os.path.splitext(y_ext)
+                if match['method'] != 'GET':
+                    client.send(b'HTTP/1.1 405 only GETs\r\n\r\n')
+                else:
+                    path = match['url']
 
-                # o.p.join() considers path to be absolute, so it ignores root
-                tile_path = os.path.join(self.opts.tile_dir, z, x, y_ext)
+                    # TODO: similar code is in tile_server. try to refactor
+                    try:
+                        # _ gets '' because path is absolute
+                        _, z, x, y_ext = path.split('/')
+                    except ValueError:
+                        client.send(f"HTTP/1.1 400 bad tile spec {path}\r\n\r\n".encode())
+                    else:
+                        # TODO: make sure ext matches the file type we return
+                        y, ext = os.path.splitext(y_ext)
 
-                # try to send tyhe tile first, but do not send 404s
-                if not self.answer(client, tile_path, send_404=False):
-                    tile = Tile(*[ int(coord) for coord in (z, x, y) ])
-                    metatile = MetaTile.from_tile(tile, 8)
-                    debug(f"{client.getpeername()}: {metatile!r}")
-                    # work = Work(metatile, [ (client.getpeername(), tile_path) ])  # BUG: ugh
+                        # o.p.join() considers path to be absolute, so it ignores root
+                        tile_path = os.path.join(self.opts.tile_dir, z, x, y_ext)
 
-                    self.master.append(metatile, client.getpeername(), tile_path)
-                    self.queries_clients[client] = tile_path
+                        # try to send tyhe tile first, but do not send 404s
+                        if not self.answer(client, tile_path, send_404=False):
+                            tile = Tile(*[ int(coord) for coord in (z, x, y) ])
+                            metatile = MetaTile.from_tile(tile, 8)
+                            debug(f"{client.getpeername()}: {metatile!r}")
+                            # work = Work(metatile, [ (client.getpeername(), tile_path) ])  # BUG: ugh
+
+                            self.master.append(metatile, client.getpeername(), tile_path)
+                            self.queries_clients[client] = tile_path
 
     def client_write(self, client):
-        if client in self.responses:
-            for data in self.responses[client]:
-                if len(data) > 0:
-                    # debug(f"serving {data} to {client.getpeername()}")
-                    if isinstance(data, bytes):
-                        sent = client.send(data)
-                        # TODO
-                        assert sent == len(data), f"E: Could not send all {data} to {client.getpeername()}"
-                    else:
-                        client.sendfile(open(data, 'br'))
+        client.flush()
+        # BUG: no keep alive support
+        debug(f"closing {client.getpeername()}")
+        client.close()
 
-            del self.responses[client]
-
-            # BUG: no keep alive support
-            debug(f"closing {client.getpeername()}")
-            client.close()
-
-            # bookkeeping
-            self.selector.unregister(client)
-            self.clients.remove(client)
-            try:
-                del self.queries_clients[client]
-            except KeyError:
-                # might not have sent any queries; that's OK
-                pass
+        # bookkeeping
+        self.selector.unregister(client)
+        self.clients.remove(client)
+        if client in self.queries_clients:
+            del self.queries_clients[client]
 
     def loop(self):
         while True:
@@ -495,21 +482,19 @@ class Server:
             file_attrs = os.stat(tile_path)
             debug('... stat!')
         except FileNotFoundError:
-            debug(f"not found {tile_path}...")
-
             if send_404:
-                self.responses[client] = [ f"HTTP/1.1 404 not here {tile_path}\r\n\r\n".encode() ]
+                debug(f"not found {tile_path}...")
+                client.send(f"HTTP/1.1 404 not here {tile_path}\r\n\r\n".encode())
 
             return False
         else:
-            debug(f"found {tile_path}...")
-            self.responses[client].append(b'HTTP/1.1 200 OK\r\n')
-            self.responses[client].append(b'Content-Type: image/png\r\n')
-            self.responses[client].append(f"Content-Length: {file_attrs.st_size}\r\n\r\n".encode())
-            self.responses[client].append(tile_path)
+            debug(f"found {tile_path} for {client.getpeername()}")
+            client.send(b'HTTP/1.1 200 OK\r\n')
+            client.send(b'Content-Type: image/png\r\n')
+            client.send(f"Content-Length: {file_attrs.st_size}\r\n\r\n".encode())
+            client.send(tile_path)
 
             # now we need to wait for client to be ready to write
-            self.selector.unregister(client)
             self.selector.register(client, EVENT_WRITE)
 
         return True
