@@ -271,6 +271,8 @@ class Client:
         self.write_data = []
         self.write_file = None
 
+        self.tile_path = None
+
     def recv(self):
         # if the last time we finished reading the request, we have to start from 0
         if self.request_read:
