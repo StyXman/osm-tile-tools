@@ -143,9 +143,7 @@ class RenderThread:
         self.store_thread = None
 
 
-    def render(self, work:Work) -> bool:
-        metatile = work.metatile
-
+    def render(self, metatile:tiles.MetaTile) -> Dict[tiles.Tile, bool]:
         # get LatLong (EPSG:4326)
         w, n = metatile.coords[0]
         e, s = metatile.coords[1]
@@ -234,8 +232,8 @@ class RenderThread:
         metatile.render_time = mid - start
         metatile.serializing_time = end - mid
 
-        debug("[%s] putting %r", self.name, work)
-        self.output.put(work)
+        debug("[%s] putting %r", self.name, metatile)
+        self.output.put(metatile)
         debug("[%s] put! (%d)", self.name, self.output.qsize())
 
         if not self.opts.store_thread and self.output.qsize() > 0:
@@ -293,10 +291,10 @@ class RenderThread:
         # Fetch a tile from the queue and render it
         debug("[%s] get..", self.name)
         # metatile:Optional[tiles.MetaTile] = self.input.get()
-        work = self.input.get()
-        debug("[%s] got! %r", self.name, work)
+        metatile = self.input.get()
+        debug("[%s] got! %r", self.name, metatile)
 
-        if work is None:
+        if metatile is None:
             # it's the end; send the storage thread a message and finish
             debug("[%s] putting %r", self.name, None)
             self.output.put(None)
@@ -304,7 +302,7 @@ class RenderThread:
 
             return False
 
-        return self.render(work)
+        return self.render(metatile)
 
 
 # backends:Dict[str,Any] = dict(
@@ -362,19 +360,17 @@ class StormBringer:
 
     def single_step(self):
         debug('[%s] >... (%d)', self.name, self.input.qsize())
-        work = self.input.get()
-        debug('[%s] ...> %s', self.name, work)
+        metatile = self.input.get()
+        debug('[%s] ...> %s', self.name, metatile)
 
-        if work is not None:
-            metatile = work.metatile
-
+        if metatile is not None:
             debug('[%s] sto...', self.name)
             self.store_metatile(metatile)
             debug('[%s] ...red!', self.name)
             # we don't need it anymore and *.Queue complains that
             # mapnik._mapnik.Image is not pickle()'able
             metatile.im = None
-            self.output.put(work)
+            self.output.put(metatile)
         else:
             # this writer finished
             self.done_writers += 1
@@ -777,7 +773,7 @@ class Master:
                 # self.log_grafana(str(metatile))
 
                 # because we're the only writer, and it's not full, this can't block
-                self.new_work.put(Work(metatile=metatile, clients=[]))
+                self.new_work.put(metatile)
                 self.work_stack.confirm()
                 self.went_out += 1
                 debug("--> %r", (metatile, ))
@@ -803,9 +799,7 @@ class Master:
         return tight_loop
 
 
-    def handle_new_work(self, work):
-        metatile = work.metatile
-
+    def handle_new_work(self, metatile):
         # an empty metatile will be accounted as rendered,
         # but the children can be pruned
         if self.opts.push_children:
