@@ -292,118 +292,127 @@ class Server:
 
         self.master = Master(self.opts)
 
+    def accept(self):
+        # new client
+        # debug('accept..')
+        client, addr = self.listener.accept()
+        # debug('...ed!')
+        debug(f"connection from {addr}")
+
+        self.clients.add(client)
+        self.client_for_peer[client.getpeername()] = client
+        self.selector.register(client, EVENT_READ)
+
+    def client_read(self, client):
+        data = client.recv(4096)
+        debug(f"read from {client.getpeername()}: {data}")
+
+        if len(data) == 0:
+            debug(f"client {client.getpeername()} disconnected")
+            # remove any trailing data
+            if client in self.responses:
+                del self.responses[client]
+
+            # clean up trailing queries from the work_stack
+            query = self.queries_clients.get(client, None)
+            if query is not None:
+                try:
+                    self.master.work_stack.remove(query)
+                except ValueError:
+                    # already being rendered, ignore
+                    pass
+
+                # debug(f"client {client.getpeername()} disconnected, was waiting for {query}")
+            else:
+                # debug(f"client {client.getpeername()} disconnected, didn't made any query yet.")
+                pass
+
+            self.responses[client] = []
+
+            # now we need to wait for client to be ready to write
+            self.selector.unregister(client)
+            self.selector.register(client, EVENT_WRITE)
+        else:
+            # splitlines() already handles any type of separators
+            lines = data.decode().splitlines()
+            request_line = lines[0]
+            match = self.request_re.match(request_line)
+
+            if match is None:
+                self.responses[client] = [ b'HTTP/1.1 400 KO\r\n\r\n' ]
+
+            if match['method'] != 'GET':
+                self.responses[client] = [ b'HTTP/1.1 405 only GETs\r\n\r\n' ]
+
+            path = match['url']
+
+            # TODO: similar code is in tile_server. try to refactor
+            try:
+                # _ gets '' because path is absolute
+                _, z, x, y_ext = path.split('/')
+            except ValueError:
+                self.responses[client] = [ f"HTTP/1.1 400 bad tile spec {path}\r\n\r\n".encode() ]
+            else:
+                # TODO: make sure ext matches the file type we return
+                y, ext = os.path.splitext(y_ext)
+
+                # o.p.join() considers path to be absolute, so it ignores root
+                tile_path = os.path.join(self.opts.tile_dir, z, x, y_ext)
+
+                # try to send tyhe tile first, but do not send 404s
+                if not self.answer(client, tile_path, send_404=False):
+                    tile = Tile(*[ int(coord) for coord in (z, x, y) ])
+                    metatile = MetaTile.from_tile(tile, 8)
+                    debug(f"{client.getpeername()}: {metatile!r}")
+                    # work = Work(metatile, [ (client.getpeername(), tile_path) ])  # BUG: ugh
+
+                    self.master.append(metatile, client.getpeername(), tile_path)
+                    self.queries_clients[client] = tile_path
+
+    def client_write(self, client):
+        if client in self.responses:
+            for data in self.responses[client]:
+                if len(data) > 0:
+                    # debug(f"serving {data} to {client.getpeername()}")
+                    if isinstance(data, bytes):
+                        sent = client.send(data)
+                        # TODO
+                        assert sent == len(data), f"E: Could not send all {data} to {client.getpeername()}"
+                    else:
+                        client.sendfile(open(data, 'br'))
+
+            del self.responses[client]
+
+            # BUG: no keep alive support
+            debug(f"closing {client.getpeername()}")
+            client.close()
+
+            # bookkeeping
+            self.selector.unregister(client)
+            self.clients.remove(client)
+            try:
+                del self.queries_clients[client]
+            except KeyError:
+                # might not have sent any queries; that's OK
+                pass
 
     def loop(self):
         while True:
-            debug(f"select... [{len(self.master.work_stack)=}; {self.master.new_work.qsize()=}; {self.master.store_queue.qsize()=}; {self.master.info.qsize()=}]")
+            # debug(f"select... [{len(self.master.work_stack)=}; {self.master.new_work.qsize()=}; {self.master.store_queue.qsize()=}; {self.master.info.qsize()=}]")
             for key, events in self.selector.select(1):
-                debug('...ed!')
+                # debug('...ed!')
                 ready_socket = key.fileobj
 
                 if ready_socket == self.listener:
-                    # new client
-                    debug('accept..')
-                    client, addr = self.listener.accept()
-                    debug('...ed!')
-                    debug(f"connection from {addr}")
-
-                    self.clients.add(client)
-                    self.client_for_peer[client.getpeername()] = client
-                    self.selector.register(client, EVENT_READ)
-
+                    self.accept()
                 elif ready_socket in self.clients:
                     client = ready_socket
 
                     if events & EVENT_READ:
-                        data = client.recv(4096)
-                        debug(f"read from {client.getpeername()}: {data}")
-
-                        if len(data) == 0:
-                            # remove any trailing data
-                            if client in self.responses:
-                                del self.responses[client]
-
-                            # clean up trailing queries from the work_stack
-                            query = self.queries_clients.get(client, None)
-                            if query is not None:
-                                try:
-                                    self.master.work_stack.remove(query)
-                                except ValueError:
-                                    # already being rendered, ignore
-                                    pass
-
-                                debug(f"client {client.getpeername()} disconnected, was waiting for {query}")
-                            else:
-                                debug(f"client {client.getpeername()} disconnected, didn't made any query yet.")
-
-                            self.responses[client] = []
-
-                            # now we need to wait for client to be ready to write
-                            self.selector.unregister(client)
-                            self.selector.register(client, EVENT_WRITE)
-                        else:
-                            # splitlines() already handles any type of separators
-                            lines = data.decode().splitlines()
-                            request_line = lines[0]
-                            match = self.request_re.match(request_line)
-
-                            if match is None:
-                                self.responses[client] = [ b'HTTP/1.1 400 KO\r\n\r\n' ]
-
-                            if match['method'] != 'GET':
-                                self.responses[client] = [ b'HTTP/1.1 405 only GETs\r\n\r\n' ]
-
-                            path = match['url']
-
-                            # TODO: similar code is in tile_server. try to refactor
-                            try:
-                                # _ gets '' because path is absolute
-                                _, z, x, y_ext = path.split('/')
-                            except ValueError:
-                                self.responses[client] = [ f"HTTP/1.1 400 bad tile spec {path}\r\n\r\n".encode() ]
-                            else:
-                                # TODO: make sure ext matches the file type we return
-                                y, ext = os.path.splitext(y_ext)
-
-                                # o.p.join() considers path to be absolute, so it ignores root
-                                tile_path = os.path.join(self.opts.tile_dir, z, x, y_ext)
-
-                                # try to send tyhe tile first, but do not send 404s
-                                if not self.answer(client, tile_path, send_404=False):
-                                    tile = Tile(*[ int(coord) for coord in (z, x, y) ])
-                                    metatile = MetaTile.from_tile(tile, 8)
-                                    debug(f"{client.getpeername()}: {metatile!r}")
-                                    # work = Work(metatile, [ (client.getpeername(), tile_path) ])  # BUG: ugh
-
-                                    self.master.append(metatile, client.getpeername(), tile_path)
-                                    self.queries_clients[client] = tile_path
+                        self.client_read(client)
 
                     if events & EVENT_WRITE:
-                        if client in self.responses:
-                            for data in self.responses[client]:
-                                if len(data) > 0:
-                                    debug(f"serving {data} to {client.getpeername()}")
-                                    if isinstance(data, bytes):
-                                        sent = client.send(data)
-                                        # TODO
-                                        assert sent == len(data), f"E: Could not send all {data} to {client.getpeername()}"
-                                    else:
-                                        client.sendfile(open(data, 'br'))
-
-                            del self.responses[client]
-
-                            # BUG: no keep alive support
-                            debug(f"closing {client.getpeername()}")
-                            client.close()
-
-                            # bookkeeping
-                            self.selector.unregister(client)
-                            self.clients.remove(client)
-                            try:
-                                del self.queries_clients[client]
-                            except KeyError:
-                                # might not have sent any queries; that's OK
-                                pass
+                        self.client_write(client)
 
             # advance the queues
             _, jobs = self.master.single_step()
