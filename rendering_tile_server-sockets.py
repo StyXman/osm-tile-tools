@@ -10,6 +10,7 @@ from  selectors import DefaultSelector as Selector, EVENT_READ, EVENT_WRITE
 import socket
 import sys
 import time
+import traceback
 
 from generate_tiles import RenderThread, StormBringer, Work
 import map_utils
@@ -398,30 +399,36 @@ class Server:
 
     def loop(self):
         while True:
-            # debug(f"select... [{len(self.master.work_stack)=}; {self.master.new_work.qsize()=}; {self.master.store_queue.qsize()=}; {self.master.info.qsize()=}]")
-            for key, events in self.selector.select(1):
-                # debug('...ed!')
-                ready_socket = key.fileobj
+            try:
+                # debug(f"select... [{len(self.master.work_stack)=}; {self.master.new_work.qsize()=}; {self.master.store_queue.qsize()=}; {self.master.info.qsize()=}]")
+                for key, events in self.selector.select(1):
+                    # debug('...ed!')
+                    ready_socket = key.fileobj
 
-                if ready_socket == self.listener:
-                    self.accept()
-                elif ready_socket in self.clients:
-                    client = ready_socket
+                    if ready_socket == self.listener:
+                        self.accept()
+                    elif ready_socket in self.clients:
+                        client = ready_socket
 
-                    if events & EVENT_READ:
-                        self.client_read(client)
+                        if events & EVENT_READ:
+                            self.client_read(client)
 
-                    if events & EVENT_WRITE:
-                        self.client_write(client)
+                        if events & EVENT_WRITE:
+                            self.client_write(client)
 
-            # advance the queues
-            _, jobs = self.master.single_step()
+                # advance the queues
+                _, jobs = self.master.single_step()
 
-            for work in jobs:
-                debug(f"{work=}")
-                for client_peer, tile_path in work.clients:
-                    client = self.client_for_peer[client_peer]
-                    self.answer(client, tile_path)
+                for work in jobs:
+                    debug(f"{work=}")
+                    for client_peer, tile_path in work.clients:
+                        client = self.client_for_peer[client_peer]
+                        self.answer(client, tile_path)
+            except Exception as e:
+                if isinstance(e, KeyboardInterrupt):
+                    raise
+                else:
+                    traceback.print_exc()
 
     def answer(self, client, tile_path, send_404=True):
         debug(f"answering {client.getpeername()} for {tile_path} ")
