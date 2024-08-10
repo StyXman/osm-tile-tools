@@ -94,7 +94,7 @@ class Master:
             render_thread.start()
             self.renderers[i] = render_thread
 
-    def append(self, metatile, client, tile_path):
+    def append(self, metatile, client):
         if metatile not in self.clients_for_metatile:
             debug(f"[Master]: first Client for {metatile!r}: {client}")
 
@@ -430,7 +430,7 @@ class Server:
                             client.metatile = metatile
                             client.tile_path = tile_path
 
-                            self.clients_for_metatile[metatile].add(client, tile_path)
+                            self.clients_for_metatile[metatile].add(client)
                             self.master.append(metatile, client.getpeername())
                             self.queries_clients[client] = tile_path
 
