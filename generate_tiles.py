@@ -115,20 +115,6 @@ class RenderStack:
         return ans
 
 
-@dataclass
-class Work:
-    metatile: tiles.MetaTile
-    # TODO: maybe a set?
-    #              (('127.0.0.1', 51390), 'Elevation/15/16868/12011.png')
-    clients: list[ ((str, int), str) ]
-
-    def __eq__(self, other):
-        return self.metatile == other.metatile
-
-    def __hash__(self):
-        return hash(self.metatile)
-
-
 RenderChildren = Dict[tiles.Tile, bool]
 class RenderThread:
     def __init__(self, opts, input, output) -> None:
