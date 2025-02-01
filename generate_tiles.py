@@ -556,12 +556,12 @@ class Master:
                     time_per_tile ) / self.opts.threads
             debug((self.start, now, time_elapsed, metatile_render_time, time_per_tile, eta))
 
-            format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %d:%02d:%06.3f, ETA: %d:%02d:%06.3f, Total: %d:%02d:%06.3f]"
+            format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %dh%02dm%06.3fs, ETA: %dh%02dm%06.3fs, Total: %dh%02dm%06.3fs]"
             info(format, self.tiles_rendered, self.tiles_skipped, self.tiles_to_render,
                  percentage, metatile, *args, *utils.time2hms(time_elapsed),
                  *utils.time2hms(eta), *utils.time2hms(time_elapsed + eta))
         else:
-            format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %d:%02d:%06.3f, ETA: ∞, Total: ∞]"
+            format = "[%d+%d/%d: %7.4f%%] %r: " + format + " [Elapsed: %dh%02dm%06.3fs, ETA: ∞, Total: ∞]"
             info(format, self.tiles_rendered, self.tiles_skipped, self.tiles_to_render,
                  percentage, metatile, *args, *utils.time2hms(time_elapsed))
 
@@ -716,7 +716,7 @@ class Master:
         total_time = time.perf_counter() - self.start
         h, m, s = utils.time2hms(total_time)
 
-        info("total time: %3d:%02d:%02d", h, m, s)
+        info("total time: %3dh%02dm%02ds", h, m, s)
         metatiles_rendered = self.tiles_rendered / self.opts.metatile_size**2
 
         if metatiles_rendered != 0:
