@@ -542,7 +542,7 @@ def main(root):
     opts.mapfile = 'Elevation.xml'
     opts.mapnik_strict = False
     opts.max_zoom = 21  # deep enough
-    opts.metatile_size = 8
+    opts.metatile_size = 2
     opts.more_opts = {}
     opts.parallel = 'fork'
     opts.parallel_factory = None  # TODO
