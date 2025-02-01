@@ -24,6 +24,7 @@ short_format = "%(asctime)s %(message)s"
 
 logging.basicConfig(level=logging.DEBUG, format=long_format)
 
+
 # fake multiprocessing for testing
 class FakeRenderThread:
     def __init__(self, opts, input, output):
@@ -95,6 +96,8 @@ class Master:
             self.renderers[i] = render_thread
 
     def append(self, metatile, client):
+        # if I move clients = self.clients_for_metatile[metatile] here, the entry is created
+        # and we never enter the 'then' branch
         if metatile not in self.clients_for_metatile:
             debug(f"[Master]: first Client for {metatile!r}: {client}")
 
@@ -167,11 +170,11 @@ class Master:
 
             if metatile is not None:
                 # because we're the only writer, and it's not full, this can't block
-                debug('[Master] new_work.put...')
+                # debug('[Master] new_work.put...')
                 self.new_work.put(metatile)
-                debug('[Master] ... new_work.put!')
-                debug(f"[Master] --> {metatile!r}")
-                debug(f"[Master] --> {clients}")
+                # debug('[Master] ... new_work.put!')
+                # debug(f"[Master] --> {metatile!r}")
+                # debug(f"[Master] --> {clients}")
 
                 # moving from work_stack to in_flight
                 self.in_flight.add(metatile)
@@ -184,12 +187,12 @@ class Master:
         while not self.info.empty():
             tight_loop = False
 
-            debug('info.get...')
+            # debug('info.get...')
             metatile = self.info.get()
             clients = self.clients_for_metatile[metatile]
 
-            debug('... info.got!')
-            debug(f"[Master] <-- {metatile!r}")
+            # debug('... info.got!')
+            # debug(f"[Master] <-- {metatile!r}")
             debug(f"[Master] <-- {clients=}")
 
             # bookkeeping
@@ -208,7 +211,7 @@ class Master:
 
         while not self.info.empty():
             data = self.info.get()
-            debug(f"[Master] <-- {data}")
+            # debug(f"[Master] <-- {data=}")
 
         self.new_work.join()
         for i in range(opts.threads):
@@ -344,6 +347,7 @@ class Server:
         self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
 
         self.listener.bind( ('', 8080) )
+        info(f"Listening on port 8080, serving from {self.opts.tile_dir}.")
         self.listener.listen(32)
         self.listener.setblocking(False)
 
@@ -416,10 +420,12 @@ class Server:
             request_line = lines[0]
             match = self.request_re.match(request_line)
 
+            debug(match)
             if match is None:
                 client.send(b'HTTP/1.1 400 KO\r\n\r\n')
             else:
                 if match['method'] != 'GET':
+                    debug(f"404: bad method {match['method']}")
                     client.send(b'HTTP/1.1 405 only GETs\r\n\r\n')
                 else:
                     path = match['url']
@@ -439,7 +445,7 @@ class Server:
                         # o.p.join() considers path to be absolute, so it ignores root
                         tile_path = os.path.join(self.opts.tile_dir, z, x, y_ext)
 
-                        # try to send tyhe tile first, but do not send 404s
+                        # try to send the tile first, but do not send 404s
                         if not self.answer(client, tile_path, send_404=False):
                             tile = Tile(*[ int(coord) for coord in (z, x, y) ])
                             metatile = MetaTile.from_tile(tile, self.opts.metatile_size)
@@ -470,6 +476,7 @@ class Server:
         while True:
             try:
                 # debug(f"select... [{len(self.master.work_stack)=}; {self.master.new_work.qsize()=}; {self.master.store_queue.qsize()=}; {self.master.info.qsize()=}]")
+                # debug(self.selector.get_map())
                 for key, events in self.selector.select(1):
                     # debug('...ed!')
                     ready_socket = key.fileobj
