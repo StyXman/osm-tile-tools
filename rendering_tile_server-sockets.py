@@ -317,7 +317,10 @@ class Client:
         return self.socket.fileno()
 
     def getpeername(self):
-        return self.socket.getpeername()
+        if self.client_name is None:
+            self.client_name = self.socket.getpeername()
+
+        return self.client_name
 
     def __hash__(self):
         return hash(self.socket)
