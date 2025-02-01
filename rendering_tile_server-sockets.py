@@ -297,13 +297,18 @@ class Client:
             self.write_file = data
 
     def flush(self):
-        for data in self.write_data:
-            sent = self.socket.send(data)
-            # TODO implement handling of short writes
-            assert sent == len(data)
+        try:
+            for data in self.write_data:
+                sent = self.socket.send(data)
+                # TODO implement handling of short writes
+                assert sent == len(data)
 
-        if self.write_file is not None:
-            self.socket.sendfile(open(self.write_file, 'br'))
+            if self.write_file is not None:
+                self.socket.sendfile(open(self.write_file, 'br'))
+        except BrokenPipeError:
+            # the client died, close it.
+            warning(f"{self.getpeername()} died, closing")
+            self.close()
 
     def close(self):
         self.socket.close()
