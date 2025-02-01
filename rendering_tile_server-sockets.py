@@ -79,13 +79,13 @@ class Master:
 
         self.new_work = multiprocessing.Queue(1)
         self.store_queue = utils.SimpleQueue(5*opts.threads)
-        self.info = multiprocessing.Queue(5*8)
+        self.info = multiprocessing.Queue(5*opts.threads)
 
         self.backend = map_utils.DiskBackend(opts.tile_dir)
         self.store_thread = StormBringer(opts, self.backend, self.store_queue, self.info)
         self.store_thread.name = 'store-embedded'
 
-        for i in range(8):
+        for i in range(opts.threads):
             renderer = RenderThread(opts, self.new_work, self.store_queue)
             render_thread = multiprocessing.Process(target=renderer.loop, name=f"Renderer-{i+1:03d}")
             renderer.name = render_thread.name
@@ -203,7 +203,7 @@ class Master:
         return tight_loop, result
 
     def finish(self):
-        for i in range(8):
+        for i in range(opts.threads):
             self.new_work.put(None)
 
         while not self.info.empty():
@@ -211,7 +211,7 @@ class Master:
             debug(f"[Master] <-- {data}")
 
         self.new_work.join()
-        for i in range(8):
+        for i in range(opts.threads):
             self.renderers[i].join()
         debug('finished')
 
@@ -424,7 +424,7 @@ class Server:
                         # try to send tyhe tile first, but do not send 404s
                         if not self.answer(client, tile_path, send_404=False):
                             tile = Tile(*[ int(coord) for coord in (z, x, y) ])
-                            metatile = MetaTile.from_tile(tile, 8)
+                            metatile = MetaTile.from_tile(tile, self.opts.metatile_size)
                             debug(f"{client.getpeername()}: {metatile!r}")
 
                             client.metatile = metatile
