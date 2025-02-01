@@ -319,6 +319,14 @@ class Client:
 
 
 class Server:
+    content_type = {
+        '.png':  'image/png',
+        '.html': 'text/html',
+        '.htm':  'text/html',
+        '.js':   'text/javascript',
+    }
+
+
     def __init__(self, opts):
         self.opts = opts
 
@@ -413,7 +421,9 @@ class Server:
                         # _ gets '' because path is absolute
                         _, z, x, y_ext = path.split('/')
                     except ValueError:
-                        client.send(f"HTTP/1.1 400 bad tile spec {path}\r\n\r\n".encode())
+                        # not a tile, try to serve the file
+                        # but remove the leading / so o.p.join() does not use it as an abs path
+                        self.answer(client, os.path.join(self.opts.tile_dir, path[1:]))
                     else:
                         # TODO: make sure ext matches the file type we return
                         y, ext = os.path.splitext(y_ext)
@@ -487,25 +497,26 @@ class Server:
                 else:
                     traceback.print_exc()
 
-    def answer(self, client, tile_path, send_404=True):
-        debug(f"answering {client.getpeername()} for {tile_path} ")
+    def answer(self, client, file_path, send_404=True):
+        # debug(f"answering {client.getpeername()} for {file_path} ")
         try:
             # this could be considered 'blocking', but if the fs is slow, we have other problems
-            debug(f"find me {tile_path}...")
-            file_attrs = os.stat(tile_path)
-            debug('... stat!')
+            # debug(f"find me {file_path}...")
+            file_attrs = os.stat(file_path)
+            # debug('... stat!')
         except FileNotFoundError:
             if send_404:
-                debug(f"not found {tile_path}...")
-                client.send(f"HTTP/1.1 404 not here {tile_path}\r\n\r\n".encode())
+                info(f"404: not found {file_path}...")
+                client.send(f"HTTP/1.1 404 not here {file_path}\r\n\r\n".encode())
 
             return False
         else:
-            debug(f"found {tile_path} for {client.getpeername()}")
+            info(f"200: found {file_path} for {client.getpeername()}")
+            ext = os.path.splitext(file_path)[1]
             client.send(b'HTTP/1.1 200 OK\r\n')
-            client.send(b'Content-Type: image/png\r\n')
+            client.send(f"Content-Type: {self.content_type[ext]}\r\n".encode())
             client.send(f"Content-Length: {file_attrs.st_size}\r\n\r\n".encode())
-            client.send(tile_path)
+            client.send(file_path)
 
             # now we need to wait for client to be ready to write
             self.selector.register(client, EVENT_WRITE)
