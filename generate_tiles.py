@@ -377,10 +377,12 @@ class StormBringer:
             for tile in metatile.tiles:
                 self.store_tile(tile, image)
 
-                child = metatile.child(tile)
-                # PixelTile does not have
-                if child is not None:
-                    child.is_empty = child.is_empty and tile.is_empty
+                # do not try to compute this for tiles outside the asked range
+                if metatile.z < self.opts.max_zoom:
+                    child = metatile.child(tile)
+                    # PixelTile does not have
+                    if child is not None:
+                        child.is_empty = child.is_empty and tile.is_empty
 
             end = time.perf_counter()
 
@@ -393,15 +395,17 @@ class StormBringer:
             metatile.deserializing_time = mid - start
             metatile.saving_time = end - mid
         else:
-            for child in metatile.children():
-                rand = random()
-                # 5% are fake empties
-                child.is_empty = (rand <= 0.05 and 2**metatile.z >= self.opts.metatile_size)
-                child.render = not (child.is_empty or self.opts.single_tiles or metatile.z == self.opts.max_zoom)
+            # do not try to compute this for tiles outside the asked range
+            if metatile.x < self.opts.max_zoom:
+                for child in metatile.children():
+                    rand = random()
+                    # 5% are fake empties
+                    child.is_empty = (rand <= 0.05 and 2**metatile.z >= self.opts.metatile_size)
+                    child.render = not (child.is_empty or self.opts.single_tiles or metatile.z == self.opts.max_zoom)
 
 
     def store_tile(self, tile, image):
-        # SVG is stored by the renderer
+        # SVG and PDF are stored by the renderer
         if self.opts.format not in ('svg', 'pdf'):
             i, j = tile.meta_index
 
@@ -573,6 +577,7 @@ class Master:
         bbox = self.opts.bbox
         min_zoom = self.opts.min_zoom
         tile_size = self.opts.tile_size
+        # if the ZL is too low, shrink the metatile_size
         metatile_size = min(self.opts.metatile_size, 2**min_zoom)
         metatile_pixel_size = metatile_size * tile_size
 
@@ -728,6 +733,7 @@ class Master:
         debug('loop() out!')
 
 
+
     def single_step(self):
         # I could get to the pipes used for the Queues, but it's useless, as they're constantly ready
         # they're really controlled by the semaphores guarding those pipes
@@ -787,7 +793,8 @@ class Master:
     def handle_new_work(self, metatile):
         # an empty metatile will be accounted as rendered,
         # but the children can be pruned
-        if self.opts.push_children:
+        if self.opts.push_children and metatile.z < self.opts.max_zoom:
+            # TODO: why reversed?
             for child in reversed(metatile.children()):
                 debug("%r: %s, %s", child, child.render, child.is_empty)
                 if child.render:
@@ -880,7 +887,7 @@ def parse_args():
                         action='store_true', help="missing tiles in a meta tile count as newer, so we don't re-render metatiles with empty tiles.")
     parser.add_argument('-e', '--empty-color',     dest='empty_color', metavar='[#]RRGGBB', required=True,
                         help='Define the color of empty space (usually sea/ocean color) for empty tile detection.')
-    parser.add_argument('-s', '--empty-size',     dest='empty_size', type=int, default=103,
+    parser.add_argument('-s', '--empty-size',      dest='empty_size', type=int, default=103,
                         help='The byte size of empty tiles.')
     parser.add_argument('-E', '--empty',           dest='empty',     default='skip',
                         choices=('skip', 'link', 'write'))
@@ -899,7 +906,7 @@ def parse_args():
     # TODO: buffer size (256?)
     opts = parser.parse_args()
 
-    ## verboseness
+    # verboseness
     if opts.debug:
         logging.basicConfig(level=logging.DEBUG, format=long_format)
     else:
