@@ -9,7 +9,7 @@ sector = sys.argv[1]
 
 atlas = map_utils.Atlas([sector])
 map = atlas.maps[sector]
-backend = map_utils.MBTilesBackend(sector, map.bbox)
+backend = map_utils.MBTilesBackend(f"{sector}.mbt", map.bbox)
 
 # backend.init()
 
